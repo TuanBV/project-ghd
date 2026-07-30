@@ -66,7 +66,7 @@ the container), so they survive container restarts/recreation.
 ## 4. Health checks
 
 ```bash
-curl http://localhost:8080/actuator/health
+curl http://localhost:${APP_PORT:-8080}/actuator/health  # e.g. http://localhost:18080/actuator/health
 ```
 
 Only `health` and `info` are exposed (`management.endpoints.web.exposure.include`),

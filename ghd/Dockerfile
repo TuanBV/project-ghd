@@ -24,6 +24,9 @@ WORKDIR /workspace
 # Cache Maven dependencies in their own layer, independent of source changes
 COPY .mvn/ .mvn/
 COPY mvnw pom.xml ./
+# mvnw's executable bit is not reliably preserved by git on Windows checkouts,
+# so force it here rather than depending on the file mode in the build context.
+RUN chmod +x mvnw
 RUN ./mvnw -B -q dependency:go-offline
 
 # Now bring in the full source...
