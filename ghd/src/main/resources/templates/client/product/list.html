@@ -1,0 +1,781 @@
+<!doctype html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+  <head
+    th:replace="~{common/head :: common_head('Sản phẩm - Green Home Shop', ~{:: #header-style}, null, null)}"
+  >
+    <th:block id="header-style">
+      <style>
+        .product-card {
+          transition: box-shadow 0.4s ease;
+        }
+
+        .product-card:hover {
+          transform: none !important;
+          box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
+        }
+
+        .loading-state {
+          opacity: 0.5;
+          pointer-events: none;
+        }
+
+        .filter-select {
+          appearance: none;
+          background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%236b7280'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='C19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E");
+          background-repeat: no-repeat;
+          background-position: right 0.75rem center;
+          background-size: 0.8rem;
+        }
+
+        @keyframes scroll-left-to-right {
+          from {
+            transform: translateX(-50%);
+          }
+          to {
+            transform: translateX(0);
+          }
+        }
+
+        .animate-infinite-scroll {
+          display: flex;
+          width: max-content;
+          animation: scroll-left-to-right 30s linear infinite;
+        }
+
+        .animate-infinite-scroll:hover {
+          animation-play-state: paused;
+        }
+
+        #article-content img {
+          max-width: 100%;
+          height: auto;
+          display: block;
+          margin: 1.5rem auto;
+          border-radius: 0.75rem;
+        }
+
+        #article-content iframe {
+          width: 100%;
+          aspect-ratio: 16 / 9;
+          border-radius: 0.75rem;
+          margin: 1.5rem 0;
+        }
+
+        img[src^="data:image"] {
+          background-color: #fff;
+        }
+
+        /* Style cho bảng bên trong nội dung chi tiết */
+        .news-content table {
+          width: 100% !important;
+          border-collapse: collapse !important;
+          margin: 1.5rem 0 !important;
+          border: 1px solid #e2e8f0 !important; /* Đường viền ngoài */
+        }
+
+        .news-content table td,
+        .news-content table th {
+          padding: 10px 15px !important;
+          border: 1px solid #e2e8f0 !important; /* Đường viền cho từng ô */
+          vertical-align: middle;
+        }
+
+        /* Tùy chọn: Tô màu nền nhẹ cho dòng đầu tiên (Header) nếu muốn */
+        .news-content table tr:first-child td {
+          background-color: #f8fafc;
+          font-weight: 600;
+        }
+
+        .news-content a {
+          color: #007bff !important;
+          text-decoration: underline;
+        }
+
+        .news-content a:hover {
+          color: #0056b3;
+        }
+      </style>
+      <th:block th:if="${relatedNews != null}">
+        <title th:text="${relatedNews.metaTitle ?: relatedNews.title}">Tiêu đề SEO</title>
+        <meta name="description" th:content="${relatedNews.metaDesc ?: relatedNews.summary}">
+        <meta name="keywords" th:content="${relatedNews.metaKeyword}">
+
+        <meta property="og:title" th:content="${relatedNews.title}">
+        <meta property="og:description" th:content="${relatedNews.summary}">
+        <meta property="og:image" th:content="${relatedNews.thumbnail != null ? relatedNews.thumbnail + '_pc.webp' : 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7'}">
+        <meta property="og:type" content="article">
+      </th:block>
+    </th:block>
+  </head>
+  <body class="bg-[#f6f6f6] text-gray-700">
+    <div th:replace="common/client/gtm :: gtm-body"></div>
+<div th:replace="common/client/header :: header"></div>
+    <main class="container mx-auto px-4 py-8">
+      <!-- Banner -->
+      <div class="w-full overflow-hidden mb-8">
+        <picture class="block w-full">
+          <source
+            media="(min-width: 1024px)"
+            th:srcset="|https://images.weserv.nl/?url=https://greenhomeshop.vn${banner.imageUrl}_pc.webp&w=1440&output=webp&q=85|"
+          />
+          <source
+            media="(min-width: 768px)"
+            th:srcset="|https://images.weserv.nl/?url=https://greenhomeshop.vn${banner.imageUrl}_tablet.webp&w=800&output=webp&q=85|"
+          />
+          <img th:src="|https://images.weserv.nl/?url=https://greenhomeshop.vn${banner.imageUrl}_mobile.webp&w=450&output=webp&q=85|"
+            th:alt="${banner.title}"
+            class="w-full h-auto object-contain transition-transform duration-500 group-hover:scale-102"
+            width="1440"
+            height="400"
+            fetchpriority="high"
+            loading="eager"
+            decoding="sync"
+          />
+        </picture>
+      </div>
+      <div
+        class="mb-6 flex flex-col md:flex-row justify-between items-center gap-4"
+      >
+        <div class="text-center md:text-left">
+          <h1
+            class="text-3xl font-semibold text-gray-700 my-2.5 text-center tracking-tight"
+          >
+            Cửa hàng công nghệ
+          </h1>
+        </div>
+        <div
+          class="flex items-center gap-3 bg-white px-4 py-2 rounded-xl border border-gray-100 shadow-sm"
+        >
+          <span class="text-[10px] font-semibold text-gray-600 uppercase"
+            >Sắp xếp:</span
+          >
+          <select
+            id="sortSelect"
+            onchange="handleSortChange(this.value)"
+            class="filter-select text-sm font-semibold bg-transparent outline-none pr-6 cursor-pointer text-gray-700"
+          >
+            <option value="id,desc">Mới nhất</option>
+            <option value="price,asc">Giá thấp đến cao</option>
+            <option value="price,desc">Giá cao đến thấp</option>
+            <option value="title,asc">Tên A-Z</option>
+          </select>
+        </div>
+      </div>
+
+      <div
+        class="bg-white p-6 rounded-xl border border-gray-100 shadow-sm mb-8"
+      >
+        <div class="grid grid-cols-1 lg:grid-cols-5 gap-4 items-end">
+          <div class="col-span-1">
+            <label
+              class="block text-[10px] font-semibold text-gray-600 uppercase mb-2 ml-1 tracking-wider"
+              >Tìm kiếm</label
+            >
+            <div class="relative group">
+              <input
+                id="searchInput"
+                th:value="${title}"
+                type="text"
+                placeholder="Tên sản phẩm..."
+                class="w-full bg-gray-50 border border-gray-200 rounded-xl py-3 px-5 text-sm focus:bg-white focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all outline-none"
+              />
+              <svg class="absolute right-4 top-1/2 -translate-y-1/2 text-gray-600 group-focus-within:text-blue-500 transition-colors" data-icon="search" aria-hidden="true" focusable="false" viewBox="0 0 24 24" width="1em" height="1em" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" ><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
+            </div>
+          </div>
+
+          <div class="col-span-1">
+            <label class="block text-[10px] font-semibold text-gray-600 uppercase mb-2 ml-1 tracking-wider">Danh mục</label>
+            <select id="categorySelect" onchange="updateBrandOptions()"
+                    class="filter-select w-full bg-gray-50 border border-gray-200 rounded-xl py-3 px-4 text-sm focus:bg-white focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all outline-none cursor-pointer">
+              <option value="">Tất cả danh mục</option>
+              <option th:each="cat : ${navBarData}"
+                      th:value="${cat.slug}"
+                      th:text="${cat.title}"
+                      th:selected="${cat.slug == categoryTitle}"></option>
+            </select>
+          </div>
+
+          <div class="col-span-1">
+            <label class="block text-[10px] font-semibold text-gray-600 uppercase mb-2 ml-1 tracking-wider">Thương hiệu</label>
+            <select id="brandSelect"
+                    class="filter-select w-full bg-gray-50 border border-gray-200 rounded-xl py-3 px-4 text-sm focus:bg-white focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all outline-none cursor-pointer">
+              <option value="">Tất cả thương hiệu</option>
+            </select>
+          </div>
+
+          <div class="col-span-1">
+            <label
+              class="block text-[10px] font-semibold text-gray-600 uppercase mb-2 ml-1 tracking-wider"
+              >Khoảng giá (VND)</label
+            >
+            <div class="flex items-center gap-2">
+              <input
+                id="minPrice"
+                type="number"
+                th:value="${minPrice}"
+                placeholder="Từ"
+                class="w-1/2 bg-gray-50 border border-gray-200 rounded-xl py-3 px-4 text-sm focus:bg-white focus:border-blue-500 transition-all outline-none"
+              />
+              <span class="text-gray-300">-</span>
+              <input
+                id="maxPrice"
+                type="number"
+                th:value="${maxPrice}"
+                placeholder="Đến"
+                class="w-1/2 bg-gray-50 border border-gray-200 rounded-xl py-3 px-4 text-sm focus:bg-white focus:border-blue-500 transition-all outline-none"
+              />
+            </div>
+          </div>
+
+          <div class="col-span-1 flex items-center gap-2">
+            <button
+              onclick="applyPriceFilter()"
+              class="flex-1 h-[46px] bg-blue-600 hover:bg-blue-700 text-white rounded-xl transition-all shadow-md active:scale-95 flex items-center justify-center gap-2 text-[11px] font-semibold uppercase tracking-wider"
+            >
+              Lọc giá
+            </button>
+            <button
+              onclick="resetFilters()"
+              id="resetBtn"
+              class="flex-1 h-[46px] bg-red-50 hover:bg-red-500 text-red-500 hover:text-white rounded-xl transition-all border border-red-100 active:scale-95 flex items-center justify-center gap-2 text-[11px] font-semibold uppercase tracking-wider"
+            >
+              Xóa
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div
+        id="product-container"
+        class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 transition-opacity duration-300"
+      >
+        <th:block th:if="${not #lists.isEmpty(products)}">
+          <th:block th:each="item : ${products}">
+            <div
+              th:replace="~{client/product/item_fragment :: product_item(${item})}"
+            ></div>
+          </th:block>
+        </th:block>
+      </div>
+
+      <div
+        id="no-products"
+        th:classappend="${not #lists.isEmpty(products)} ? 'hidden' : ''"
+        class="col-span-full w-full min-h-[400px] flex flex-col items-center justify-center py-10 px-4 text-center"
+      >
+        <div class="relative mb-6">
+          <div
+            class="absolute inset-0 bg-gray-100 rounded-full scale-150 animate-pulse opacity-50"
+          ></div>
+          <div class="relative text-6xl"><svg class="" data-icon="search" aria-hidden="true" focusable="false" viewBox="0 0 24 24" width="1em" height="1em" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" ><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg></div>
+        </div>
+        <h3 class="text-2xl font-semibold text-gray-700 mb-2">
+          Không tìm thấy kết quả
+        </h3>
+        <p class="text-gray-600 max-w-xs mx-auto mb-8">
+          Chúng tôi đã thử tìm kiếm khắp nơi nhưng không có sản phẩm nào khớp
+          với lựa chọn của bạn.
+        </p>
+      </div>
+
+      <div
+        id="pagination"
+        class="mt-12 flex justify-center items-center gap-2"
+      ></div>
+
+      <!-- Brand -->
+      <section class="mt-10">
+        <div class="overflow-hidden bg-white py-10 rounded-xl">
+          <div
+            class="relative flex overflow-hidden [mask-image:_linear-gradient(to_right,transparent_0,_black_128px,_black_calc(100%-128px),transparent_100%)]"
+          >
+            <div class="animate-infinite-scroll flex items-center">
+              <th:block th:each="brand : ${brands}">
+                <div
+                  class="mx-12 flex-none"
+                  th:if="${brand.logo != null && !brand.logo.isEmpty()}"
+                >
+                  <img th:src="|https://images.weserv.nl/?url=https://greenhomeshop.vn${brand.logo}_mobile.webp&w=200&output=webp&q=90|"
+                      th:alt="${brand.title}"
+                      width="120"
+                      height="48"
+                      loading="lazy"
+                      decoding="async"
+                      class="h-12 w-auto object-contain transition-transform duration-300 hover:scale-110"
+                  />
+                </div>
+              </th:block>
+              <th:block th:each="brand : ${brands}">
+                <div
+                  class="mx-12 flex-none"
+                  th:if="${brand.logo != null && !brand.logo.isEmpty()}"
+                >
+                  <img th:src="|https://images.weserv.nl/?url=https://greenhomeshop.vn${brand.logo}_mobile.webp&w=200&output=webp&q=90|"
+                    th:alt="${brand.title}"
+                    width="120"
+                    height="48"
+                    loading="lazy"
+                    decoding="async"
+                    class="h-12 w-auto object-contain transition-transform duration-300 hover:scale-110"
+                />
+                </div>
+              </th:block>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="mt-12 mb-8 bg-white rounded-3xl p-6 md:p-10 border border-gray-100 shadow-sm" th:if="${relatedNews != null}">
+        <article class="mx-auto">
+          <header class="mb-8 text-left">
+            <div class="flex items-center justify-start gap-2 mb-4">
+                <span th:if="${relatedNews.categoryName != null}"
+                      class="bg-blue-50 text-blue-600 text-[11px] font-semibold px-3 py-1 rounded-full uppercase tracking-wider"
+                      th:text="${relatedNews.categoryName}">Danh mục</span>
+            </div>
+
+            <h1 class="text-3xl md:text-4xl font-semibold text-gray-900 mb-6 leading-tight" th:text="${relatedNews.title}">
+              Tiêu đề bài viết chi tiết
+            </h1>
+
+            <div class="flex flex-wrap items-center justify-start gap-6 text-[#191919] text-sm border-y border-gray-50 py-4">
+                <span class="flex items-center gap-1.5">
+                    <svg class="text-lg" data-icon="calendar" aria-hidden="true" focusable="false" viewBox="0 0 24 24" width="1em" height="1em" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" ><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
+                    <span th:text="${#temporals.format(relatedNews.createdDate, 'dd/MM/yyyy')}">12/02/2026</span>
+                </span>
+              <span class="flex items-center gap-1.5">
+                    <svg class="text-lg" data-icon="user" aria-hidden="true" focusable="false" viewBox="0 0 24 24" width="1em" height="1em" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" ><path d="M20 21a8 8 0 0 0-16 0"/><circle cx="12" cy="7" r="4"/></svg>
+                    <span th:text="${relatedNews.authorId ?: 'Ban biên tập'}">Tác giả</span>
+                </span>
+              <span class="flex items-center gap-1.5" th:if="${relatedNews.viewCount != null}">
+                    <svg class="text-lg" data-icon="show" aria-hidden="true" focusable="false" viewBox="0 0 24 24" width="1em" height="1em" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" ><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg>
+                    <span th:text="${#numbers.formatInteger(relatedNews.viewCount, 0, 'POINT')}">0</span> lượt xem
+                </span>
+            </div>
+          </header>
+
+          <picture th:if="${relatedNews.thumbnail != null && !relatedNews.thumbnail.isEmpty()}">
+            <source media="(min-width: 1024px)" 
+                    th:srcset="|https://images.weserv.nl/?url=https://greenhomeshop.vn${relatedNews.thumbnail}_pc.webp&w=600&output=webp&q=80|">
+            <source media="(min-width: 768px)" 
+                    th:srcset="|https://images.weserv.nl/?url=https://greenhomeshop.vn${relatedNews.thumbnail}_tablet.webp&w=500&output=webp&q=80|">
+            <img th:src="|https://images.weserv.nl/?url=https://greenhomeshop.vn${relatedNews.thumbnail}_mobile.webp&w=400&output=webp&q=80|"
+                th:alt="${relatedNews.title}"
+                class="w-full h-auto object-cover max-h-[500px]"
+                width="400"
+                height="225"
+                loading="lazy"
+                decoding="async"
+                onerror="this.src='data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7'">
+        </picture>
+          <div th:unless="${relatedNews.thumbnail != null && !relatedNews.thumbnail.isEmpty()}"
+              class="w-full aspect-video bg-white"></div>
+
+          <div class="mb-8 italic text-lg text-gray-600 leading-relaxed border-l-4 border-blue-500 pl-6" th:text="${relatedNews.summary}">
+            Tóm tắt bài viết giúp người đọc nắm bắt ý chính nhanh chóng.
+          </div>
+
+          <div class="news-content prose prose-blue max-w-none text-gray-700 leading-7 md:leading-8 text-base md:text-lg" id="article-content" th:utext="${relatedNews.content}">
+            Nội dung bài viết sẽ hiển thị ở đây (bao gồm text, ảnh, video, table từ CKEditor/TinyMCE).
+          </div>
+
+          <footer class="mt-12 pt-8 border-t border-gray-100 flex flex-wrap gap-4 items-center justify-between">
+            <div class="flex items-center gap-2">
+              <span class="text-sm font-semibold text-[#191919] uppercase">Tags:</span>
+              <span class="text-sm bg-gray-100 px-2 py-1 rounded text-gray-600" th:text="${relatedNews.metaKeyword}">keyword</span>
+            </div>
+            <div class="flex items-center gap-4">
+              <span class="text-sm text-gray-600">Chia sẻ bài viết:</span>
+              <div class="flex gap-2">
+                <button
+                        id="share-facebook"
+                        class="w-8 h-8 rounded-full bg-[#1877F2] text-white flex items-center justify-center hover:opacity-80"
+                >
+                  <svg class="" data-icon="facebook" aria-hidden="true" focusable="false" viewBox="0 0 24 24" width="1em" height="1em" fill="currentColor" ><path d="M14 8h3V4h-3c-3.3 0-5 2-5 5v3H6v4h3v6h4v-6h3l1-4h-4V9c0-.7.3-1 1-1z"/></svg>
+                </button>
+              </div>
+            </div>
+          </footer>
+        </article>
+      </section>
+    </main>
+
+    <div th:replace="common/client/footer :: footer"></div>
+    <script th:inline="javascript">
+      const shareFbBtn = document.getElementById('share-facebook');
+      if (shareFbBtn) {
+        shareFbBtn.addEventListener('click', function() {
+          const postUrl = encodeURIComponent(window.location.href);
+          const facebookShareUrl = `https://www.facebook.com/sharer/sharer.php?u=${postUrl}`;
+          window.open(facebookShareUrl, 'facebook-share-dialog', 'width=800,height=600');
+        });
+      }
+
+      // Lấy dữ liệu từ Server an toàn qua Thymeleaf
+      const serverTitle = /*[[${title}]]*/ "";
+      const serverCat = /*[[${categoryTitle}]]*/ "";
+      const serverBrand = /*[[${brandTitle}]]*/ "";
+      const serverMinPrice = /*[[${minPrice}]]*/ "";
+      const serverMaxPrice = /*[[${maxPrice}]]*/ "";
+      const serverTotalPages = /*[[${totalPages}]]*/ 0;
+      const serverCurrentPage = /*[[${currentPage}]]*/ 0;
+      const navBarData = /*[[${navBarData}]]*/ [] || [];
+
+      const API_BASE = "/api/v1/product/search";
+      const defaultValues = {
+        ten: "",
+        "danh-muc": "",
+        "thuong-hieu": "",
+        "gia-min": "",
+        "gia-max": "",
+        trang: 0,
+        "so-ban-ghi": 10,
+        "thuoc-tinh": "id",
+        "kieu-sap-xep": "desc",
+        "trang-thai": 1,
+      };
+
+      function getParamsFromUrl() {
+        const params = new URLSearchParams(window.location.search);
+        return {
+          ten: params.get("ten") || serverTitle || defaultValues.ten,
+          "danh-muc":
+            params.get("danh-muc") || serverCat || defaultValues["danh-muc"],
+          "thuong-hieu":
+            params.get("thuong-hieu") ||
+            serverBrand ||
+            defaultValues["thuong-hieu"],
+          "gia-min":
+            params.get("gia-min") || serverMinPrice || defaultValues["gia-min"],
+          "gia-max":
+            params.get("gia-max") || serverMaxPrice || defaultValues["gia-max"],
+          trang: parseInt(params.get("trang")) || defaultValues.trang,
+          "so-ban-ghi": defaultValues["so-ban-ghi"],
+          "thuoc-tinh": params.get("thuoc-tinh") || defaultValues["thuoc-tinh"],
+          "kieu-sap-xep":
+            params.get("kieu-sap-xep") || defaultValues["kieu-sap-xep"],
+          "trang-thai": defaultValues["trang-thai"],
+        };
+      }
+
+      let state = getParamsFromUrl();
+
+      function formatCurrency(value) {
+        return new Intl.NumberFormat("vi-VN", {
+          style: "currency",
+          currency: "VND",
+        }).format(value);
+      }
+
+      function loadProducts(page = null) {
+        if (!window.jQuery) return window.ensureJQuery().then(function() { loadProducts(page); });
+        if (page !== null) state.trang = parseInt(page);
+
+        const paramsForUrl = {};
+        Object.keys(state).forEach((key) => {
+          const val = state[key];
+          if (
+            val !== undefined &&
+            val !== null &&
+            val !== "" &&
+            val != defaultValues[key]
+          ) {
+            paramsForUrl[key] = val;
+          }
+        });
+
+        const queryString = $.param(paramsForUrl);
+        const newUrl =
+          window.location.pathname + (queryString ? "?" + queryString : "");
+        window.history.pushState(state, "", newUrl);
+
+        fetchData(state);
+      }
+
+      function fetchData(params) {
+        $("#product-container").addClass("loading-state");
+        toggleResetButton();
+
+        $.ajax({
+          url: API_BASE,
+          method: "GET",
+          data: params,
+          success: function (res) {
+            renderProductGrid(res.content || []);
+            renderPagination(res.totalPages, res.number);
+            $("#product-container").removeClass("loading-state");
+
+            if (res.content && res.content.length > 0) {
+              $("#no-products").addClass("hidden");
+            } else {
+              $("#no-products").removeClass("hidden");
+            }
+            window.scrollTo({ top: 0, behavior: "smooth" });
+          },
+          error: function () {
+            $("#product-container").removeClass("loading-state");
+          },
+        });
+      }
+
+      function handleSortChange(val) {
+        const parts = val.split(",");
+        state["thuoc-tinh"] = parts[0];
+        state["kieu-sap-xep"] = parts[1];
+        loadProducts(0);
+      }
+
+      function applyPriceFilter() {
+        if (!window.jQuery) return window.ensureJQuery().then(applyPriceFilter);
+        state["gia-min"] = $("#minPrice").val();
+        state["gia-max"] = $("#maxPrice").val();
+        loadProducts(0);
+      }
+
+      function resetFilters() {
+        if (!window.jQuery) return window.ensureJQuery().then(resetFilters);
+        state = { ...defaultValues };
+        syncStateToUI();
+        loadProducts(0);
+      }
+
+      function syncStateToUI() {
+        $("#searchInput").val(state.ten);
+        $("#categorySelect").val(state["danh-muc"]);
+        $("#brandSelect").val(state["thuong-hieu"]);
+        $("#minPrice").val(state["gia-min"]);
+        $("#maxPrice").val(state["gia-max"]);
+        $("#sortSelect").val(`${state["thuoc-tinh"]},${state["kieu-sap-xep"]}`);
+      }
+
+      function toggleResetButton() {
+        const isFiltering = state.ten || state["danh-muc"] || state["thuong-hieu"] || state["gia-min"] || state["gia-max"];
+        $("#resetBtn").toggleClass("opacity-50 pointer-events-none", !isFiltering);
+      }
+
+      function renderProductGrid(list) {
+        const $container = $("#product-container").empty();
+
+        list.forEach((item) => {
+          const isOutOfStock = item.stockQty <= 0;
+          const detailUrl = `/san-pham/${item.slug}`;
+          const fullTitle = item.title;
+          // 1. Badge giảm giá % (Đồng bộ logic: price > salePrice > 0)
+          let discountBadge = "";
+          if (
+            item.price > 0 &&
+            item.salePrice > 0 &&
+            item.price > item.salePrice
+          ) {
+            const percent = Math.round((1 - item.salePrice / item.price) * 100);
+            discountBadge = `
+              <div class="absolute top-3 left-3 z-20 bg-red-600 text-white text-[10px] font-semibold px-2 py-1 rounded-lg shadow-sm">
+                -${percent}%
+              </div>`;
+          }
+
+          // 2. Badge hết hàng
+          const stockOverlay = isOutOfStock
+            ? `<div class="absolute inset-0 bg-white/60 flex items-center justify-center z-20">
+          <span class="bg-gray-800 text-white text-[10px] font-semibold px-3 py-1 rounded uppercase tracking-wider">Hết hàng</span>
+         </div>`
+            : "";
+
+          // 3. Xử lý logic hình ảnh (Đồng bộ format .webp và onerror)
+          const imagePath =
+            item.image ||
+            "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7";
+          const isComplexImage = !imagePath.includes("."); // Kiểm tra nếu path không có đuôi (để tự nối _mobile.webp)
+
+          let imageHtml = "";
+          if (isComplexImage && item.image) {
+            imageHtml = `
+              <picture class="w-full h-full">
+                <source 
+                  media="(min-width: 1024px)" 
+                  srcset="https://images.weserv.nl/?url=https://greenhomeshop.vn${item.image}_pc.webp&w=1000&output=webp&q=80"
+                />
+                
+                <img src="https://images.weserv.nl/?url=https://greenhomeshop.vn${item.image}_mobile.webp&w=450&output=webp&q=80"
+                  class="w-full h-full object-contain transition-transform duration-500 group-hover:scale-103 bg-white"
+                  th:alt="${fullTitle}" 
+                  width="450"
+                  height="338"
+                  loading="lazy"
+                  decoding="async"
+                  onerror="this.src = 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7'"
+                />
+              </picture>
+            `;
+          } else {
+            imageHtml = `<img src="https://images.weserv.nl/?url=https://greenhomeshop.vn${imagePath}&w=500&output=webp&q=80"
+                class="w-full h-full object-contain transition-transform duration-500 group-hover:scale-103 bg-white"
+                th:alt="${fullTitle}" 
+                width="450"
+                height="338"
+                onerror="this.src = 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7'" 
+                loading="lazy"
+                decoding="async">`;
+          }
+
+          // 4. Logic hiển thị giá
+          let priceHtml = "";
+          if (item.salePrice && item.salePrice > 0) {
+            priceHtml = `
+              <div class="flex flex-col text-center">
+                  <span class="text-[18px] font-semibold text-[#dd2f2c] leading-tight">${formatCurrency(item.salePrice)}</span>
+                  ${item.price > item.salePrice ? `<span class="text-[11px] md:text-xs text-[#191919] line-through font-medium">${formatCurrency(item.price)}</span>` : ""}
+              </div>`;
+          } else if (item.price && item.price > 0) {
+            priceHtml = `
+              <div class="flex flex-col text-center">
+                  <span class="text-sm md:text-base font-semibold text-gray-700 leading-tight">${formatCurrency(item.price)}</span>
+              </div>`;
+          } else {
+            priceHtml = `
+              <div class="flex flex-col text-center">
+                  <span class="text-[18px] font-medium text-gray-600 italic">Giá liên hệ</span>
+              </div>`;
+          }
+
+          // 5. Nút Giỏ hàng (Đồng bộ data attributes cho Add to Cart)
+          const currentPrice =
+            item.salePrice && item.salePrice > 0 ? item.salePrice : item.price;
+          const btnDisabled = isOutOfStock ? "disabled" : "";
+
+          $container.append(`
+      <div class="product-card bg-white rounded-2xl overflow-hidden border border-gray-100 flex flex-col shadow-sm group relative h-full hover:shadow-md transition-shadow duration-300">
+          <div class="aspect-4/3 relative overflow-hidden bg-gray-50">
+              ${discountBadge}
+              <a href="${detailUrl}" class="block w-full h-full">
+                  ${imageHtml}
+              </a>
+              ${stockOverlay}
+          </div>
+          <div class="px-3 py-2 flex flex-col flex-1 mb-2">
+              <div class="flex justify-between items-start mb-1">
+                  <span class="text-[9px] font-semibold text-blue-600 uppercase tracking-widest">${item.brandName || "GREEN HOME SHOP"}</span>
+              </div>
+              <h2 class="text-xs md:text-sm font-semibold text-gray-700 mb-1 group-hover:text-blue-900 transition-colors line-clamp-3 leading-[18px] h-[55px] overflow-hidden">
+                  <a href="${detailUrl}">${fullTitle}</a>
+              </h2>
+              <div class="flex flex-col justify-center my-2">
+                  ${priceHtml}
+              </div>
+              <div class="mt-auto border-t border-gray-50 pt-2 flex justify-center">
+                <button type="button"
+                  class="btn-add-to-cart w-full py-1.5 bg-gray-700 text-white text-center rounded-full text-[9px] md:text-[10px] font-semibold hover:bg-blue-600 transition-all duration-300 flex items-center justify-center uppercase active:scale-95 disabled:bg-gray-300 disabled:cursor-not-allowed cursor-pointer"
+                  ${btnDisabled}
+                  data-id="${item.id}"
+                  data-title="${fullTitle}"
+                  data-price="${currentPrice}"
+                  data-image="${item.image}_mobile.webp"
+                  data-slug="${item.slug}"
+                  data-category="${item.categoryName}">
+                  <svg class="mr-1.5 text-sm" data-icon="cart-add" aria-hidden="true" focusable="false" viewBox="0 0 24 24" width="1em" height="1em" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" ><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.7 13.4a2 2 0 0 0 2 1.6h8.8a2 2 0 0 0 2-1.6L22 6H6"/><path d="M12 8v6M9 11h6"/></svg> Giỏ hàng
+                </button>
+              </div>
+          </div>
+      </div>
+    `);
+        });
+      }
+
+      function renderPagination(totalPages, current) {
+        const $buttons = $("#pagination").empty();
+        if (totalPages <= 1) return;
+        for (let i = 0; i < totalPages; i++) {
+          if (
+            i === 0 ||
+            i === totalPages - 1 ||
+            (i >= current - 1 && i <= current + 1)
+          ) {
+            const active =
+              i === current
+                ? "bg-blue-600 text-white shadow-md"
+                : "bg-white text-gray-600 border border-gray-100 hover:border-blue-200";
+            $buttons.append(
+              `<button type="button" onclick="loadProducts(${i})" class="w-8 h-8 rounded-xl text-sm font-semibold transition-all ${active}">${i + 1}</button>`,
+            );
+          } else if (i === current - 2 || i === current + 2) {
+            $buttons.append(`<span class="text-gray-300">...</span>`);
+          }
+        }
+      }
+      function updateFilters(changedField) {
+        const currentCat = $("#categorySelect").val();
+        const currentBrand = $("#brandSelect").val();
+        const $catSelect = $("#categorySelect");
+        const $brandSelect = $("#brandSelect");
+
+        // Nếu thay đổi Danh mục -> Cập nhật lại danh sách Thương hiệu tương ứng
+        if (changedField === 'category' || changedField === 'init') {
+          $brandSelect.empty().append('<option value="">Tất cả thương hiệu</option>');
+          let brandsToShow = [];
+
+          if (currentCat) {
+            const cat = navBarData.find(c => c.slug === currentCat);
+            if (cat && cat.childs) brandsToShow = cat.childs;
+          } else {
+            const allBrands = [];
+            navBarData.forEach(c => { if(c.childs) allBrands.push(...c.childs) });
+            brandsToShow = Array.from(new Map(allBrands.map(b => [b.slug, b])).values());
+          }
+
+          brandsToShow.forEach(b => {
+            $brandSelect.append(`<option value="${b.slug}" ${b.slug === (state["thuong-hieu"] || currentBrand) ? 'selected' : ''}>${b.title}</option>`);
+          });
+        }
+
+        // Nếu thay đổi Thương hiệu -> Cập nhật lại danh sách Danh mục chứa thương hiệu đó
+        if (changedField === 'brand' || changedField === 'init') {
+          $catSelect.empty().append('<option value="">Tất cả danh mục</option>');
+          navBarData.forEach(cat => {
+            const hasBrand = !currentBrand || (cat.childs && cat.childs.some(b => b.slug === currentBrand));
+            if (hasBrand) {
+              $catSelect.append(`<option value="${cat.slug}" ${cat.slug === (state["danh-muc"] || currentCat) ? 'selected' : ''}>${cat.title}</option>`);
+            }
+          });
+        }
+      }
+      window.addEventListener("load", function () {
+        window.ensureJQuery().then(function () {
+        state = getParamsFromUrl();
+        syncStateToUI();
+
+        updateFilters('init');
+        toggleResetButton();
+
+        let searchTimer;
+        $("#searchInput").on("input", function () {
+          clearTimeout(searchTimer);
+          searchTimer = setTimeout(() => { state.ten = $(this).val(); loadProducts(0); }, 500);
+        });
+
+        $("#categorySelect").on("change", function() {
+          state["danh-muc"] = $(this).val();
+          updateFilters('category');
+          loadProducts(0);
+        });
+
+        $("#brandSelect").on("change", function() {
+          state["thuong-hieu"] = $(this).val();
+          updateFilters('brand');
+          loadProducts(0);
+        });
+
+        window.onpopstate = function () {
+          state = getParamsFromUrl();
+          syncStateToUI();
+          updateFilters('init');
+          fetchData(state);
+        };
+
+        if (serverTotalPages > 1) {
+          renderPagination(serverTotalPages, serverCurrentPage);
+        }
+        });
+      });
+    </script>
+  </body>
+</html>

@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{common/head :: common_head('Chính sách đổi trả & hoàn tiền - Green Home Shop', ~{:: #header-style}, null, null)}">
+    <th:block id="header-style">
+        <meta name="description" content="Chi tiết quy định đổi trả trong vòng 07 ngày và chính sách hoàn tiền minh bạch tại Green Home Shop. Đảm bảo quyền lợi tuyệt đối cho khách hàng.">
+        <meta name="keywords" content="chính sách đổi trả, hoàn tiền Green Home Shop, đổi trả robot hút bụi, quy định trả hàng">
+        <link rel="canonical" href="https://greenhomeshop.vn/chinh-sach/doi-tra" />
+
+        <meta property="og:title" content="Chính sách Đổi trả & Hoàn tiền - Green Home Shop">
+        <meta property="og:description" content="Hỗ trợ đổi trả trong vòng 07 ngày. Cam kết hoàn tiền từ 3-5 ngày làm việc. Minh bạch và nhanh chóng.">
+        <meta property="og:image" content="https://greenhomeshop.vn/client/images/logo.png">
+
+        <script type="application/ld+json" th:inline="javascript">
+            [
+                {
+                    "@context": "https://schema.org",
+                    "@type": "BreadcrumbList",
+                    "itemListElement": [{
+                        "@type": "ListItem",
+                        "position": 1,
+                        "name": "Trang chủ",
+                        "item": {
+                            "@id": "https://greenhomeshop.vn/",
+                            "name": "Trang chủ"
+                        }
+                    },{
+                        "@type": "ListItem",
+                        "position": 2,
+                        "name": "Chính sách đổi trả",
+                        "item": {
+                            "@id": "https://greenhomeshop.vn/chinh-sach/doi-tra",
+                            "name": "Chính sách đổi trả"
+                        }
+                    }]
+                },
+                {
+                    "@context": "https://schema.org",
+                    "@type": "WebPage",
+                    "@id": "https://greenhomeshop.vn/chinh-sach/doi-tra#webpage",
+                    "url": "https://greenhomeshop.vn/chinh-sach/doi-tra",
+                    "name": "Chính sách đổi trả & hoàn tiền - Green Home Shop",
+                    "description": "Chi tiết quy định đổi trả trong vòng 07 ngày và chính sách hoàn tiền minh bạch tại Green Home Shop.",
+                    "publisher": {
+                        "@id": "https://greenhomeshop.vn/#organization"
+                    }
+                },
+                {
+                    "@context": "https://schema.org",
+                    "@type": "MerchantReturnPolicy",
+                    "name": "Chính sách trả hàng Green Home Shop",
+                    "description": "Đổi trả sản phẩm trong vòng 7 ngày nếu còn nguyên vẹn tem mác và hóa đơn.",
+                    "returnPolicyCategory": "https://schema.org/MerchantReturnFiniteReturnWindow",
+                    "merchantReturnDays": 7,
+                    "returnMethod": "https://schema.org/ReturnByMail",
+                    "returnFees": "https://schema.org/ReturnFeesCustomerResponsibility",
+                    "applicableCountry": "VN"
+                }
+            ]
+        </script>
+
+        <style>
+            .policy-content h3 { font-size: 1.4rem; font-weight: 600; color: #1e3a8a; margin-top: 2rem; margin-bottom: 1rem; text-transform: uppercase; }
+            .policy-content p { margin-bottom: 1rem; line-height: 1.7; }
+            .policy-content ul { list-style-type: disc; margin-left: 1.5rem; margin-bottom: 1.5rem; }
+            .policy-content li { margin-bottom: 0.6rem; }
+            .highlight-box { background-color: #f0f7ff; border-left: 4px solid #1e3a8a; padding: 1.25rem; border-radius: 0 0.5rem 0.5rem 0; margin: 1.5rem 0; }
+            .note-important { color: #dc2626; font-weight: 500; font-style: italic; }
+            table { width: 100%; border-collapse: collapse; margin: 1.5rem 0; }
+            table th, table td { border: 1px solid #e5e7eb; padding: 12px; text-align: left; }
+            table thead { background-color: #f8fafc; font-weight: 600; color: #1e3a8a; }
+        </style>
+    </th:block>
+</head>
+<body class="bg-[#f6f6f6] text-gray-700">
+<div th:replace="common/client/gtm :: gtm-body"></div>
+<div th:replace="common/client/header :: header"></div>
+
+<main class="container mx-auto px-4 pb-12">
+    <div th:replace="~{common/client/breadcrumb :: breadcrumb(${ {{name: 'Chính sách đổi trả', url: '/chinh-sach/doi-tra'}}})}"></div>
+
+    <article class="bg-white p-6 md:p-16 rounded-[2rem] shadow-sm border border-gray-100 policy-content">
+        <header class="text-center mb-12">
+            <h1 class="text-3xl md:text-5xl font-semibold text-blue-800 mb-6 leading-tight uppercase">
+                Chính sách Đổi trả và Hoàn tiền
+            </h1>
+            <p class="text-lg text-gray-600 max-w-3xl mx-auto">
+                Tại <span class="font-semibold text-gray-800">Green Home Shop</span>, chúng tôi cam kết mang đến trải nghiệm mua sắm tốt nhất và sự hài lòng tuyệt đối cho khách hàng.
+            </p>
+        </header>
+
+        <section>
+            <h3>1. Thời hạn đổi trả</h3>
+            <p>Khách hàng có quyền yêu cầu đổi trả sản phẩm trong vòng <span class="font-semibold text-blue-700">07 ngày</span> kể từ ngày nhận hàng thành công (căn cứ theo dấu bưu điện hoặc vận đơn của đơn vị vận chuyển).</p>
+        </section>
+
+        <section>
+            <h3>2. Điều kiện đổi trả sản phẩm</h3>
+            <p>Sản phẩm được chấp nhận đổi trả khi đáp ứng đầy đủ các điều kiện sau:</p>
+            <ul>
+                <li>Sản phẩm còn nguyên vẹn, đầy đủ bao bì, hộp đựng, xốp chèn (nếu có).</li>
+                <li>Sản phẩm còn đầy đủ tem mác, hóa đơn mua hàng và các quà tặng kèm theo.</li>
+                <li>Sản phẩm chưa qua sử dụng, không bị trầy xước, hỏng hóc do tác động ngoại lực sau khi nhận hàng.</li>
+            </ul>
+            <p class="note-important">Lưu ý: Để được hỗ trợ nhanh nhất trong trường hợp sản phẩm lỗi hoặc hư hỏng do vận chuyển, chúng tôi khuyến khích quý khách kiểm tra hàng ngay khi nhận. Green Home Shop cam kết giải quyết mọi khiếu nại dựa trên sự tin tưởng và quyền lợi khách hàng.</p>
+        </section>
+
+        <section>
+            <h3>3. Quy trình đổi trả</h3>
+            <div class="space-y-4">
+                <p><strong>Bước 1:</strong> Liên hệ hotline <span class="text-blue-700 font-semibold" th:text="${sysParams['hotline']}">0852 262 666</span> hoặc email <span class="text-blue-700 font-semibold">lienheghd@gmail.com</span> để thông báo yêu cầu.</p>
+                <p><strong>Bước 2:</strong> Gửi sản phẩm về địa chỉ: <span class="font-medium text-gray-900">LK7-142, Khu tái định cư phục vụ giải phóng mặt bằng, Xã Tứ Hiệp, Huyện Thanh Trì, Thành phố Hà Nội, Việt Nam</span>.</p>
+                <p><strong>Bước 3:</strong> Sau khi nhận được hàng, Green Home Shop sẽ kiểm tra tình trạng sản phẩm trong vòng <strong>2-3 ngày làm việc</strong> và thông báo kết quả cho quý khách.</p>
+            </div>
+        </section>
+
+        <section>
+            <h3>4. Chính sách hoàn tiền</h3>
+            <p>Nếu yêu cầu hoàn tiền của quý khách được phê duyệt, chúng tôi sẽ thực hiện hoàn trả theo các phương thức sau:</p>
+            <div class="highlight-box">
+                <ul>
+                    <li><strong>Phương thức:</strong> Hoàn tiền qua chuyển khoản ngân hàng hoặc ví điện tử.</li>
+                    <li><strong>Thời gian:</strong> Nhận tiền từ 03 đến 05 ngày làm việc.</li>
+                    <li><strong>Phí tái nhập:</strong> <span class="text-green-600 font-semibold">MIỄN PHÍ</span> (Green Home Shop không thu phí tái nhập kho).</li>
+                </ul>
+            </div>
+        </section>
+
+        <section>
+            <h3>5. Chi phí đổi trả</h3>
+            <div class="overflow-x-auto">
+                <table>
+                    <thead>
+                    <tr>
+                        <td>Trường hợp</td>
+                        <td>Trách nhiệm chi phí</td>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr>
+                        <td><strong>Lỗi từ phía Green Home Shop</strong> (Sản phẩm lỗi, giao sai mẫu)</td>
+                        <td>Chúng tôi chịu <span class="text-green-600 font-semibold">toàn bộ</span> chi phí vận chuyển lượt đi và về.</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Lỗi từ phía Khách hàng</strong> (Thay đổi ý định, chọn nhầm mẫu mã)</td>
+                        <td>Quý khách vui lòng thanh toán chi phí vận chuyển 2 chiều (Lượt gửi đi và lượt gửi về) theo đúng biểu phí của đơn vị vận chuyển (GHTK, Viettel Post, v.v.).</td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <footer class="mt-12 pt-8 border-t text-center text-gray-500 italic">
+            <p>Mọi thắc mắc về chính sách, quý khách vui lòng liên hệ Hotline để được giải đáp kịp thời.</p>
+        </footer>
+    </article>
+</main>
+
+<div th:replace="common/client/footer :: footer"></div>
+</body>
+</html>

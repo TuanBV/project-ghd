@@ -1,0 +1,479 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head
+        th:replace="~{common/head :: common_head('Trang chủ', ~{:: #header-style}, null, null)}"
+>
+  <th:block id="header-style">
+    <style>
+      .scrollbar-hide::-webkit-scrollbar {
+        display: none;
+      }
+      .scrollbar-hide {
+        -ms-overflow-style: none;
+        scrollbar-width: none;
+      }
+      .sidebar {
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      }
+      .icon-rotate {
+        transition: transform 0.3s ease;
+      }
+      .btn-expand:active {
+        background-color: rgba(37, 99, 235, 0.1);
+        border-radius: 50%;
+      }
+
+      @keyframes scroll-left-to-right {
+        from {
+          transform: translateX(-50%);
+        }
+        to {
+          transform: translateX(0);
+        }
+      }
+
+      .animate-infinite-scroll {
+        display: flex;
+        width: max-content;
+        animation: scroll-left-to-right 75s linear infinite;
+      }
+
+      .animate-infinite-scroll:hover {
+        animation-play-state: paused;
+      }
+    </style>
+
+    <link th:if="${sliderImages != null and !sliderImages.isEmpty()}"
+          rel="preload"
+          as="image"
+          th:href="${sliderImages[0] + '_mobile.webp'}"
+          fetchpriority="high">
+
+    <script type="application/ld+json" th:inline="javascript">
+      [
+        {
+          "@context": "[https://schema.org](https://schema.org)",
+          "@type": "WebSite",
+          "name": "Green Home Shop",
+          "url": "[https://greenhomeshop.vn/](https://greenhomeshop.vn/)",
+          "potentialAction": {
+            "@type": "SearchAction",
+            "target": "[https://greenhomeshop.vn/san-pham?search=](https://greenhomeshop.vn/san-pham?search=){search_term_string}",
+            "query-input": "required name=search_term_string"
+          }
+        },
+        {
+          "@context": "[https://schema.org](https://schema.org)",
+          "@type": "Organization",
+          "name": "Green Home Shop - Công ty TNHH Thương mại và Công nghệ GHD",
+          "url": "[https://greenhomeshop.vn/](https://greenhomeshop.vn/)",
+          "logo": "[https://greenhomeshop.vn/client/images/logo.png](https://greenhomeshop.vn/client/images/logo.png)",
+          "contactPoint": {
+            "@type": "ContactPoint",
+            "telephone": "0852262666",
+            "contactType": "customer service",
+            "areaServed": "VN",
+            "availableLanguage": "Vietnamese"
+          },
+          "address": {
+            "@type": "PostalAddress",
+            "streetAddress": "LK7-142, Khu tái định cư phục vụ giải phóng mặt bằng, Xã Tứ Hiệp, Huyện Thanh Trì",
+            "addressLocality": "Hà Nội",
+            "addressCountry": "VN"
+          }
+        },
+        {
+          "@context": "[https://schema.org](https://schema.org)",
+          "@type": "BreadcrumbList",
+          "itemListElement": [{
+            "@type": "ListItem",
+            "position": 1,
+            "name": "Trang chủ",
+            "item": "[https://greenhomeshop.vn/](https://greenhomeshop.vn/)"
+          }]
+        }
+      ]
+    </script>
+
+    <th:block th:if="${sliderImages != null and !sliderImages.isEmpty()}">
+      <link rel="preconnect" href="https://images.weserv.nl" crossorigin>
+
+      <link
+              rel="preload"
+              as="image"
+              th:href="|https://images.weserv.nl/?url=https://greenhomeshop.vn${sliderImages[0]}_mobile.webp&w=450&output=webp&q=85|"
+              th:attr="
+            imagesrcset=|https://images.weserv.nl/?url=https://greenhomeshop.vn${sliderImages[0]}_mobile.webp&w=450&output=webp&q=85 450w, https://images.weserv.nl/?url=https://greenhomeshop.vn${sliderImages[0]}_tablet.webp&w=800&output=webp&q=85 800w, https://images.weserv.nl/?url=https://greenhomeshop.vn${sliderImages[0]}_pc.webp&w=1440&output=webp&q=85 1440w|,
+            imagesizes='100vw'
+          "
+              fetchpriority="high">
+    </th:block>
+  </th:block>
+</head>
+<body class="bg-[#f6f6f6] text-gray-700">
+<div th:replace="common/client/gtm :: gtm-body"></div>
+<div th:replace="common/client/header :: header"></div>
+
+<main class="container mx-auto px-4 pb-8 pt-[120px]">
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-4 items-stretch">
+    <div class="col-span-1 flex">
+      <div class="w-full aspect-video md:aspect-auto overflow-hidden rounded-2xl bg-gray-100 flex-1">
+        <div th:replace="client/slider :: slider" class="h-full w-full"></div>
+      </div>
+    </div>
+
+    <div class="col-span-1 flex flex-col gap-4">
+      <th:block th:if="${not #lists.isEmpty(banners)}">
+        <div th:each="banner, iterStat : ${banners}"
+             th:if="${iterStat.index < 2}"
+             class="w-full overflow-hidden rounded-xl bg-gray-100 shadow-sm relative aspect-[744/201]">
+          <a th:href="${banner.linkUrl ?: '#'}" class="absolute inset-0 group">
+            <picture class="w-full h-full">
+              <source media="(min-width: 1024px)"
+                      th:srcset="|https://images.weserv.nl/?url=https://greenhomeshop.vn${banner.imageUrl}_pc.webp&w=1200&output=webp|">
+              <source media="(min-width: 768px)"
+                      th:srcset="|https://images.weserv.nl/?url=https://greenhomeshop.vn${banner.imageUrl}_tablet.webp&w=800&output=webp|">
+              <img th:src="|https://images.weserv.nl/?url=https://greenhomeshop.vn${banner.imageUrl}_mobile.webp&w=450&output=webp|"
+                  th:alt="${banner.title}"
+                  class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-102"
+                  width="744"
+                  height="201"
+                  th:attr="fetchpriority=${iterStat.first ? 'high' : 'auto'}, loading=${iterStat.first ? 'eager' : 'lazy'}, decoding=${iterStat.first ? 'sync' : 'async'}"
+              />
+            </picture>
+          </a>
+        </div>
+      </th:block>
+    </div>
+  </div>
+  <!-- Category -->
+  <section class="mt-10">
+    <h2 class="text-xl md:text-2xl font-semibold text-gray-700 mb-2">Danh mục sản phẩm</h2>
+
+    <div th:if="${#lists.size(categories) > 6}" class="overflow-hidden">
+      <div class="relative flex overflow-hidden [mask-image:_linear-gradient(to_right,transparent_0,_black_128px,_black_calc(100%-128px),transparent_100%)]">
+        <div class="animate-infinite-scroll flex items-center">
+          <th:block th:each="i : ${#numbers.sequence(1, 2)}">
+            <th:block th:each="category : ${categories}">
+              <div class="mx-6 flex-none w-32 md:w-44">
+                <a th:href="@{/san-pham(danh-muc=${category.slug})}" class="group flex flex-col items-center">
+                  <div class="w-full aspect-square bg-white rounded-2xl shadow-sm border border-gray-50 flex items-center justify-center p-4 md:p-6 transition-all duration-300 group-hover:shadow-md group-hover:-translate-y-1">
+                    <picture class="w-full h-full flex items-center justify-center">
+                      <source media="(min-width: 1024px)"
+                              th:srcset="|https://images.weserv.nl/?url=https://greenhomeshop.vn${category.logo}_pc.webp&w=400&output=webp|">
+                      <source media="(min-width: 768px)"
+                              th:srcset="|https://images.weserv.nl/?url=https://greenhomeshop.vn${category.logo}_tablet.webp&w=300&output=webp|">
+                      <img th:src="|https://images.weserv.nl/?url=https://greenhomeshop.vn${category.logo}_mobile.webp&w=200&output=webp|"
+                           th:alt="${category.title}"
+                           class="max-w-full max-h-full object-contain"
+                           loading="lazy"
+                           decoding="async"
+                           width="137" height="137">
+                    </picture>
+                  </div>
+                  <div class="mt-4 text-center">
+                    <h3 class="text-base font-medium text-gray-700 group-hover:text-blue-900 transition-colors" th:text="${category.title}">Tên danh mục</h3>
+                  </div>
+                </a>
+              </div>
+            </th:block>
+          </th:block>
+        </div>
+      </div>
+    </div>
+
+    <div th:unless="${#lists.size(categories) > 6}" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-6">
+      <th:block th:each="category : ${categories}">
+        <a th:href="@{/san-pham(danh-muc=${category.slug})}" class="group flex flex-col items-center">
+          <div class="w-full aspect-square bg-white rounded-2xl shadow-sm border border-gray-50 flex items-center justify-center p-4 md:p-6 transition-all duration-300 group-hover:shadow-md group-hover:-translate-y-1">
+            <picture class="w-full h-full flex items-center justify-center">
+              <source media="(min-width: 1024px)"
+                      th:srcset="|https://images.weserv.nl/?url=https://greenhomeshop.vn${category.logo}_pc.webp&w=400&output=webp|">
+              <source media="(min-width: 768px)"
+                      th:srcset="|https://images.weserv.nl/?url=https://greenhomeshop.vn${category.logo}_tablet.webp&w=300&output=webp|">
+              <img th:src="|https://images.weserv.nl/?url=https://greenhomeshop.vn${category.logo}_mobile.webp&w=300&output=webp|"
+                   th:alt="${category.title}"
+                   class="max-w-full max-h-full object-contain"
+                   loading="lazy"
+                   decoding="async"
+                   width="137"
+                   height="137">
+            </picture>
+          </div>
+          <div class="mt-4 text-center">
+            <h3 class="text-base font-medium text-gray-700 group-hover:text-blue-900 transition-colors" th:text="${category.title}">Tên danh mục</h3>
+          </div>
+        </a>
+      </th:block>
+    </div>
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 py-5 items-center">
+      <div class="flex items-center gap-4 group p-3 rounded-xl transition-all duration-300 hover:bg-gray-50 bg-white">
+        <div class="flex-shrink-0 w-12 h-12 flex items-center justify-center bg-blue-50 rounded-full group-hover:bg-blue-600 transition-colors">
+          <svg class="text-2xl text-blue-600 group-hover:text-white" data-icon="truck" aria-hidden="true" focusable="false" viewBox="0 0 24 24" width="1em" height="1em" fill="currentColor" ><path d="M3 5h11v10H3z"/><path d="M14 8h4l3 4v3h-7z"/><circle cx="7" cy="17" r="2"/><circle cx="17" cy="17" r="2"/></svg>
+        </div>
+        <span class="text-gray-800 font-semibold text-sm leading-snug">Miễn phí giao hàng</span>
+      </div>
+
+      <div class="flex items-center gap-4 group p-3 rounded-xl transition-all duration-300 hover:bg-gray-50 bg-white">
+        <div class="flex-shrink-0 w-12 h-12 flex items-center justify-center bg-orange-50 rounded-full group-hover:bg-orange-500 transition-colors">
+          <svg class="text-2xl text-orange-500 group-hover:text-white" data-icon="timer" aria-hidden="true" focusable="false" viewBox="0 0 24 24" width="1em" height="1em" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" ><circle cx="12" cy="13" r="8"/><path d="M12 9v4l3 2"/><path d="M9 2h6"/></svg>
+        </div>
+        <span class="text-gray-800 font-semibold text-sm leading-snug">Giao hàng nhanh chóng</span>
+      </div>
+
+      <div class="flex items-center gap-4 group p-3 rounded-xl transition-all duration-300 hover:bg-gray-50 bg-white">
+        <div class="flex-shrink-0 w-12 h-12 flex items-center justify-center bg-green-50 rounded-full group-hover:bg-green-500 transition-colors">
+          <svg class="text-2xl text-green-500 group-hover:text-white" data-icon="refresh" aria-hidden="true" focusable="false" viewBox="0 0 24 24" width="1em" height="1em" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" ><path d="M21 12a9 9 0 0 1-15.3 6.4L3 16"/><path d="M3 21v-5h5"/><path d="M3 12A9 9 0 0 1 18.3 5.6L21 8"/><path d="M21 3v5h-5"/></svg>
+        </div>
+        <span class="text-gray-800 font-semibold text-sm leading-snug">Hỗ trợ đổi mới 1:1</span>
+      </div>
+
+      <div class="flex items-center gap-4 group p-3 rounded-xl transition-all duration-300 hover:bg-gray-50 bg-white">
+        <div class="flex-shrink-0 w-12 h-12 flex items-center justify-center bg-red-50 rounded-full group-hover:bg-red-500 transition-colors">
+          <svg class="text-2xl text-red-500 group-hover:text-white" data-icon="badge-check" aria-hidden="true" focusable="false" viewBox="0 0 24 24" width="1em" height="1em" fill="currentColor" ><path d="M12 2 14.5 4.4 18 4l.8 3.4L22 9l-1.5 3L22 15l-3.2 1.6L18 20l-3.5-.4L12 22l-2.5-2.4L6 20l-.8-3.4L2 15l1.5-3L2 9l3.2-1.6L6 4l3.5.4L12 2zm-1 13.2 5.2-5.2-1.4-1.4-3.8 3.8-1.8-1.8-1.4 1.4 3.2 3.2z"/></svg>
+        </div>
+        <span class="text-gray-800 font-semibold text-sm leading-snug">Sản phẩm có nguồn gốc rõ ràng</span>
+      </div>
+
+      <div class="flex items-center gap-4 group p-3 rounded-xl transition-all duration-300 hover:bg-gray-50 bg-white">
+        <div class="flex-shrink-0 w-12 h-12 flex items-center justify-center bg-purple-50 rounded-full group-hover:bg-purple-600 transition-colors">
+          <svg class="text-2xl text-purple-600 group-hover:text-white" data-icon="credit-card" aria-hidden="true" focusable="false" viewBox="0 0 24 24" width="1em" height="1em" fill="currentColor" ><path d="M4 5h16a2 2 0 0 1 2 2v2H2V7a2 2 0 0 1 2-2zm-2 6h20v6a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2v-6zm3 4h6v2H5v-2z"/></svg>
+        </div>
+        <span class="text-gray-800 font-semibold text-sm leading-snug">Hỗ trợ trả góp theo điều kiện đối tác</span>
+      </div>
+    </div>
+  </section>
+
+  <section class="mt-10" th:if="${not #lists.isEmpty(listSpecial)}">
+    <div class="container mx-auto mb-16" th:each="special : ${listSpecial}">
+      <div class="grid grid-cols-1 lg:grid-cols-5 gap-8 items-stretch">
+
+        <div class="hidden lg:block lg:col-span-1">
+          <div class="group relative h-full overflow-hidden rounded-xl shadow-lg border border-gray-100">
+            <img th:src="|https://images.weserv.nl/?url=https://greenhomeshop.vn${special.banner}&w=400&output=webp&q=80|"
+                 th:srcset="|https://images.weserv.nl/?url=https://greenhomeshop.vn${special.banner}&w=400&output=webp&q=80 1x,
+                            https://images.weserv.nl/?url=https://greenhomeshop.vn${special.banner}&w=800&output=webp&q=80 2x|"
+                 th:alt="${special.title}"
+                 width="400"
+                 height="600"
+                 loading="lazy"
+                 decoding="async"
+                 class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-103">
+            <div class="absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+          </div>
+        </div>
+
+        <div class="col-span-1 lg:col-span-4">
+          <div class="flex items-center justify-between mb-2">
+            <div class="relative">
+              <h2 class="text-xl md:text-2xl font-semibold text-gray-700" th:text="${special.title}">Tiêu đề danh mục</h2>
+            </div>
+            <a th:href="@{/san-pham(danh-muc=${special.slug})}" class="flex items-center gap-1 text-blue-600 font-semibold hover:gap-3 transition-all">
+              Xem thêm <svg class="text-2xl" data-icon="right-arrow-alt" aria-hidden="true" focusable="false" viewBox="0 0 24 24" width="1em" height="1em" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" ><path d="M5 12h14"/><path d="m13 6 6 6-6 6"/></svg>
+            </a>
+          </div>
+
+          <div id="special-product-container"
+               class="grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 transition-opacity duration-300">
+
+            <th:block th:if="${not #lists.isEmpty(special.listProduct)}">
+              <th:block th:each="product : ${special.listProduct}">
+                <div th:replace="~{client/product/item_fragment :: product_item(${product})}"></div>
+              </th:block>
+            </th:block>
+
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Product -->
+  <section class="py-10">
+    <div class="container mx-auto">
+      <div class="flex items-center justify-between mb-2">
+        <h2 class="text-xl md:text-2xl font-semibold text-gray-700">Sản phẩm mới nhất</h2>
+        <a href="/san-pham" class="text-blue-600 hover:text-blue-900 font-semibold text-sm md:hidden">
+          Xem tất cả <svg class="" data-icon="chevron-right" aria-hidden="true" focusable="false" viewBox="0 0 24 24" width="1em" height="1em" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" ><path d="m9 18 6-6-6-6"/></svg>
+        </a>
+      </div>
+
+      <div id="product-container"
+           class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 transition-opacity duration-300">
+
+        <th:block th:if="${not #lists.isEmpty(products)}">
+          <th:block th:each="item : ${products}">
+            <div th:replace="~{client/product/item_fragment :: product_item(${item})}"></div>
+          </th:block>
+        </th:block>
+      </div>
+
+      <div class="mt-10 flex justify-center">
+        <a href="/san-pham"
+           class="group flex items-center gap-2 px-8 py-3 bg-white border-2 border-blue-600 text-blue-600 font-semibold rounded-2xl hover:bg-blue-600 hover:text-white transition-all duration-300 shadow-sm hover:shadow-blue-200">
+          XEM TẤT CẢ SẢN PHẨM
+          <svg class="text-xl group-hover:translate-x-1 transition-transform" data-icon="right-arrow-alt" aria-hidden="true" focusable="false" viewBox="0 0 24 24" width="1em" height="1em" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" ><path d="M5 12h14"/><path d="m13 6 6 6-6 6"/></svg>
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <!-- Brand -->
+  <section class="mt-10">
+    <h2 class="text-xl font-semibold text-gray-700 mb-2">Thương hiệu đồng hành</h2>
+    <div class="overflow-hidden bg-white py-10 rounded-xl">
+      <div class="relative flex overflow-hidden [mask-image:_linear-gradient(to_right,transparent_0,_black_128px,_black_calc(100%-128px),transparent_100%)]">
+        <div class="animate-infinite-scroll flex items-center">
+          <th:block th:each="brand : ${brands}">
+            <div class="mx-12 flex-none">
+              <img th:src="|https://images.weserv.nl/?url=https://greenhomeshop.vn${brand.logo}_mobile.webp&w=288&output=webp&q=90|"
+                 th:alt="${brand.title}"
+                 width="144"
+                 height="48"
+                 loading="lazy"
+                 decoding="async"
+                 class="h-12 w-auto object-contain transition-transform duration-300 hover:scale-110"
+              />
+            </div>
+          </th:block>
+          <th:block th:each="brand : ${brands}">
+            <div class="mx-12 flex-none">
+              <img th:src="|https://images.weserv.nl/?url=https://greenhomeshop.vn${brand.logo}_mobile.webp&w=288&output=webp&q=90|"
+                  th:alt="${brand.title}"
+                  width="144"
+                  height="48"
+                  loading="lazy"
+                  decoding="async"
+                  class="h-12 w-auto object-contain transition-transform duration-300 hover:scale-110"
+              />
+            </div>
+          </th:block>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <section id="about-us" class="mt-10">
+    <article class="mx-auto bg-white rounded-[2rem] overflow-hidden border border-gray-100 shadow-sm text-gray-700">
+      <header class="p-8 md:p-12 bg-gradient-to-r from-blue-50 to-white border-b border-gray-50">
+        <h1 class="text-2xl md:text-4xl font-semibold leading-tight mb-4 text-blue-900 uppercase tracking-tight">
+          Giới thiệu về Green Home Shop
+        </h1>
+        <div class="h-1.5 w-20 bg-green-500 rounded-full"></div>
+        <p class="mt-6 text-lg md:text-xl text-gray-600 font-medium">
+          Chào mừng bạn đến với <span class="text-blue-700 font-semibold">Green Home Shop</span> – Điểm đến tin cậy cho không gian sống hiện đại và tiện nghi!
+        </p>
+      </header>
+
+      <div class="p-3 space-y-12">
+        <section>
+          <h2 class="text-xl md:text-2xl font-semibold text-blue-800 mb-4 flex items-center">
+            <span class="w-8 h-8 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center mr-3 text-base">1</span>
+            Câu chuyện của chúng tôi
+          </h2>
+          <p class="leading-relaxed text-gray-600 text-base md:text-lg">
+            Được thành lập với khát khao mang đến những giải pháp chăm sóc nhà cửa thông minh, <span class="font-medium text-gray-800">Green Home Shop</span> chuyên cung cấp các thiết bị gia dụng, đồ dùng nhà bếp và các sản phẩm tiện ích gia đình chất lượng cao. Chúng tôi hiểu rằng, ngôi nhà không chỉ là nơi để ở, mà là nơi nuôi dưỡng hạnh phúc. Vì vậy, mỗi sản phẩm tại Green Home đều được tuyển chọn kỹ lưỡng về cả tính năng lẫn thẩm mỹ.
+          </p>
+        </section>
+
+        <div class="grid md:grid-cols-2 gap-6">
+          <div class="p-6 bg-green-50 rounded-2xl border border-green-100">
+            <h3 class="font-semibold text-green-800 mb-2 flex items-center">
+              <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20"><path d="M7 3a1 1 0 000 2h6a1 1 0 100-2H7zM4 7a1 1 0 011-1h10a1 1 0 110 2H5a1 1 0 01-1-1zM2 11a2 2 0 012-2h12a2 2 0 012 2v4a2 2 0 01-2 2H4a2 2 0 01-2-2v-4z"></path></svg>
+              Sứ mệnh
+            </h3>
+            <p class="text-gray-700">Đơn giản hóa cuộc sống nội trợ và nâng tầm chất lượng không gian sống cho mọi gia đình Việt bằng những sản phẩm có nguồn gốc rõ ràng, bền bỉ và an toàn.</p>
+          </div>
+          <div class="p-6 bg-blue-50 rounded-2xl border border-blue-100">
+            <h3 class="font-semibold text-blue-800 mb-2 flex items-center">
+              <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20"><path d="M10 12a2 2 0 100-4 2 2 0 000 4z"></path><path fill-rule="evenodd" d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clip-rule="evenodd"></path></svg>
+              Tầm nhìn
+            </h3>
+            <p class="text-gray-700">Trở thành hệ thống bán lẻ đồ gia dụng thông minh hàng đầu, nơi khách hàng luôn tìm thấy sự an tâm và hài lòng tuyệt đối.</p>
+          </div>
+        </div>
+
+        <section>
+          <h2 class="text-xl md:text-2xl font-semibold text-blue-800 mb-6 flex items-center">
+            <span class="w-8 h-8 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center mr-3 text-base">2</span>
+            Tại sao nên chọn Green Home Shop?
+          </h2>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div class="flex items-start p-4 border border-gray-100 rounded-xl hover:shadow-md transition-shadow">
+              <span class="text-2xl mr-4">🛡️</span>
+              <div>
+                <h3 class="font-semibold text-gray-800">Sản phẩm có nguồn gốc rõ ràng</h3>
+                <p class="text-sm text-gray-600">Cam kết nguồn gốc rõ ràng, nói không với hàng giả, hàng nhái.</p>
+              </div>
+            </div>
+            <div class="flex items-start p-4 border border-gray-100 rounded-xl hover:shadow-md transition-shadow">
+              <span class="text-2xl mr-4">🏷️</span>
+              <div>
+                <h3 class="font-semibold text-gray-800">Giá cả minh bạch</h3>
+                <p class="text-sm text-gray-600">Giá niêm yết là giá cuối cùng, không phí ẩn, bảo vệ quyền lợi người mua.</p>
+              </div>
+            </div>
+            <div class="flex items-start p-4 border border-gray-100 rounded-xl hover:shadow-md transition-shadow">
+              <span class="text-2xl mr-4">🎧</span>
+              <div>
+                <h3 class="font-semibold text-gray-800">Dịch vụ tận tâm</h3>
+                <p class="text-sm text-gray-600">Đội ngũ am hiểu sản phẩm, hỗ trợ từ khâu lựa chọn đến khi sử dụng.</p>
+              </div>
+            </div>
+            <div class="flex items-start p-4 border border-gray-100 rounded-xl hover:shadow-md transition-shadow">
+              <span class="text-2xl mr-4">🔄</span>
+              <div>
+                <h3 class="font-semibold text-gray-800">Hậu mãi uy tín</h3>
+                <p class="text-sm text-gray-600">Chính sách bảo hành và đổi trả rõ ràng, nhanh chóng, bảo vệ khách hàng.</p>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section class="bg-gray-50 rounded-2xl p-3 border border-gray-200">
+          <h2 class="text-lg md:text-2xl font-semibold text-blue-800 mb-6 uppercase tracking-wider text-center md:text-left">
+            Thông tin liên hệ chính thức
+          </h2>
+
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-8">
+
+            <ul class="space-y-4">
+              <li class="flex flex-row items-start">
+                <strong class="w-24 md:w-32 flex-shrink-0 text-gray-500 uppercase text-[10px] md:text-xs mt-1">Tên đơn
+                  vị:</strong>
+                <span class="font-semibold text-gray-800 text-sm md:text-base">Công ty TNHH Thương mại và Công nghệ GHD</span>
+              </li>
+              <li class="flex flex-row items-start">
+                <strong class="w-24 md:w-32 flex-shrink-0 text-gray-500 uppercase text-[10px] md:text-xs mt-1">Địa
+                  chỉ:</strong>
+                <span class="flex-1 text-sm md:text-base text-gray-800" th:text="${sysParams['address']}">
+          LK7-142, Khu tái định cư phục vụ giải phóng mặt bằng, Xã Tứ Hiệp, Huyện Thanh Trì, Thành phố Hà Nội, Việt Nam
+        </span>
+              </li>
+            </ul>
+
+            <ul class="space-y-4">
+              <li class="flex flex-row items-start">
+                <strong class="w-24 md:w-32 flex-shrink-0 text-gray-500 uppercase text-[10px] md:text-xs mt-1">Hotline:</strong>
+                <span class="font-semibold text-blue-700 text-sm md:text-base" th:text="${sysParams['hotline']}">0852 262 666</span>
+              </li>
+              <li class="flex flex-row items-start">
+                <strong class="w-24 md:w-32 flex-shrink-0 text-gray-500 uppercase text-[10px] md:text-xs mt-1">Email:</strong>
+                <span class="text-blue-700 break-all text-sm md:text-base">lienheghd@gmail.com</span>
+              </li>
+              <li class="flex flex-row items-start">
+                <strong class="w-24 md:w-32 flex-shrink-0 text-gray-500 uppercase text-[10px] md:text-xs mt-1">Website:</strong>
+                <span class="font-medium text-gray-800 break-all text-sm md:text-base">https://greenhomeshop.vn/</span>
+              </li>
+            </ul>
+
+          </div>
+        </section>
+      </div>
+    </article>
+  </section>
+</main>
+<div th:replace="common/client/footer :: footer"></div>
+</body>
+</html>

@@ -1,0 +1,714 @@
+<!doctype html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+  <head th:replace="~{common/admin/header :: header(~{::title}, ~{::link})}">
+    <title th:text="${titlePage} + ' - Green Home Shop'"></title>
+<link
+      href="https://cdn.jsdelivr.net/npm/suneditor@2.47.8/dist/css/suneditor.min.css"
+      rel="stylesheet"
+    />
+    <style>
+      body {
+        background-color: #f8fafc;
+      }
+      .sun-editor {
+        border-radius: 0.75rem !important;
+        border-color: #e5e7eb !important;
+      }
+      /*input:focus, textarea:focus { border-color: #3b82f6 !important; outline: none; }*/
+      select#categoryId, select#brandId {
+        appearance: none;
+        background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");
+        background-position: right 0.75rem center;
+        background-repeat: no-repeat;
+        background-size: 1.5em 1.5em;
+      }
+      .sun-editor-editable img {
+        max-width: 100% !important;
+        height: auto !important;
+        object-fit: contain;
+      }
+      .se-component.se-image-container {
+        width: 100% !important;
+        height: auto !important;
+      }
+
+      .sun-editor {
+        border-color: #e5e7eb !important;
+        border-radius: 0.75rem !important;
+        overflow: hidden;
+      }
+      .sun-editor.border-red-500 {
+        border-color: #ef4444 !important;
+      }
+      #newsForm input[type="text"],
+      #newsForm textarea,
+      #newsForm select {
+        border: 1px solid #d1d5db !important; /* Màu xám nhạt */
+        background-color: #ffffff !important;
+      }
+
+      /* Hiệu ứng khi click vào (Focus) */
+      #newsForm input:focus,
+      #newsForm textarea:focus,
+      #newsForm select:focus {
+        border-color: #3b82f6 !important; /* Màu xanh Blue-500 */
+        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2) !important;
+        outline: none;
+      }
+    </style>
+  </head>
+  <body>
+    <div th:replace="common/admin/sidebar :: sidebar"></div>
+
+    <section id="content" class="min-h-screen flex flex-col">
+      <nav th:replace="common/admin/navbar :: navbar"></nav>
+
+      <main
+        class="flex-1 p-6"
+        th:with="data=${news.isPresent() ? news.get() : null}"
+      >
+        <form id="newsForm" class="mx-auto grid grid-cols-12 gap-6 items-start">
+          <input type="hidden" id="newsId" th:value="${data?.id}" />
+          <div class="col-span-12 lg:col-span-9 space-y-6">
+            <div
+              class="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm space-y-5"
+            >
+              <div class="flex justify-between items-end border-b pb-4">
+                <h2
+                  class="font-semibold text-gray-700 uppercase text-xs tracking-widest"
+                  th:text="${titlePage}"
+                ></h2>
+                <div class="flex gap-2">
+                  <button
+                    type="button"
+                    onclick="history.back()"
+                    class="px-4 py-2 text-xs font-semibold text-gray-600 bg-gray-100 rounded-xl hover:bg-gray-200 transition uppercase"
+                  >
+                    Hủy
+                  </button>
+                  <button type="button" onclick="previewNews()" class="px-4 py-2 text-xs font-semibold text-blue-600 bg-blue-50 border border-blue-200 rounded-xl hover:bg-blue-100 transition uppercase">
+                    Xem trước
+                  </button>
+                  <button
+                    type="submit"
+                    id="btnSave"
+                    class="px-6 py-2 text-xs font-semibold text-white bg-blue-600 rounded-xl hover:bg-blue-700 transition uppercase shadow-md flex items-center gap-2"
+                  >
+                    <svg class="text-lg" data-icon="save" aria-hidden="true" focusable="false" viewBox="0 0 24 24" width="1em" height="1em" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" ><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><path d="M17 21v-8H7v8"/><path d="M7 3v5h8"/></svg> Lưu bài viết
+                  </button>
+                </div>
+              </div>
+
+              <div>
+                <label
+                  class="block text-[11px] font-semibold text-gray-600 uppercase tracking-widest mb-2"
+                  >Tiêu đề bài viết *</label
+                >
+                <input
+                  type="text"
+                  id="title"
+                  th:value="${data?.title}"
+                  onkeyup="handleTitleInput(this.value)"
+                  placeholder="Nhập tiêu đề..."
+                  class="w-full px-4 py-3 text-sm font-semibold rounded-xl border border-gray-200 outline-none focus:ring-2 focus:ring-blue-500/20"
+                />
+                <span
+                  id="error-title"
+                  class="text-[12px] font-normal text-red-500 mt-1 hidden"
+                ></span>
+              </div>
+
+              <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+                <div>
+                  <label class="block text-[11px] font-semibold text-gray-600 tracking-widest mb-2">
+                    SLUG (ĐƯỜNG DẪN)
+                  </label>
+                  <input type="text" id="slug" th:value="${data?.slug}"
+                         oninput="$(this).data('edited', true)"
+                         class="w-full px-4 py-2.5 rounded-xl border border-gray-100 bg-white text-gray-600 focus:ring-2 focus:ring-blue-500/20 outline-none"/>
+                  <span id="error-slug" class="text-[12px] font-normal text-red-500 mt-1 hidden"></span>
+                </div>
+
+                <div>
+                  <label class="block text-[11px] font-semibold text-gray-600 uppercase tracking-widest mb-2">
+                    Danh mục *
+                  </label>
+                  <select id="categoryId" class="w-full px-4 py-2.5 rounded-xl border border-gray-200 bg-white cursor-pointer outline-none focus:ring-2 focus:ring-blue-500/20">
+                    <option value="" th:selected="${data?.categoryId == null}">Chung</option>
+                    <option th:each="cat : ${categories}"
+                            th:value="${cat.id}"
+                            th:text="${cat.title}"
+                            th:selected="${#strings.toString(data?.categoryId) == #strings.toString(cat.id)}">
+                    </option>
+                  </select>
+                  <span id="error-categoryId" class="text-[12px] font-normal text-red-500 mt-1 hidden"></span>
+                </div>
+
+                <div>
+                  <label class="block text-[11px] font-semibold text-gray-600 uppercase tracking-widest mb-2">
+                    Thương hiệu
+                  </label>
+                  <select id="brandId" class="w-full px-4 py-2.5 rounded-xl border border-gray-200 bg-white cursor-pointer outline-none focus:ring-2 focus:ring-blue-500/20">
+                    <option value="" th:selected="${data?.brandId == null}">Chung</option>
+                    <option th:each="brand : ${brands}"
+                            th:value="${brand.id}"
+                            th:text="${brand.title}"
+                            th:selected="${#strings.toString(data?.brandId) == #strings.toString(brand.id)}">
+                    </option>
+                  </select>
+                  <span id="error-brandId" class="text-[12px] font-normal text-red-500 mt-1 hidden"></span>
+                </div>
+              </div>
+
+              <div>
+                <label
+                  class="block text-[11px] font-semibold text-gray-600 uppercase tracking-widest mb-2"
+                  >Tóm tắt ngắn (Tối đa 1000 ký tự)</label
+                >
+                <textarea
+                  id="summary"
+                  rows="2"
+                  class="w-full px-4 py-3 rounded-xl border border-gray-200 resize-none outline-none focus:ring-2 focus:ring-blue-500/20"
+                  th:text="${data?.summary}"
+                ></textarea>
+                <span
+                  id="error-summary"
+                  class="text-[12px] font-normal text-red-500 mt-1 hidden"
+                ></span>
+              </div>
+
+              <div>
+                <label
+                  class="block text-[11px] font-semibold text-gray-600 uppercase tracking-widest mb-2"
+                  >Nội dung chi tiết *</label
+                >
+                <textarea
+                  id="editor_content"
+                  th:text="${data?.content}"
+                ></textarea>
+                <span
+                  id="error-content"
+                  class="text-[12px] font-normal text-red-500 mt-1 hidden"
+                ></span>
+              </div>
+            </div>
+          </div>
+
+          <div class="col-span-12 lg:col-span-3 space-y-6 flex flex-col h-full">
+            <div
+              class="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm"
+            >
+              <h3
+                class="text-xs font-semibold text-gray-700 uppercase tracking-widest mb-4 flex items-center gap-2"
+              >
+                <svg class="text-lg text-blue-500" data-icon="image" aria-hidden="true" focusable="false" viewBox="0 0 24 24" width="1em" height="1em" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" ><rect x="3" y="5" width="18" height="14" rx="2"/><circle cx="8.5" cy="10.5" r="1.5"/><path d="m21 15-5-5L5 19"/></svg> Ảnh đại diện
+              </h3>
+              <div id="thumbnailWrapper" class="relative group">
+                <input
+                  type="file"
+                  id="thumbnailFile"
+                  accept="image/*"
+                  class="hidden"
+                  onchange="handleThumbnailUpload(event)"
+                />
+                <div
+                  id="thumbnailContainer"
+                  onclick="$('#thumbnailFile').click()"
+                  class="border-2 border-dashed border-gray-200 rounded-2xl aspect-video flex flex-col items-center justify-center cursor-pointer hover:bg-blue-50 transition-all overflow-hidden"
+                >
+                  <img
+                    id="imgPreview"
+                    th:src="${data?.thumbnail != null ? data.thumbnail + '_pc.webp' : ''}"
+                    th:class="${data?.thumbnail != null ? 'w-full h-full object-cover' : 'hidden w-full h-full object-cover'}"
+                  />
+
+                  <div
+                    id="imgPlaceholder"
+                    th:class="${data?.thumbnail != null ? 'hidden text-center p-2' : 'text-center p-2'}"
+                  >
+                    <svg class="text-4xl text-gray-300" data-icon="cloud-upload" aria-hidden="true" focusable="false" viewBox="0 0 24 24" width="1em" height="1em" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" ><path d="M16 16l-4-4-4 4"/><path d="M12 12v9"/><path d="M20.4 17.6A5 5 0 0 0 18 8.1 7 7 0 0 0 4.7 10.3 4.5 4.5 0 0 0 5.5 19H8"/></svg>
+                    <p
+                      class="text-[10px] font-semibold text-gray-600 mt-1 uppercase"
+                    >
+                      Tải ảnh lên
+                    </p>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onclick="removeThumbnail()"
+                  id="btnRemoveImg"
+                  th:class="${data?.thumbnail != null ? 'absolute top-2 right-2 bg-red-500 text-white p-1.5 rounded-xl shadow-lg' : 'hidden absolute top-2 right-2 bg-red-500 text-white p-1.5 rounded-xl shadow-lg'}"
+                >
+                  <svg class="" data-icon="trash" aria-hidden="true" focusable="false" viewBox="0 0 24 24" width="1em" height="1em" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" ><path d="M3 6h18"/><path d="M8 6V4h8v2"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v5M14 11v5"/></svg>
+                </button>
+              </div>
+              <span
+                id="error-thumbnailFile"
+                class="text-[12px] font-normal text-red-500 mt-1 hidden"
+              ></span>
+            </div>
+
+            <div
+              class="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm space-y-4"
+            >
+              <h3
+                class="text-xs font-semibold text-gray-700 uppercase tracking-widest mb-2"
+              >
+                Thiết lập
+              </h3>
+              <select
+                id="status"
+                class="w-full px-4 py-2.5 rounded-xl border border-gray-200 bg-gray-50 font-semibold text-sm outline-none"
+              >
+                <option value="DRAFT" th:selected="${data?.status == 'DRAFT'}">
+                  LƯU BẢN NHÁP
+                </option>
+                <option
+                  value="PUBLISHED"
+                  th:selected="${data?.status == 'PUBLISHED'}"
+                >
+                  XUẤT BẢN NGAY
+                </option>
+              </select>
+              <span
+                id="error-status"
+                class="text-[12px] font-normal text-red-500 mt-1 hidden"
+              ></span>
+
+              <label
+                class="flex items-center justify-between p-3 bg-blue-50 rounded-xl border border-blue-100 cursor-pointer"
+              >
+                <span class="text-xs font-semibold text-blue-700 uppercase"
+                  >⚡ Tin nổi bật</span
+                >
+                <input
+                  type="checkbox"
+                  id="isFeatured"
+                  th:checked="${data?.isFeatured}"
+                  class="w-5 h-5 accent-blue-600"
+                />
+              </label>
+            </div>
+
+            <div
+              class="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm space-y-4 flex-1"
+            >
+              <h3
+                class="text-xs font-semibold text-gray-700 uppercase tracking-widest mb-2 flex items-center gap-2"
+              >
+                <svg class="text-lg text-blue-500" data-icon="line-chart" aria-hidden="true" focusable="false" viewBox="0 0 24 24" width="1em" height="1em" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" ><path d="M3 3v18h18"/><path d="m7 15 4-4 3 3 5-7"/></svg> Tối ưu
+                SEO
+              </h3>
+              <div class="space-y-3">
+                <input
+                  type="text"
+                  id="metaTitle"
+                  th:value="${data?.metaTitle}"
+                  placeholder="Meta Title (Max 200)"
+                  class="w-full px-3 py-2 rounded-xl border border-gray-200 text-sm outline-none focus:ring-2 focus:ring-blue-500/20"
+                />
+                <span
+                  id="error-metaTitle"
+                  class="text-[12px] font-normal text-red-500 mt-1 hidden"
+                ></span>
+
+                <textarea
+                  id="metaDesc"
+                  th:text="${data?.metaDesc}"
+                  rows="4"
+                  placeholder="Meta Description (Max 1000)"
+                  class="w-full px-3 py-2 rounded-xl border border-gray-200 text-sm resize-none outline-none focus:ring-2 focus:ring-blue-500/20"
+                ></textarea>
+                <span
+                  id="error-metaDesc"
+                  class="text-[12px] font-normal text-red-500 mt-1 hidden"
+                ></span>
+
+                <input
+                  type="text"
+                  id="metaKeyword"
+                  th:value="${data?.metaKeyword}"
+                  placeholder="Keywords"
+                  class="w-full px-3 py-2 rounded-xl border border-gray-200 text-sm outline-none focus:ring-2 focus:ring-blue-500/20"
+                />
+                <span
+                  id="error-metaKeyword"
+                  class="text-[12px] font-normal text-red-500 mt-1 hidden"
+                ></span>
+              </div>
+            </div>
+          </div>
+        </form>
+      </main>
+    </section>
+
+    <script src="https://cdn.jsdelivr.net/npm/suneditor@2.47.8/dist/suneditor.min.js"></script>
+    <script>
+      let selectedFile = null;
+      let isOptimizing = false;
+      function previewNews() {
+        localStorage.removeItem("newsPreviewClient");
+
+        const previewData = {
+          title: $("#title").val(),
+          slug: $("#slug").val(),
+          category: $("#categoryId option:selected").text(),
+          brand: $("#brandId option:selected").text(),
+          summary: $("#summary").val(),
+          content: editor.getContents(),
+          thumbnail: $("#imgPreview").attr("src"),
+          isFeatured: $("#isFeatured").is(":checked"),
+          createdAt: new Date().toLocaleDateString('vi-VN')
+        };
+
+        localStorage.setItem("newsPreviewClient", JSON.stringify(previewData));
+
+        window.open("/admin/v1/news/preview", "_blank");
+      }
+
+      function optimizeImageForResponsive(targetImgElement, info) {
+        if (isOptimizing || !targetImgElement) return;
+
+        const pcUrl = (info && info.src) ? info.src : targetImgElement.src;
+
+        if (!pcUrl || typeof pcUrl !== 'string' || !pcUrl.includes("_pc.webp")) return;
+
+        isOptimizing = true;
+
+        const baseUrl = pcUrl.replace("_pc.webp", "");
+        const mobileUrl = baseUrl + "_mobile.webp";
+        const tabletUrl = baseUrl + "_tablet.webp";
+
+        const wrapper = document.createElement("div");
+        wrapper.className =
+          "se-component se-image-container __se__float-center";
+        wrapper.style.width = "100%";
+
+        wrapper.innerHTML = `
+    <figure style="margin:0;width:100%">
+      <img
+        src="${pcUrl}"
+        srcset="${mobileUrl} 400w, ${tabletUrl} 800w, ${pcUrl} 1200w"
+        sizes="(max-width:640px) 100vw, (max-width:1024px) 800px, 1200px"
+        loading="lazy"
+        style="width:100%;height:auto;display:block"
+        alt="product image"
+      />
+    </figure>
+  `;
+
+        const oldContainer =
+          targetImgElement.closest(".se-component") || targetImgElement;
+        oldContainer.replaceWith(wrapper);
+        setTimeout(() => {
+          isOptimizing = false;
+        }, 100);
+      }
+
+      // 2. Khởi tạo SunEditor
+      const editor = SUNEDITOR.create("editor_content", {
+        height: "450px",
+        width: "100%",
+        font: [
+          "Arial",
+          "tahoma",
+          "Courier New",
+          "Montserrat",
+          "Roboto",
+          "Open Sans",
+          "Times New Roman",
+          "Verdana",
+        ],
+        attributesWhitelist: {
+          all: "srcset|sizes|loading|data-*",
+          img: "srcset|sizes|loading|alt|style",
+          figure: "style",
+          div: "style|class",
+          a: 'href|target|rel',
+        },
+        imageResizing: false,
+        imageWidth: "100%",
+        imageUploadUrl: "/api/v1/image/upload",
+        imageAccept: ".jpg, .jpeg, .png, .webp",
+        buttonList: [
+          ["undo", "redo"],
+          ["font", "formatBlock", "fontSize"],
+          ["bold", "underline", "italic"],
+          ["fontColor", "hiliteColor"],
+          ["align", "list"],
+          ["link", "image", "table"],
+          ["codeView", "preview"],
+        ],
+        placeholder: "Bắt đầu viết nội dung...",
+      });
+
+      editor.onload = function (core) {
+        const images = core.context.element.wysiwyg.querySelectorAll("img");
+        images.forEach((img) => optimizeImageForResponsive(img));
+      };
+
+      editor.onImageUpload = function (
+        targetImgElement,
+        index,
+        state,
+        info,
+        remainingFilesCount,
+      ) {
+        if ((state === "create" || state === "update") && !isOptimizing) {
+          optimizeImageForResponsive(targetImgElement, info, editor);
+        }
+      };
+
+      // 3. Xử lý logic SEO & Slug
+      function handleTitleInput(val) {
+        // 1. Tạo slug từ title
+        const slug = val
+          .toLowerCase()
+          .normalize("NFD")
+          .replace(/[\u0300-\u036f]/g, "")
+          .replace(/[đĐ]/g, "d")
+          .replace(/([^0-9a-z-\s])/g, "")
+          .replace(/(\s+)/g, "-")
+          .replace(/-+/g, "-")
+          .replace(/^-+|-+$/g, "");
+
+        const $slugInput = $("#slug");
+
+        // 2. Chỉ tự động điền nếu người dùng chưa từng tự nhập slug hoặc slug đang trống
+        if (!$slugInput.data("edited") || $slugInput.val() === "") {
+          $slugInput.val(slug);
+        }
+
+        // Logic Meta Title giữ nguyên
+        if (!$("#metaTitle").val() || $("#metaTitle").data("auto") === true) {
+          $("#metaTitle").val(val).data("auto", true);
+        }
+
+        $("#title").removeClass("border-red-500 bg-red-50");
+        $("#error-title").addClass("hidden");
+      }
+
+      // Thêm sự kiện để chuẩn hóa slug khi người dùng tự nhập xong (Xóa dấu, khoảng trắng)
+      $("#slug").on("blur", function () {
+        const manualVal = $(this)
+          .val()
+          .toLowerCase()
+          .normalize("NFD")
+          .replace(/[\u0300-\u036f]/g, "")
+          .replace(/[đĐ]/g, "d")
+          .replace(/([^0-9a-z-\s])/g, "")
+          .replace(/(\s+)/g, "-")
+          .replace(/-+/g, "-");
+        $(this).val(manualVal);
+      });
+
+      // 4. Xử lý Thumbnail
+      function handleThumbnailUpload(event) {
+        const file = event.target.files[0];
+        if (file) {
+          const validTypes = ["image/jpeg", "image/png", "image/webp"];
+          if (!validTypes.includes(file.type)) {
+            Swal.fire("Lỗi", "Chỉ chấp nhận định dạng JPG, PNG, WEBP", "error");
+            return;
+          }
+
+          // TĂNG SIZE Ở ĐÂY: 10 * 1024 * 1024 = 10MB
+          const maxAllowedSize = 10 * 1024 * 1024;
+          if (file.size > maxAllowedSize) {
+            Swal.fire(
+              "Lỗi",
+              "Kích thước ảnh quá lớn! Vui lòng chọn ảnh dưới 10MB",
+              "error",
+            );
+            return;
+          }
+
+          selectedFile = file;
+          const reader = new FileReader();
+          reader.onload = (e) => {
+            $("#imgPreview").attr("src", e.target.result).removeClass("hidden");
+            $("#imgPlaceholder").addClass("hidden");
+            $("#btnRemoveImg").removeClass("hidden");
+            $("#thumbnailContainer").removeClass("border-red-500 bg-red-50");
+            $("#error-thumbnailFile").addClass("hidden");
+          };
+          reader.readAsDataURL(file);
+        }
+      }
+
+      function removeThumbnail() {
+        selectedFile = null;
+        $("#imgPreview").addClass("hidden").attr("src", "");
+        $("#imgPlaceholder").removeClass("hidden");
+        $("#btnRemoveImg").addClass("hidden");
+        $("#thumbnailFile").val("");
+      }
+
+      // 5. Hàm Validate Client-side
+      function clearErrors() {
+        $(".error-message, [id^='error-']").addClass("hidden").text("");
+        $("input, textarea, select").removeClass("border-red-500 bg-red-50");
+        $(".sun-editor").css("border", "1px solid #ccc");
+        $("#thumbnailContainer").removeClass("border-red-500 bg-red-50");
+      }
+
+      function showError(id, message) {
+        const $errorSpan = $(`#error-${id}`);
+        if ($errorSpan.length) {
+          $errorSpan.text(message).removeClass("hidden");
+        }
+
+        if (id === "content") {
+          $(".sun-editor").css("border", "2px solid #ef4444");
+        } else if (id === "thumbnailFile") {
+          $("#thumbnailContainer").addClass("border-red-500 bg-red-50");
+        } else {
+          $(`#${id}`).addClass("border-red-500 bg-red-50");
+        }
+      }
+
+      function validateForm() {
+        clearErrors();
+        let isValid = true;
+
+        // Title: @NotBlank, @Size(max = 255)
+        const title = $("#title").val().trim();
+        if (!title) {
+          showError("title", "Tiêu đề bài viết không được để trống");
+          isValid = false;
+        } else if (title.length > 255) {
+          showError("title", "Tiêu đề không được vượt quá 255 ký tự");
+          isValid = false;
+        }
+
+        // Slug: @NotBlank
+        if (!$("#slug").val().trim()) {
+          showError("slug", "Slug không được để trống");
+          isValid = false;
+        }
+
+        // Summary: @Size(max = 1000)
+        const summary = $("#summary").val().trim();
+        if (summary.length > 1000) {
+          showError("summary", "Tóm tắt không được vượt quá 1000 ký tự");
+          isValid = false;
+        }
+
+        // Content: @NotBlank
+        const content = editor.getContents().trim();
+        if (
+          !content ||
+          content === "<p><br></p>" ||
+          content === "<p>&nbsp;</p>"
+        ) {
+          showError("content", "Nội dung bài viết không được để trống");
+          isValid = false;
+        }
+
+        // Status: @NotBlank
+        if (!$("#status").val()) {
+          showError("status", "Trạng thái bài viết không được để trống");
+          isValid = false;
+        }
+
+        // SEO Meta Title: @Size(max = 200)
+        const metaTitle = $("#metaTitle").val().trim();
+        if (metaTitle.length > 200) {
+          showError("metaTitle", "Meta Title không nên quá 200 ký tự");
+          isValid = false;
+        }
+
+        // SEO Meta Desc: @Size(max = 1000)
+        const metaDesc = $("#metaDesc").val().trim();
+        if (metaDesc.length > 1000) {
+          showError("metaDesc", "Tóm tắt không được vượt quá 1000 ký tự");
+          isValid = false;
+        }
+
+        return isValid;
+      }
+
+      // 6. Submit Form
+      $("#newsForm").on("submit", function (e) {
+        e.preventDefault();
+
+        if (!validateForm()) return;
+
+        const id = $("#newsId").val();
+        const btn = $("#btnSave");
+        const originalHtml = btn.html();
+
+        btn
+          .prop("disabled", true)
+          .html('<svg class="animate-spin" data-icon="loader-alt" aria-hidden="true" focusable="false" viewBox="0 0 24 24" width="1em" height="1em" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-6.2-8.6"/></svg> ĐANG LƯU...');
+
+        const formData = new FormData();
+        const newsData = {
+          id: id || null,
+          title: $("#title").val().trim(),
+          slug: $("#slug").val(),
+          summary: $("#summary").val().trim(),
+          content: editor.getContents(),
+          categoryId: $("#categoryId").val(),
+          brandId: $("#brandId").val(),
+          status: $("#status").val(),
+          isFeatured: $("#isFeatured").is(":checked"),
+          metaTitle: $("#metaTitle").val().trim(),
+          metaKeyword: $("#metaKeyword").val().trim(),
+          metaDesc: $("#metaDesc").val().trim(),
+          postType: "NEWS",
+        };
+
+        formData.append(
+          "data",
+          new Blob([JSON.stringify(newsData)], { type: "application/json" }),
+        );
+
+        if (selectedFile) formData.append("image", selectedFile);
+
+        const url = id ? `/api/v1/news/${id}` : "/api/v1/news";
+        const method = id ? "PUT" : "POST";
+
+        $.ajax({
+          url: url,
+          method: method,
+          data: formData,
+          processData: false,
+          contentType: false,
+          success: (res) => {
+            Swal.fire({
+              icon: "success",
+              title: "Thành công",
+              text: "Bài viết đã được lưu!",
+              timer: 1500,
+              showConfirmButton: false,
+            }).then(() => {
+              window.location.href = "/admin/v1/news";
+            });
+          },
+          error: (err) => {
+            if (err.status === 400 && err.responseJSON?.data) {
+              const errors = err.responseJSON.data;
+              Object.keys(errors).forEach((key) => showError(key, errors[key]));
+            } else {
+              Swal.fire(
+                "Lỗi",
+                err.responseJSON?.message || "Không thể lưu dữ liệu",
+                "error",
+              );
+            }
+            btn.prop("disabled", false).html(originalHtml);
+          },
+        });
+      });
+
+      // Clear error khi input thay đổi
+      $("input, select, textarea").on("change input", function () {
+        const id = $(this).attr("id");
+        $(this).removeClass("border-red-500 bg-red-50");
+        $(`#error-${id}`).addClass("hidden");
+      });
+    </script>
+  </body>
+</html>

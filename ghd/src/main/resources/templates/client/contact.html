@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{common/head :: common_head('Liên hệ Green Home Shop - Hỗ trợ và Tư vấn trong giờ làm việc', ~{:: #header-style}, null, null)}">
+    <th:block id="header-style">
+        <meta name="description" content="Liên hệ Green Home Shop để được tư vấn Robot hút bụi, máy lọc không khí chính hãng. Hỗ trợ kỹ thuật nhanh chóng tại Hà Nội.">
+        <link rel="canonical" href="https://greenhomeshop.vn/lien-he" />
+
+        <script type="application/ld+json" th:inline="javascript">
+            {
+                "@context": "https://schema.org",
+                "@type": "BreadcrumbList",
+                "itemListElement": [
+                    {
+                        "@type": "ListItem",
+                        "position": 1,
+                        "name": "Trang chủ",
+                        "item": {
+                            "@id": "https://greenhomeshop.vn/",
+                            "name": "Trang chủ"
+                        }
+                    },
+                    {
+                        "@type": "ListItem",
+                        "position": 2,
+                        "name": "Liên hệ",
+                        "item": {
+                            "@id": "https://greenhomeshop.vn/lien-he",
+                            "name": "Liên hệ"
+                        }
+                    }
+                ]
+            }
+        </script>
+        <style>
+            .scrollbar-hide::-webkit-scrollbar {
+                display: none;
+            }
+
+            .scrollbar-hide {
+                -ms-overflow-style: none;
+                scrollbar-width: none;
+            }
+
+            .map-container {
+                position: relative;
+                padding-bottom: 70%;
+                height: 0;
+                overflow: hidden;
+                border-radius: 1.5rem;
+                border: 1px solid #e5e7eb;
+            }
+
+            .map-container iframe {
+                position: absolute;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                border: 0;
+            }
+
+            .form-input:focus {
+                border-color: #006a31;
+                box-shadow: 0 0 0 2px rgba(0, 106, 49, 0.1);
+                outline: none;
+            }
+        </style>
+    </th:block>
+</head>
+<body class="bg-[#f6f6f6] text-gray-700">
+<div th:replace="common/client/gtm :: gtm-body"></div>
+<div th:replace="common/client/header :: header"></div>
+
+<main class="container mx-auto px-4 pb-16">
+    <div th:replace="~{common/client/breadcrumb :: breadcrumb(${ {{name: 'Liên hệ', url: '/lien-he'}}})}"></div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-10 mt-2">
+        <section class="lg:col-span-7">
+            <div class="bg-white p-8 md:p-12 rounded-[2rem] shadow-sm border border-gray-100 h-full">
+                <h2 class="text-2xl font-semibold text-gray-700 mb-4">Gửi yêu cầu tư vấn</h2>
+                <p class="text-gray-600 mb-8 leading-relaxed">Hãy để lại thông tin, đội ngũ nhân viên của <strong>Green Home Shop</strong> sẽ liên hệ lại với bạn trong vòng 15 phút.</p>
+                <form class="space-y-6" id="contactForm">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div class="flex flex-col space-y-2">
+                            <label for="fullName" class="text-sm font-semibold text-gray-700 ml-1">Họ và tên *</label>
+                            <input type="text" id="fullName" name="fullName" required
+                                   class="form-input w-full px-5 py-4 rounded-2xl border border-gray-200 transition-all"
+                                   placeholder="Ví dụ: Nguyễn Văn A">
+                        </div>
+                        <div class="flex flex-col space-y-2">
+                            <label for="phone" class="text-sm font-semibold text-gray-700 ml-1">Số điện thoại *</label>
+                            <input type="tel" id="phone" name="phone" required
+                                   class="form-input w-full px-5 py-4 rounded-2xl border border-gray-200 transition-all"
+                                   placeholder="09xx xxx xxx">
+                        </div>
+                    </div>
+                    <div class="flex flex-col space-y-2">
+                        <label for="service" class="text-sm font-semibold text-gray-700 ml-1">Dịch vụ bạn quan tâm</label>
+                        <select id="service" name="service" class="form-input w-full px-5 py-4 rounded-2xl border border-gray-200 transition-all bg-white cursor-pointer">
+                            <option value="Robot hút bụi">Robot hút bụi lau nhà</option>
+                            <option value="Máy lọc không khí">Máy lọc không khí chính hãng</option>
+                            <option value="Bảo hành/Sửa chữa">Dịch vụ bảo hành & kỹ thuật</option>
+                            <option value="Hợp tác đại lý">Hợp tác làm đại lý/CTV</option>
+                        </select>
+                    </div>
+
+                    <div class="flex flex-col space-y-2">
+                        <label for="message" class="text-sm font-semibold text-gray-700 ml-1">Nội dung tin nhắn</label>
+                        <textarea id="message" name="message" rows="4"
+                                  class="form-input w-full px-5 py-4 rounded-2xl border border-gray-200 transition-all resize-none"
+                                  placeholder="Bạn cần chúng tôi hỗ trợ gì thêm không?"></textarea>
+                    </div>
+
+                    <div class="pt-4">
+                        <button type="submit"
+                                class="w-full bg-[#006a31] text-white py-5 rounded-2xl font-semibold text-lg shadow-xl shadow-green-100 hover:bg-green-700 hover:shadow-2xl transition-all active:scale-95 transform">
+                            GỬI THÔNG TIN NGAY
+                        </button>
+                    </div>
+                    <p class="text-center text-xs text-gray-600 mt-4">
+                        <svg class="" data-icon="lock-alt" aria-hidden="true" focusable="false" viewBox="0 0 24 24" width="1em" height="1em" fill="currentColor" ><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg> Thông tin của bạn được bảo mật tuyệt đối.
+                    </p>
+                </form>
+            </div>
+        </section>
+        <aside class="lg:col-span-5 space-y-8">
+            <div class="bg-white p-8 rounded-[2rem] shadow-sm border border-gray-100">
+                <h1 class="text-3xl font-semibold text-[#006a31] mb-6">Kết nối với chúng tôi</h1>
+
+                <div class="space-y-6">
+                    <a th:href="'tel:' + ${sysParams['consulting_hotline']}" class="flex items-center p-4 border border-gray-100 rounded-2xl hover:bg-green-50 transition-all group shadow-sm">
+                        <div class="bg-green-100 p-3 rounded-xl text-[#006a31] group-hover:bg-[#006a31] group-hover:text-white transition-colors">
+                            <svg class="text-2xl" data-icon="phone-call" aria-hidden="true" focusable="false" viewBox="0 0 24 24" width="1em" height="1em" fill="currentColor" ><path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.4 19.4 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.2 2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1 1 .4 2 .7 2.9a2 2 0 0 1-.5 2.1L8.1 9.9a16 16 0 0 0 6 6l1.2-1.2a2 2 0 0 1 2.1-.5c.9.3 1.9.6 2.9.7a2 2 0 0 1 1.7 2z"/></svg>
+                        </div>
+                        <div class="ml-4">
+                            <p class="text-sm text-gray-600 font-medium">Hotline tư vấn 24/7</p>
+                            <p class="text-gray-700 font-semibold text-lg" th:text="${sysParams['consulting_hotline']}">0852 262 666</p>
+                        </div>
+                    </a>
+                    <a th:href="'https://zalo.me/' + ${sysParams['zalo']}" target="_blank" rel="nofollow" class="flex items-center p-4 border border-gray-100 rounded-2xl hover:bg-blue-50 transition-all group shadow-sm">
+                        <div class="bg-blue-100 p-3 rounded-xl text-blue-600 group-hover:bg-blue-600 group-hover:text-white transition-colors">
+                            <svg class="text-2xl" data-icon="chat" aria-hidden="true" focusable="false" viewBox="0 0 24 24" width="1em" height="1em" fill="currentColor" ><path d="M21 15a4 4 0 0 1-4 4H8l-5 3V7a4 4 0 0 1 4-4h10a4 4 0 0 1 4 4z"/></svg>
+                        </div>
+                        <div class="ml-4">
+                            <p class="text-sm text-gray-600 font-medium">Chat Zalo miễn phí</p>
+                            <p class="text-gray-700 font-semibold text-lg">Zalo Green Home Shop</p>
+                        </div>
+                    </a>
+
+                    <a th:href="'sms:' + ${sysParams['hotline']}" class="flex items-center p-4 border border-gray-100 rounded-2xl hover:bg-orange-50 transition-all group shadow-sm">
+                        <div class="bg-orange-100 p-3 rounded-xl text-orange-600 group-hover:bg-orange-600 group-hover:text-white transition-colors">
+                            <svg class="text-2xl" data-icon="message-rounded-dots" aria-hidden="true" focusable="false" viewBox="0 0 24 24" width="1em" height="1em" fill="currentColor" ><path d="M21 11.5a8.5 8.5 0 0 1-9.8 8.4L5 22l1.8-5.4A8.5 8.5 0 1 1 21 11.5z"/><path d="M8 12h.01M12 12h.01M16 12h.01"/></svg>
+                        </div>
+                        <div class="ml-4">
+                            <p class="text-sm text-gray-600 font-medium">Gửi tin nhắn SMS</p>
+                            <p class="text-gray-700 font-semibold text-lg" th:text="${sysParams['hotline']}">0852 262 666</p>
+                        </div>
+                    </a>
+
+                    <a th:href="${sysParams['email_contact']}" class="flex items-center p-4 border border-gray-100 rounded-2xl hover:bg-red-50 transition-all group shadow-sm">
+                        <div class="bg-red-100 p-3 rounded-xl text-red-600 group-hover:bg-red-600 group-hover:text-white transition-colors">
+                            <svg class="text-2xl" data-icon="envelope" aria-hidden="true" focusable="false" viewBox="0 0 24 24" width="1em" height="1em" fill="currentColor" ><path d="M4 5h16a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2zm8 8 8-5H4l8 5z"/></svg>
+                        </div>
+                        <div class="ml-4">
+                            <p class="text-sm text-gray-600 font-medium">Gửi Email phản hồi</p>
+                            <p class="text-gray-700 font-semibold text-lg">Green Home Shop Email</p>
+                        </div>
+                    </a>
+                </div>
+
+            </div>
+        </aside>
+    </div>
+</main>
+
+<div th:replace="common/client/footer :: footer"></div>
+
+<script>
+    window.addEventListener('load', function() {
+      window.ensureJQuery().then(function() {
+        $('#contactForm').on('submit', function(e) {
+            e.preventDefault();
+
+            const formData = {
+                fullName: $('#fullName').val(),
+                phone: $('#phone').val(),
+                serviceType: $('#service').val(),
+                message: $('#message').val()
+            };
+
+            const $btn = $('#submitBtn');
+            const $text = $('#btnText');
+            const $loader = $('#btnLoader');
+
+            $btn.prop('disabled', true).addClass('opacity-70 cursor-not-allowed');
+            $text.addClass('hidden');
+            $loader.removeClass('hidden');
+
+            $.ajax({
+                url: '/api/v1/contact',
+                type: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify(formData),
+                success: function(response) {
+                    window.dataLayer = window.dataLayer || [];
+                    window.dataLayer.push({
+                        event: 'contact_form_success',
+                        form_name: 'contactForm',
+                        service_type: formData.serviceType
+                    });
+
+                    window.showToast({icon: 'success', title: 'Cảm ơn bạn! Chúng tôi đã nhận được thông tin và sẽ liên hệ lại trong 15 phút.'});
+                    $('#contactForm')[0].reset();
+                },
+                error: function(xhr) {
+                    window.showToast({icon: 'error', title: 'Có lỗi xảy ra: ' + (xhr.responseText || 'Vui lòng thử lại sau.')});
+                },
+                complete: function() {
+                    $btn.prop('disabled', false).removeClass('opacity-70 cursor-not-allowed');
+                    $text.removeClass('hidden');
+                    $loader.addClass('hidden');
+                }
+            });
+        });
+      });
+    });
+</script>
+</body>
+</html>

@@ -1,0 +1,369 @@
+<!doctype html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{common/admin/header :: header(~{::title}, ~{::link-extra})}">
+    <title>Quản lý Gói chính sách & Hậu mãi - Hệ thống quản trị</title>
+
+    <th:block th:fragment="link-extra">
+        <link href="https://cdn.jsdelivr.net/npm/tom-select@2.2.2/dist/css/tom-select.bootstrap5.min.css" rel="stylesheet">
+        <script src="https://cdn.jsdelivr.net/npm/tom-select@2.2.2/dist/js/tom-select.complete.min.js"></script>
+        <style>
+            .ts-control {
+                border-radius: 0.75rem !important;
+                padding: 0.5rem 0.75rem !important;
+                border: 1px solid #e2e8f0 !important;
+                box-shadow: none !important;
+                min-height: 45px;
+                max-height: 120px;
+                overflow-y: auto !important;
+                font-weight: 400 !important;
+                color: #475569 !important;
+                transition: all 0.2s ease;
+            }
+
+            .ts-control.focus {
+                border-color: #bae6fd !important;
+                ring: 3px rgba(186, 230, 253, 0.4);
+            }
+
+            .ts-dropdown .active {
+                background-color: #f0f9ff !important;
+                color: #0369a1 !important;
+                font-weight: 400;
+            }
+
+            .ts-control .item {
+                background: #f1f5f9 !important;
+                color: #334155 !important;
+                border: 1px solid #e2e8f0 !important;
+                border-radius: 0.5rem !important;
+                font-weight: 400 !important;
+            }
+
+            .dynamic-list-container {
+                height: 150px;
+                overflow-y: auto;
+                padding-right: 4px;
+            }
+
+            .animate-in { animation: fadeIn 0.3s ease-out; }
+            @keyframes fadeIn {
+                from { opacity: 0; transform: translateY(10px); }
+                to { opacity: 1; transform: translateY(0); }
+            }
+
+            #packageForm label { font-weight: 400; color: #64748b; }
+            #packageForm h3 { font-weight: 500; }
+
+            .bg-indigo-600 { background-color: #0ea5e9 !important; }
+            .bg-indigo-600:hover { background-color: #0284c7 !important; }
+        </style>
+    </th:block>
+</head>
+<body class="bg-gray-50">
+<div th:replace="common/admin/sidebar :: sidebar"></div>
+
+<section id="content">
+    <nav th:replace="common/admin/navbar :: navbar"></nav>
+
+    <main class="p-6">
+        <div class="max-w-full mx-auto">
+            <div class="flex items-center justify-between mb-6">
+                <div>
+                    <h1 class="text-2xl font-semibold text-gray-700">Gói chính sách & Hậu mãi</h1>
+                    <p class="text-sm text-gray-600">Thiết lập các quy định cho từng nhóm sản phẩm</p>
+                </div>
+                <button class="inline-flex items-center px-5 py-2.5 text-sm font-normal text-white bg-indigo-600 rounded-xl shadow-sm hover:bg-sky-700 transition-all active:scale-95"
+                        onclick="openPackageModal()">
+                    <svg class="me-2 text-lg" data-icon="plus" aria-hidden="true" focusable="false" viewBox="0 0 24 24" width="1em" height="1em" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" ><path d="M12 5v14M5 12h14"/></svg>
+                    Tạo gói mới
+                </button>
+            </div>
+
+            <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+                <div class="overflow-x-auto">
+                    <table class="min-w-full table-fixed">
+                        <thead class="bg-gray-50 border-b border-gray-100">
+                        <tr>
+                            <th class="w-[15%] px-6 py-3 text-left text-xs font-medium text-gray-600 uppercase">Tên gói</th>
+                            <th class="w-[25%] px-6 py-3 text-left text-xs font-medium text-gray-600 uppercase">Chính sách</th>
+                            <th class="w-[25%] px-6 py-3 text-left text-xs font-medium text-gray-600 uppercase">Hậu mãi</th>
+                            <th class="w-[25%] px-6 py-3 text-left text-xs font-medium text-gray-600 uppercase">Quà tặng</th>
+                            <th class="w-[10%] px-6 py-3 text-right text-xs font-medium text-gray-600 uppercase">Hành động</th>
+                        </tr>
+                        </thead>
+                        <tbody id="packageBody" class="divide-y divide-gray-100 text-sm text-gray-600 font-normal">
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div id="packageModal" class="hidden fixed inset-0 bg-gray-900/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+            <div class="bg-white rounded-2xl w-full max-w-7xl max-h-[95vh] overflow-hidden shadow-2xl flex flex-col relative animate-in">
+
+                <div class="px-6 py-4 border-b border-gray-100 flex justify-between items-center bg-white sticky top-0">
+                    <h2 id="modalTitle" class="text-lg font-medium text-gray-700">Cấu hình Gói chính sách</h2>
+                    <button type="button" class="text-[#191919] hover:text-gray-600 text-2xl" onclick="closePackageModal()">&times;</button>
+                </div>
+
+                <form id="packageForm" class="p-6 overflow-y-auto space-y-6">
+                    <input type="hidden" id="packageId"/>
+
+                    <div class="w-full">
+                        <label class="block text-sm mb-1">Tên gói ưu đãi</label>
+                        <input type="text" id="packageNameInput"
+                               placeholder="Ví dụ: Gói bảo hành 2026..."
+                               class="w-full px-4 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-sky-200 outline-none transition-all font-normal"
+                               oninput="removeError(this, 'error-packageName')"/>
+                        <p id="error-packageName" class="text-red-500 text-xs mt-1 hidden"></p>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        <div class="bg-blue-100 p-4 rounded-2xl border border-blue-100 flex flex-col">
+                            <div class="flex justify-between items-center mb-3">
+                                <h3 class="text-sm text-blue-700 flex items-center"><svg class="me-2" data-icon="shield-quarter" aria-hidden="true" focusable="false" viewBox="0 0 24 24" width="1em" height="1em" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" ><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="M12 2v20"/></svg>Chính sách</h3>
+                                <button type="button" onclick="addDynamicRow('policyContainer')"
+                                        class="text-[10px] bg-blue-500 text-white px-2 py-1 rounded-md hover:bg-blue-600 transition-colors uppercase">+ Thêm</button>
+                            </div>
+                            <div id="policyContainer" class="space-y-2 dynamic-list-container"></div>
+                        </div>
+
+                        <div class="bg-emerald-100 p-4 rounded-2xl border border-emerald-100 flex flex-col">
+                            <div class="flex justify-between items-center mb-3">
+                                <h3 class="text-sm text-emerald-700 flex items-center"><svg class="me-2" data-icon="wrench" aria-hidden="true" focusable="false" viewBox="0 0 24 24" width="1em" height="1em" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" ><path d="M14.7 6.3a4 4 0 0 0-5.4 5.4L3 18l3 3 6.3-6.3a4 4 0 0 0 5.4-5.4l-2.4 2.4-2.8-2.8z"/></svg>Hậu mãi</h3>
+                                <button type="button" onclick="addDynamicRow('afterSalesContainer')"
+                                        class="text-[10px] bg-emerald-500 text-white px-2 py-1 rounded-md hover:bg-emerald-600 transition-colors uppercase">+ Thêm</button>
+                            </div>
+                            <div id="afterSalesContainer" class="space-y-2 dynamic-list-container"></div>
+                        </div>
+
+                        <div class="bg-amber-100 p-4 rounded-2xl border border-amber-100 flex flex-col">
+                            <div class="flex justify-between items-center mb-3">
+                                <h3 class="text-sm text-amber-700 flex items-center">
+                                    <svg class="me-2" data-icon="gift" aria-hidden="true" focusable="false" viewBox="0 0 24 24" width="1em" height="1em" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" ><path d="M20 7h-2.2A3 3 0 0 0 12 4.8 3 3 0 0 0 6.2 7H4a2 2 0 0 0-2 2v3h9V7h2v5h9V9a2 2 0 0 0-2-2zM9 7a1 1 0 1 1 1-1 1 1 0 0 1-1 1zm6 0a1 1 0 1 1 1-1 1 1 0 0 1-1 1zM3 14h8v8H5a2 2 0 0 1-2-2v-6zm10 0h8v6a2 2 0 0 1-2 2h-6v-8z"/></svg>Quà tặng
+                                </h3>
+                                <button type="button" onclick="addDynamicRow('giftContainer')"
+                                        class="text-[10px] bg-amber-500 text-white px-2 py-1 rounded-md hover:bg-amber-600 transition-colors uppercase">+ Thêm</button>
+                            </div>
+                            <div id="giftContainer" class="space-y-2 dynamic-list-container"></div>
+                        </div>
+                    </div>
+
+                    <div class="w-full border-t border-gray-100 pt-6">
+                        <label class="block text-sm mb-2 flex items-center">
+                            <svg class="me-2 text-sky-500" data-icon="package" aria-hidden="true" focusable="false" viewBox="0 0 24 24" width="1em" height="1em" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" ><path d="m21 8-9-5-9 5 9 5 9-5z"/><path d="M3 8v8l9 5 9-5V8"/><path d="M12 13v8"/></svg>Sản phẩm áp dụng
+                        </label>
+                        <select id="appliedProductIdsInput" multiple placeholder="Chọn sản phẩm..." autocomplete="off"></select>
+                    </div>
+                </form>
+
+                <div class="px-6 py-4 border-t bg-gray-50 flex gap-3 justify-end sticky bottom-0">
+                    <button type="button" onclick="closePackageModal()" class="px-6 py-2 bg-white border border-gray-200 text-gray-600 rounded-xl hover:bg-gray-100 font-normal">Hủy</button>
+                    <button type="button" id="btnSavePackage" onclick="savePackage()" class="px-8 py-2 bg-indigo-600 text-white rounded-xl hover:bg-sky-700 font-normal shadow-sm active:scale-95">Lưu thay đổi</button>
+                </div>
+            </div>
+        </div>
+    </main>
+</section>
+
+<script th:src="@{/admin/js/main.js}"></script>
+<script>
+    const API_URL = "/api/v1/policy";
+    let productSelect;
+
+    function initProductSelect() {
+        if (typeof TomSelect !== "undefined" && !productSelect) {
+            productSelect = new TomSelect("#appliedProductIdsInput", {
+                valueField: 'id',
+                labelField: 'name',
+                searchField: 'name',
+                dropdownParent: 'body',
+                load: function(query, callback) {
+                    if (!query.length) return callback();
+                    fetch(`/api/v1/product/find?keyword=${encodeURIComponent(query)}`)
+                        .then(res => res.json())
+                        .then(json => callback(json.body || json))
+                        .catch(() => callback());
+                },
+                render: {
+                    option: (item, escape) => `<div class="py-2 px-3 border-b border-gray-50">
+                        <div class="font-medium text-gray-700">${escape(item.name)}</div>
+                        <div class="text-[10px] text-[#191919]">ID: ${escape(item.id)}</div>
+                    </div>`,
+                    item: (item, escape) => `<div class="font-normal">${escape(item.name)}</div>`
+                }
+            });
+        }
+    }
+
+    window.addDynamicRow = function(containerId, value = "") {
+        let placeholder = 'Nội dung...';
+        if(containerId === 'policyContainer') placeholder = 'Tên chính sách...';
+        if(containerId === 'afterSalesContainer') placeholder = 'Dịch vụ hậu mãi...';
+        if(containerId === 'giftContainer') placeholder = 'Tên quà tặng...';
+
+        const html = `
+      <div class="flex gap-2 dynamic-row animate-in">
+        <input type="text" value="${value}" placeholder="${placeholder}"
+               class="flex-1 px-3 py-1.5 text-xs border border-gray-100 rounded-lg focus:border-sky-300 focus:ring-1 focus:ring-sky-100 outline-none bg-white font-normal">
+        <button type="button" onclick="this.parentElement.remove()" class="text-red-500 hover:text-red-700 transition-colors">
+          <svg class="text-xl" data-icon="x" aria-hidden="true" focusable="false" viewBox="0 0 24 24" width="1em" height="1em" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" ><path d="M18 6 6 18M6 6l12 12"/></svg>
+        </button>
+      </div>`;
+        $(`#${containerId}`).append(html);
+    }
+
+    window.removeError = (input, errorId) => {
+        $(input).removeClass("border-red-400");
+        $(`#${errorId}`).addClass("hidden");
+    }
+
+    window.openPackageModal = function() {
+        $("#packageModal").removeClass("hidden");
+        $("#modalTitle").text("Thêm gói chính sách mới");
+        $("#packageForm")[0].reset();
+        $("#packageId").val("");
+        if (productSelect) productSelect.clear();
+
+        // Xóa sạch và thêm dòng trống cho cả 3
+        $("#policyContainer, #afterSalesContainer, #giftContainer").empty();
+        addDynamicRow('policyContainer');
+        addDynamicRow('afterSalesContainer');
+        addDynamicRow('giftContainer');
+    }
+
+    window.closePackageModal = () => $("#packageModal").addClass("hidden");
+
+    window.savePackage = function() {
+        const id = $("#packageId").val();
+        const packageName = $("#packageNameInput").val().trim();
+
+        if (!packageName) {
+            $("#error-packageName").text("Vui lòng nhập tên gói").removeClass("hidden");
+            $("#packageNameInput").addClass("border-red-400");
+            return;
+        }
+
+        const policies = [];
+        $("#policyContainer .dynamic-row input").each(function() { if($(this).val().trim()) policies.push($(this).val().trim()); });
+        const afterSales = [];
+        $("#afterSalesContainer .dynamic-row input").each(function() { if($(this).val().trim()) afterSales.push($(this).val().trim()); });
+
+        const gifts = [];
+        $("#giftContainer .dynamic-row input").each(function() {
+            if($(this).val().trim()) gifts.push($(this).val().trim());
+        });
+
+        const data = {
+            packageName: packageName,
+            appliedProductIds: productSelect ? productSelect.getValue() : [],
+            policies: policies,
+            afterSales: afterSales,
+            gifts: gifts,
+            isActive: 1
+        };
+
+        const method = id ? "PUT" : "POST";
+        const url = id ? `${API_URL}/${id}` : API_URL;
+
+        $.ajax({
+            url: url,
+            method: method,
+            contentType: "application/json",
+            data: JSON.stringify(data),
+            success: function() {
+                closePackageModal();
+                fetchPackages();
+                if(typeof Toast !== 'undefined') Toast.fire({icon: 'success', title: 'Đã lưu dữ liệu!'});
+            }
+        });
+    }
+
+    window.editPackage = function(id) {
+        $.get(`${API_URL}/${id}`, function (res) {
+            const item = res.body || res;
+            $("#packageId").val(item.id);
+            $("#packageNameInput").val(item.packageName);
+
+            if (productSelect) {
+                productSelect.clear(true);
+
+                const ids = item.appliedProductIds || [];
+                ids.forEach(item => {
+                    productSelect.addOption({
+                        id: item.id,
+                        name: item.name,
+                    });
+                    productSelect.addItem(item.id);
+                });
+            }
+
+            $("#policyContainer, #afterSalesContainer, #giftContainer").empty();
+            if(item.policies?.length) item.policies.forEach(p => addDynamicRow('policyContainer', p));
+            if(item.afterSales?.length) item.afterSales.forEach(s => addDynamicRow('afterSalesContainer', s));
+            if(item.gifts?.length) item.gifts.forEach(g => addDynamicRow('giftContainer', g)); // Thêm dòng này
+
+            $("#modalTitle").text("Cập nhật gói chính sách");
+            $("#packageModal").removeClass("hidden");
+        });
+    }
+
+    window.deletePackage = function(id) {
+        if(confirm("Xác nhận xóa gói này?")) {
+            $.ajax({
+                url: `${API_URL}/${id}`,
+                method: "DELETE",
+                success: function() {
+                    fetchPackages();
+                }
+            });
+        }
+    }
+
+    window.fetchPackages = function() {
+        $.get(API_URL, function (response) {
+            const list = Array.isArray(response) ? response : (response.body || response.content || []);
+            const $tbody = $("#packageBody").empty();
+
+            list.forEach(item => {
+                const renderListWithIcon = (dataArray, colorClass = "text-blue-500") => {
+                    return (dataArray || []).map(text => `
+                    <li class="flex items-start gap-1.5 mb-1">
+                        <span class="${colorClass} font-semibold text-[10px] mt-0.5">✔︎</span>
+                        <span>${text}</span>
+                    </li>
+                `).join('');
+                };
+
+                $tbody.append(`
+                <tr class="hover:bg-gray-50 transition border-b border-gray-100">
+                    <td class="px-6 py-4 font-medium text-gray-800 align-top">${item.packageName}</td>
+                    <td class="px-6 py-4 align-top">
+                        <ul class="text-[11px] text-gray-600">${renderListWithIcon(item.policies, "text-blue-500")}</ul>
+                    </td>
+                    <td class="px-6 py-4 align-top">
+                        <ul class="text-[11px] text-gray-600">${renderListWithIcon(item.afterSales, "text-emerald-500")}</ul>
+                    </td>
+                    <td class="px-6 py-4 align-top">
+                        <ul class="text-[11px] text-gray-600">${renderListWithIcon(item.gifts, "text-amber-500")}</ul>
+                    </td>
+                    <td class="px-6 py-4 text-right space-x-1 align-top">
+                        <button onclick="editPackage('${item.id}')" class="text-sky-600 p-1.5 hover:bg-sky-50 rounded-lg transition">
+                            <svg class="text-lg" data-icon="edit-alt" aria-hidden="true" focusable="false" viewBox="0 0 24 24" width="1em" height="1em" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" ><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/></svg>
+                        </button>
+                        <button onclick="deletePackage('${item.id}')" class="text-red-400 p-1.5 hover:bg-red-50 rounded-lg transition">
+                            <svg class="text-lg" data-icon="trash" aria-hidden="true" focusable="false" viewBox="0 0 24 24" width="1em" height="1em" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" ><path d="M3 6h18"/><path d="M8 6V4h8v2"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v5M14 11v5"/></svg>
+                        </button>
+                    </td>
+                </tr>`);
+            });
+        });
+    }
+
+    window.addEventListener('load', () => {
+        initProductSelect();
+        fetchPackages();
+    });
+</script>
+</body>
+</html>

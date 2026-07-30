@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{common/head :: common_head('Chính sách thanh toán - Green Home Shop', ~{:: #header-style}, null, null)}">
+    <th:block id="header-style">
+        <meta name="description" content="Hướng dẫn chi tiết các hình thức thanh toán tại Green Home Shop: Thanh toán COD khi nhận hàng hoặc chuyển khoản ngân hàng an toàn.">
+        <meta name="keywords" content="thanh toán Green Home Shop, chuyển khoản mb bank, mua hàng trả sau, hướng dẫn thanh toán">
+        <link rel="canonical" href="https://greenhomeshop.vn/huong-dan-thanh-toan" />
+
+        <meta property="og:title" content="Chính sách thanh toán - Green Home Shop">
+        <meta property="og:description" content="Thanh toán linh hoạt, an toàn. Hỗ trợ COD toàn quốc và chuyển khoản qua MB Bank.">
+        <meta property="og:image" content="https://greenhomeshop.vn/client/images/logo.png">
+        <meta property="og:url" content="https://greenhomeshop.vn/huong-dan-thanh-toan">
+
+        <script type="application/ld+json" th:inline="javascript">
+            {
+                "@context": "https://schema.org",
+                "@type": "BreadcrumbList",
+                "itemListElement": [{
+                    "@type": "ListItem",
+                    "position": 1,
+                    "name": "Trang chủ",
+                    "item": {
+                        "@id": "https://greenhomeshop.vn/",
+                        "name": "Trang chủ"
+                    }
+                },{
+                    "@type": "ListItem",
+                    "position": 2,
+                    "name": "Chính sách thanh toán",
+                    "item": {
+                        "@id": "https://greenhomeshop.vn/chinh-sach/thanh-toan",
+                        "name": "Chính sách thanh toán"
+                    }
+                }]
+            }
+        </script>
+    </th:block>
+</head>
+<body class="bg-gray-50 text-gray-700">
+<div th:replace="common/client/gtm :: gtm-body"></div>
+<div th:replace="common/client/header :: header"></div>
+
+<main class="container mx-auto px-4 pb-12">
+    <div th:replace="~{common/client/breadcrumb :: breadcrumb(${ {{name: 'Thanh toán', url: '/huong-dan-thanh-toan'}}})}"></div>
+
+    <article class="bg-white p-6 md:p-12 rounded-xl shadow-sm border border-gray-100 mt-6">
+        <header class="text-center mb-12">
+            <h1 class="text-3xl md:text-4xl font-semibold text-blue-700 mb-4 uppercase tracking-tight">CHÍNH SÁCH THANH TOÁN</h1>
+            <p class="text-gray-600 max-w-2xl mx-auto leading-relaxed">
+                Green Home Shop cam kết mang đến trải nghiệm mua sắm thuận tiện và an toàn nhất với các phương thức thanh toán linh hoạt.
+            </p>
+        </header>
+
+        <div class="grid lg:grid-cols-2 gap-8">
+            <div class="bg-white border border-gray-200 p-6 md:p-8 rounded-xl hover:border-blue-400 hover:shadow-md transition-all duration-300">
+                <div class="flex items-center mb-6">
+                    <div class="w-12 h-12 bg-blue-50 rounded-xl flex items-center justify-center text-2xl mr-4">📦</div>
+                    <h3 class="text-xl font-semibold text-gray-900">1. Thanh toán tiền mặt (COD)</h3>
+                </div>
+                <div class="space-y-4 text-gray-600">
+                    <div class="flex items-start">
+                        <span class="text-blue-500 mr-3 mt-1 text-xs">◆</span>
+                        <p><strong class="text-gray-900">Quy trình:</strong> Đặt hàng qua website, nhận hàng và kiểm tra ngay tại nhà.</p>
+                    </div>
+                    <div class="flex items-start">
+                        <span class="text-blue-500 mr-3 mt-1 text-xs">◆</span>
+                        <p><strong class="text-gray-900">Kiểm tra:</strong> Quý khách được quyền xem sản phẩm, số lượng và hóa đơn trước khi trả tiền.</p>
+                    </div>
+                    <div class="flex items-start">
+                        <span class="text-blue-500 mr-3 mt-1 text-xs">◆</span>
+                        <p><strong class="text-gray-900">Thanh toán:</strong> Trả tiền mặt trực tiếp cho nhân viên giao hàng theo đúng hóa đơn.</p>
+                    </div>
+                    <div class="mt-6 p-4 bg-green-50 text-green-700 rounded-xl text-sm font-medium border border-green-100 italic">
+                        * Green Home Shop cam kết không thu thêm bất kỳ chi phí ẩn nào khác ngoài tổng tiền đã chốt trên đơn hàng.
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white border border-gray-200 p-6 md:p-8 rounded-xl hover:border-indigo-400 hover:shadow-md transition-all duration-300">
+                <div class="flex items-center mb-6">
+                    <div class="w-12 h-12 bg-indigo-50 rounded-xl flex items-center justify-center text-2xl mr-4">💳</div>
+                    <h3 class="text-xl font-semibold text-gray-900">2. Chuyển khoản ngân hàng</h3>
+                </div>
+                
+                <div class="bg-gray-50 border border-blue-100 p-5 rounded-xl mb-4 relative overflow-hidden">
+                    <div class="absolute top-0 right-0 p-2 opacity-10 font-semibold text-4xl italic text-blue-900">MB</div>
+                    <div class="grid grid-cols-2 gap-2 mb-4">
+                        <p class="text-[10px] uppercase font-semibold text-[#191919] tracking-wider">Ngân hàng</p>
+                        <p class="text-xs font-semibold text-blue-800 text-right">MB BANK (Quân Đội)</p>
+                    </div>
+                    <div class="space-y-3">
+                        <div>
+                            <p class="text-[10px] uppercase font-semibold text-[#191919] tracking-wider">Số tài khoản</p>
+                            <p class="text-2xl font-semibold text-blue-700 tracking-widest">097678888</p>
+                        </div>
+                        <div>
+                            <p class="text-[10px] uppercase font-semibold text-[#191919] tracking-wider">Chủ tài khoản</p>
+                            <p class="font-semibold text-gray-800 text-sm uppercase">CTY TNHH THƯƠNG MẠI VÀ CÔNG NGHỆ GHD</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-indigo-50 border-l-4 border-indigo-500 p-4 rounded-r-xl">
+                    <p class="text-[10px] font-semibold text-indigo-800 uppercase mb-1 tracking-widest">Cấu trúc nội dung:</p>
+                    <p class="text-sm font-semibold text-gray-700">[Số điện thoại] + [Tên khách hàng]</p>
+                </div>
+                <p class="text-xs mt-4 italic text-[#191919] leading-relaxed">
+                    Lưu ý: Sau khi chuyển khoản thành công, bộ phận CSKH sẽ liên hệ xác nhận và tiến hành giao hàng ngay.
+                </p>
+            </div>
+        </div>
+
+        <section class="mt-12 p-6 md:p-8 rounded-xl bg-gradient-to-r from-rose-50 to-white border border-rose-100">
+            <h3 class="text-lg font-semibold text-rose-700 flex items-center mb-4 uppercase tracking-tight">
+                <span class="mr-3">🔄</span> 3. Quy định về hoàn tiền
+            </h3>
+            <p class="text-gray-600 leading-relaxed">
+                Trong trường hợp quý khách đã thanh toán chuyển khoản nhưng muốn hủy đơn (trước khi giao) hoặc trả hàng theo chính sách đổi trả, chúng tôi sẽ hoàn trả <strong class="text-rose-600">số tiền</strong> vào chính tài khoản quý khách đã sử dụng trong vòng <strong class="text-gray-900">3-5 ngày làm việc</strong>.
+            </p>
+        </section>
+
+        <footer class="mt-16 pt-10 border-t border-gray-100">
+            <div class="grid md:grid-cols-2 gap-8 items-center">
+                <div class="space-y-4">
+                    <div class="text-lg font-semibold text-gray-900">Liên hệ & Hỗ trợ thanh toán</div>
+                    <p class="text-gray-600 text-sm leading-relaxed">
+                        Mọi thắc mắc về giao dịch hoặc gặp khó khăn khi thực hiện thanh toán, xin vui lòng liên hệ:
+                    </p>
+                    <div class="flex flex-wrap items-center gap-4">
+                        <a th:href="'tel:' + ${sysParams['hotline']}" class="inline-flex items-center bg-blue-600 text-white px-6 py-2.5 rounded-xl font-semibold hover:bg-blue-700 transition shadow-sm">
+                            📞 <span th:text="${sysParams['hotline']}">0852 262 666</span>
+                        </a>
+                        <span class="text-gray-300 hidden sm:block">|</span>
+                        <p class="text-sm font-semibold text-gray-700" th:text="${sysParams['email_contact']}">lienheghd@gmail.com</p>
+                    </div>
+                </div>
+                
+                <div class="bg-gray-50 p-6 rounded-xl border border-gray-100">
+                    <p class="text-[10px] font-semibold text-[#191919] uppercase tracking-widest mb-3">Đơn vị chủ quản</p>
+                    <p class="font-semibold text-blue-700 uppercase mb-2 text-sm leading-tight">Công ty TNHH Thương mại và Công nghệ GHD</p>
+                    <ul class="text-xs space-y-2 text-gray-600">
+                        <li><strong>MST:</strong> 0110891976</li>
+                        <li><strong>Địa chỉ:</strong> LK7-142, Khu tái định cư phục vụ giải phóng mặt bằng, Xã Tứ Hiệp, Huyện Thanh Trì, Thành phố Hà Nội, Việt Nam</li>
+                    </ul>
+                </div>
+            </div>
+        </footer>
+    </article>
+</main>
+
+<div th:replace="common/client/footer :: footer"></div>
+</body>
+</html>

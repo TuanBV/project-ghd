@@ -1,0 +1,250 @@
+<footer id="footer" th:fragment="footer" class="bg-white pt-12 pb-8 mt-auto">
+  <div class="container mx-auto px-4">
+    <!-- Address -->
+    <div
+            class="mb-10 pb-8 border-b border-gray-100 grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-10 items-start"
+    >
+      <!-- Address -->
+      <div
+              th:data-address="${sysParams['store']}"
+              class="cursor-pointer"
+      >
+        <div class="flex items-center space-x-3 mb-3">
+      <span class="font-semibold text-gray-700 text-lg uppercase tracking-wide">
+        Showroom Green Home Shop
+      </span>
+
+          <span
+                  title="Chi tiết"
+                  class="bg-blue-600 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs hover:bg-blue-700 transition-colors"
+          >
+        <svg class="" data-icon="chevron-right" aria-hidden="true" focusable="false" viewBox="0 0 24 24" width="1em" height="1em" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" ><path d="m9 18 6-6-6-6"/></svg>
+      </span>
+        </div>
+
+        <div class="space-y-3 text-sm text-gray-600 leading-relaxed">
+          <p><strong>Giờ làm việc:</strong> 08:00 - 18:00 (Thứ 2 - Chủ nhật)</p>
+          <p>
+            <span class="font-semibold text-gray-700">Địa chỉ:</span><br />
+            LK7-142, Khu tái định cư phục vụ giải phóng mặt bằng,
+            Xã Tứ Hiệp, Huyện Thanh Trì,
+            Thành phố Hà Nội 100000, Việt Nam
+          </p>
+
+          <p>
+            <span class="font-semibold text-gray-700">Hotline:</span>
+            <a
+                    th:href="'tel:' + ${sysParams['consulting_hotline']}"
+                    class="text-blue-700 hover:underline"
+                    th:text="${sysParams['consulting_hotline']}"
+            >
+              0852 262 666
+            </a>
+          </p>
+
+          <p>
+            <span class="font-semibold text-gray-700">Email:</span>
+            <span th:text="${sysParams['email_contact']}">
+          lienheghd@gmail.com
+        </span>
+          </p>
+
+          <p>
+            <span class="font-semibold text-gray-700">Mã số thuế:</span>
+            0110891976
+          </p>
+        </div>
+      </div>
+
+      <!-- Google Map -->
+      <div>
+        <div class="rounded-2xl overflow-hidden border border-gray-200 shadow-sm">
+          <iframe
+                  src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d7452.571635488802!2d105.84375719959951!3d20.94103408590247!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3135ad926a912381%3A0x58f4b3bf10788674!2zQ8OUTkcgVFkgVE5ISCBUSMavxqBORyBN4bqgSSBWw4AgQ8OUTkcgTkdI4buGIEdIRA!5e0!3m2!1svi!2s!4v1778579330893!5m2!1svi!2s"
+                  width="100%"
+                  height="260"
+                  style="border:0;"
+                  allowfullscreen=""
+                  loading="lazy"
+                  referrerpolicy="no-referrer-when-downgrade"
+                  title="Bản đồ vị trí cửa hàng GreenHomeShop"
+          >
+          </iframe>
+        </div>
+      </div>
+    </div>
+    <!-- Footer -->
+    <div class="flex items-center justify-start mb-5 w-full md:w-1/2 lg:w-1/4">
+      <a th:href="@{/}" aria-label="GreenHome" class="h-10 flex items-center">
+        <picture>
+          <source
+                  type="image/webp"
+                  th:srcset="@{/client/images/greenhome-logo-500.lossless.webp}"
+          />
+
+          <img
+                  th:src="@{/client/images/logo.png}"
+                  alt="Logo Green Home Shop"
+                  class="w-[180px] md:w-[200px] h-auto object-contain"
+                  width="200"
+                  height="43"
+                  fetchpriority="high"
+                  loading="eager"
+                  decoding="async"
+          />
+        </picture>
+      </a>
+    </div>
+    <div
+      class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 md:gap-12 text-left"
+    >
+      <div class="space-y-3 text-sm text-gray-600 leading-relaxed">
+        <div class="space-y-3">
+          <div class="space-y-1">
+            <p class="text-gray-600 text-sm">
+              Tư vấn mua hàng:
+              <a th:href="'tel:' + ${sysParams['consulting_hotline']}">
+                <span
+                  class="md:text-base font-semibold text-gray-700 block"
+                  th:text="${sysParams['consulting_hotline']}"
+                ></span>
+              </a>
+            </p>
+          </div>
+          <div class="space-y-1">
+            <p class="text-gray-600 text-sm">
+              Hỗ trợ kỹ thuật:
+              <a th:href="'tel:' + ${sysParams['technical_hotline']}">
+                <span
+                  class="md:text-base font-semibold text-gray-700 block"
+                  th:text="${sysParams['technical_hotline']}"
+                ></span>
+              </a>
+            </p>
+          </div>
+          <div class="space-y-1">
+            <p class="text-gray-600 text-sm">
+              Góp ý, khiếu nại:
+              <a th:href="'tel:' + ${sysParams['complaint_hotline']}">
+                <span
+                  class="md:text-base font-semibold text-gray-700 block"
+                  th:text="${sysParams['complaint_hotline']}"
+                ></span>
+              </a>
+            </p>
+          </div>
+        </div>
+        </div>
+      <div>
+        <h3
+                class="font-semibold text-gray-700 mb-6 uppercase text-sm md:text-base tracking-wider"
+        >
+          Chính sách
+        </h3>
+        <ul class="space-y-3 text-sm text-gray-600">
+          <li>
+            <a
+                    href="/chinh-sach/quy-dinh-chung"
+                    class="hover:text-blue-900 transition-colors"
+            >Quy định chung</a
+            >
+          </li>
+          <li>
+            <a
+                    href="/chinh-sach/dieu-khoan-su-dung-va-bao-mat"
+                    class="hover:text-blue-900 transition-colors"
+            >Điều khoản và chính sách</a
+            >
+          </li>
+          <li>
+            <a
+                    href="/chinh-sach/bao-hanh"
+                    class="hover:text-blue-900 transition-colors"
+            >Chính sách bảo hành</a
+            >
+          </li>
+          <li>
+            <a
+                    href="/chinh-sach/thanh-toan"
+                    class="hover:text-blue-900 transition-colors"
+            >Chính sách thanh toán</a
+            >
+          </li>
+          <li>
+            <a
+                    href="/chinh-sach/van-chuyen"
+                    class="hover:text-blue-900 transition-colors"
+            >Chính sách vận chuyển</a
+            >
+          </li>
+          <li>
+            <a
+                    href="/chinh-sach/doi-tra"
+                    class="hover:text-blue-900 transition-colors"
+            >Chính sách đổi trả hàng</a
+            >
+          </li>
+        </ul>
+      </div>
+      <div>
+        <h3 class="font-semibold text-gray-700 mb-6 uppercase text-sm md:text-base tracking-wider">
+          Về chúng tôi
+        </h3>
+        <ul class="space-y-3 text-sm text-gray-600">
+          <li>
+            <a
+              href="/ve-chung-toi"
+              class="hover:text-blue-900 transition-colors"
+              >Về chúng tôi</a
+            >
+          </li>
+          <li>
+            <a href="/lien-he" class="hover:text-blue-900 transition-colors"
+              >Liên hệ</a
+            >
+          </li>
+          <li>
+            <a href="/tin-tuc" class="hover:text-blue-900 transition-colors"
+              >Tin tức</a
+            >
+          </li>
+        </ul>
+        <div class="space-y-3 pt-3">
+          <p class="font-semibold text-gray-700 uppercase md:text-base">
+            Công ty TNHH Thương mại và Công nghệ GHD
+          </p>
+          <p class="text-sm">
+            Mã số thuế: <span class="text-gray-700 font-medium">0110891976</span
+          ><br />
+            do Sở KH&ĐT TP.HN cấp ngày: 18/11/2024
+          </p>
+          <a href="http://online.gov.vn/Home/WebDetails/140706" rel="nofollow" target="_blank">
+            <img th:src="|https://images.weserv.nl/?url=https://greenhomeshop.vn/client/images/logoBCT.png&h=100&output=webp&q=90|"
+                 alt="Chứng nhận Đã thông báo Bộ Công Thương"
+                 class="h-14 w-auto object-contain"
+                 width="150"
+                 height="56"
+                 loading="lazy"
+                 decoding="async"
+            />
+          </a>
+        </div>
+      </div>
+    </div>
+
+    <div class="mt-12 pb-3 flex items-center justify-center gap-5">
+      Mạng xã hội
+      <a href="https://www.facebook.com/greenhomeshop.vn" class="text-gray-400 hover:text-blue-600 transition-colors" aria-label="Facebook">
+        <svg class="w-7 h-7" fill="currentColor" viewBox="0 0 24 24"><path d="M22 12c0-5.523-4.477-10-10-10S2 6.477 2 12c0 4.991 3.657 9.128 8.438 9.878v-6.987h-2.54V12h2.54V9.797c0-2.506 1.492-3.89 3.777-3.89 1.094 0 2.238.195 2.238.195v2.46h-1.26c-1.243 0-1.63.771-1.63 1.562V12h2.773l-.443 2.89h-2.33v6.988C18.343 21.128 22 16.991 22 12z"/></svg>
+      </a>
+    </div>
+    <div class="pt-3 border-t border-gray-200 text-center">
+      <p class="text-sm text-gray-600">
+        © 2026 Green Home Shop - Gia dụng thông minh.
+      </p>
+    </div>
+  </div>
+  <div th:replace="~{common/client/floating-contact :: floating-contact}"></div>
+  <script defer th:src="@{/client/js/slider.js}"></script>
+  <script defer th:src="@{/client/js/alpine.min.js}"></script>
+</footer>

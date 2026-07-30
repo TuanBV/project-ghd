@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{common/head :: common_head('Tin tức - Green Home Shop', ~{:: #header-style}, null, null)}">
+  <th:block id="header-style">
+    <style>
+      .article-card {
+        transition: all 0.4s ease;
+      }
+
+      .article-card:hover {
+        box-shadow: 0 15px 30px -10px rgb(0 0 0 / 0.15);
+      }
+
+      .img-zoom {
+        transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+      }
+
+      .article-card:hover .img-zoom {
+        transform: scale(1.05);
+      }
+
+      .article-card:hover h2 {
+        color: #2563eb;
+      }
+
+      .fixed-thumb {
+        width: 100%;
+        aspect-ratio: 16 / 9;
+        flex-shrink: 0;
+        overflow: hidden;
+        background-color: #f3f4f6;
+      }
+
+      @media (min-width: 768px) {
+        .fixed-thumb {
+          width: 400px;
+          height: auto;
+        }
+      }
+
+      #news-container {
+        scroll-behavior: smooth;
+      }
+
+      .custom-select {
+        appearance: none;
+        -webkit-appearance: none;
+      }
+
+      #clearFilterBtn {
+        transition: all 0.3s ease;
+      }
+
+      #clearFilterBtn.hidden {
+        display: none;
+      }
+    </style>
+  </th:block>
+</head>
+<body class="bg-[#f6f6f6] text-gray-700">
+<div th:replace="common/client/gtm :: gtm-body"></div>
+<div th:replace="common/client/header :: header"></div>
+
+<main class="container mx-auto px-6 md:px-12 py-12">
+  <div class="mb-12 text-center md:text-left">
+    <h1 class="text-xl md:text-2xl font-semibold text-gray-700 mb-4 tracking-tight">Tin tức & Sự kiện</h1>
+    <div class="h-1.5 w-20 bg-blue-600 rounded-full mx-auto md:mx-0"></div>
+  </div>
+
+  <div class="flex flex-col lg:flex-row gap-5">
+    <div class="w-full lg:w-3/4">
+      <div class="mb-10 flex flex-col md:flex-row gap-4">
+        <div class="flex-1 flex items-center bg-white rounded-2xl ring-1 ring-gray-200 focus-within:ring-2 focus-within:ring-blue-600 shadow-sm px-6 transition-all group relative">
+          <svg class="text-gray-600 text-2xl group-focus-within:text-blue-600" data-icon="search" aria-hidden="true" focusable="false" viewBox="0 0 24 24" width="1em" height="1em" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" ><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
+          <input id="searchInput" type="text" th:value="${param['tu-khoa']}" placeholder="Tìm kiếm bài viết theo tiêu đề..." class="w-full py-4 px-4 bg-transparent border-none outline-none text-lg text-gray-700">
+          <button id="clearFilterBtn" onclick="clearFilters()" title="Xóa tất cả bộ lọc" class="hidden absolute right-16 flex items-center gap-1 px-3 py-1.5 bg-gray-100 hover:bg-rose-50 text-gray-600 hover:text-rose-600 rounded-lg text-xs font-semibold transition-all border border-gray-200">
+            <svg class="text-lg" data-icon="x" aria-hidden="true" focusable="false" viewBox="0 0 24 24" width="1em" height="1em" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" ><path d="M18 6 6 18M6 6l12 12"/></svg> XÓA LỌC
+          </button>
+          <div id="search-loader" class="hidden">
+            <div class="animate-spin rounded-full h-5 w-5 border-b-2 border-blue-600"></div>
+          </div>
+        </div>
+        <div class="md:w-72 flex items-center bg-white rounded-2xl ring-1 ring-gray-200 shadow-sm px-4 focus-within:ring-2 focus-within:ring-blue-600 transition-all">
+          <svg class="text-gray-600 text-xl" data-icon="sort-alt-left" aria-hidden="true" focusable="false" viewBox="0 0 24 24" width="1em" height="1em" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" ><path d="M4 7h13M4 12h9M4 17h5"/><path d="m17 4 3 3-3 3"/></svg>
+          <select id="sortSelect" class="w-full py-4 px-2 bg-transparent border-none outline-none text-gray-700 cursor-pointer font-medium">
+            <option value="created_date,desc">Mới nhất</option>
+            <option value="created_date,asc">Cũ nhất</option>
+            <option value="view_count,desc">Xem nhiều nhất</option>
+            <option value="title,asc">Tiêu đề (A-Z)</option>
+          </select>
+        </div>
+      </div>
+
+      <div id="news-container" class="flex flex-col gap-10 transition-opacity duration-300">
+        <th:block th:each="item, iterStat : ${newsData}">
+          <article class="article-card bg-white rounded-xl overflow-hidden border border-gray-100 flex flex-col md:flex-row shadow-sm cursor-pointer group">
+            <div class="fixed-thumb">
+              <picture>
+                <source media="(min-width: 1024px)" th:srcset="|${item.thumbnail}_pc.webp|">
+                <source media="(min-width: 768px)" th:srcset="|${item.thumbnail}_tablet.webp|">
+                <img th:src="|${item.thumbnail}_mobile.webp|"
+                     th:alt="${item.title}"
+                     class="img-zoom w-full h-full object-cover"
+                     width="400"
+                     height="225"
+                     th:attr="fetchpriority=${iterStat.first ? 'high' : 'auto'}, loading=${iterStat.first ? 'eager' : 'lazy'}, decoding=${iterStat.first ? 'sync' : 'async'}">
+              </picture>
+            </div>
+            <div class="p-8 flex flex-col flex-1 justify-center">
+              <div class="flex items-center gap-4 text-xs text-gray-600 mb-4 font-medium uppercase tracking-wider">
+                <span class="flex items-center gap-1.5"><svg class="text-lg" data-icon="calendar" aria-hidden="true" focusable="false" viewBox="0 0 24 24" width="1em" height="1em" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" ><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg> [[${#temporals.format(item.createdDate, 'dd/MM/yyyy')}]]</span>
+                <span class="flex items-center gap-1.5"><svg class="text-lg" data-icon="show" aria-hidden="true" focusable="false" viewBox="0 0 24 24" width="1em" height="1em" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" ><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg> [[${item.viewCount ?: 0}]] xem</span>
+              </div>
+              <h2 class="text-2xl font-semibold text-gray-700 mb-4 line-clamp-2 leading-tight transition-colors duration-300">
+                <a th:href="@{'/tin-tuc/' + ${item.slug}}" th:text="${item.title}"></a>
+              </h2>
+              <p class="text-gray-600 text-base line-clamp-3 mb-6 leading-relaxed" th:text="${item.summary}"></p>
+              <div class="mt-auto pt-6 border-t border-gray-50">
+                <a th:href="@{'/tin-tuc/' + ${item.slug}}" class="text-blue-600 font-semibold text-sm flex items-center gap-2 group/btn">
+                  XEM CHI TIẾT <svg class="text-2xl transition-transform group-hover/btn:translate-x-1" data-icon="right-arrow-alt" aria-hidden="true" focusable="false" viewBox="0 0 24 24" width="1em" height="1em" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" ><path d="M5 12h14"/><path d="m13 6 6 6-6 6"/></svg>
+                </a>
+              </div>
+            </div>
+          </article>
+        </th:block>
+      </div>
+
+      <div id="pagination" class="mt-16 flex justify-center items-center gap-3">
+        <th:block th:if="${totalPages > 1}" th:each="i : ${#numbers.sequence(1, totalPages)}">
+          <button th:onclick="'loadNews(' + ${i} + ')'" th:class="${i == currentPage} ? 'page-btn w-12 h-12 rounded-xl bg-blue-600 text-white shadow-lg shadow-blue-200 font-semibold' : 'page-btn w-12 h-12 rounded-xl bg-white text-gray-600 border border-gray-100 hover:border-blue-600 hover:text-blue-900 font-semibold transition-all'" th:text="${i}"></button>
+        </th:block>
+      </div>
+    </div>
+
+    <aside class="w-full lg:w-1/4 space-y-10">
+      <div class="bg-white p-8 rounded-xl border border-gray-100 shadow-sm">
+        <h3 class="text-lg font-semibold text-gray-700 mb-6 flex items-center gap-2">
+          <svg class="text-orange-500 text-2xl" data-icon="hot" aria-hidden="true" focusable="false" viewBox="0 0 24 24" width="1em" height="1em" fill="currentColor" ><path d="M13.5 2s.5 4-2.5 6.5C8.5 10.6 7 12.2 7 15a5 5 0 0 0 10 0c0-2.5-1.7-4.2-3-5.5.2 2-1.2 3-2.3 3.7.5-2.7-.1-5.4 1.8-11.2z"/></svg> Tin nổi bật
+        </h3>
+        <div class="space-y-6">
+          <th:block th:each="feat, iter : ${newsFeatured}">
+            <a th:href="@{'/tin-tuc/' + ${feat.slug}}" class="flex gap-4 group">
+              <div class="w-20 h-20 overflow-hidden flex-shrink-0 bg-gray-100 rounded-lg">
+                <picture>
+                  <source media="(min-width: 1024px)" th:srcset="|${feat.thumbnail}_pc.webp|">
+                  <source media="(min-width: 768px)" th:srcset="|${feat.thumbnail}_tablet.webp|">
+                  <img th:src="|${feat.thumbnail}_mobile.webp|"
+                       th:alt="${feat.title}"
+                       class="w-full h-full object-cover group-hover:scale-110 transition duration-500"
+                       width="80"
+                       height="80"
+                       loading="lazy"
+                       decoding="async">
+                </picture>
+              </div>
+              <div class="flex flex-col justify-center">
+                <h4 class="text-sm font-semibold text-gray-700 line-clamp-2 overflow-hidden group-hover:text-blue-900 transition" th:text="${feat.title}"></h4>
+                <span class="text-[11px] text-gray-600 mt-1">[[${#temporals.format(feat.createdDate, 'dd/MM/yyyy')}]]</span>
+              </div>
+            </a>
+          </th:block>
+        </div>
+      </div>
+    </aside>
+  </div>
+</main>
+
+<div th:replace="common/client/footer :: footer"></div>
+
+<script th:inline="javascript">
+  const API_BASE = "/api/v1/news/list";
+  const DEFAULT_PAGE = 1;
+  const DEFAULT_SORT_FIELD = "created_date";
+  const DEFAULT_SORT_DIR = "desc";
+  const DEFAULT_SORT_VAL = `${DEFAULT_SORT_FIELD},${DEFAULT_SORT_DIR}`;
+
+  window.addEventListener('load', function() {
+    window.ensureJQuery().then(function() {
+    const urlParams = new URLSearchParams(window.location.search);
+    const initialPage = parseInt(urlParams.get('trang')) || DEFAULT_PAGE;
+    syncUIFromUrl(urlParams);
+    toggleClearButton();
+    if (urlParams.has('trang') || urlParams.has('tu-khoa') || urlParams.has('thuoc-tinh')) {
+      loadNews(initialPage, false);
+    }
+    $("#searchInput").on("keyup", debounce(function() {
+      toggleClearButton();
+      loadNews(1, true);
+    }, 500));
+    $("#sortSelect").on("change", function() {
+      toggleClearButton();
+      loadNews(1, true);
+    });
+    window.onpopstate = function() {
+      const params = new URLSearchParams(window.location.search);
+      syncUIFromUrl(params);
+      toggleClearButton();
+      loadNews(parseInt(params.get('trang')) || DEFAULT_PAGE, false);
+    };
+    });
+  });
+
+  function toggleClearButton() {
+    const keyword = $("#searchInput").val().trim();
+    const sortVal = $("#sortSelect").val();
+    keyword !== "" || sortVal !== DEFAULT_SORT_VAL ? $("#clearFilterBtn").removeClass("hidden") : $("#clearFilterBtn").addClass("hidden");
+  }
+
+  function clearFilters() {
+    if (!window.jQuery) return window.ensureJQuery().then(function() { clearFilters(); });
+    $("#searchInput").val("");
+    $("#sortSelect").val(DEFAULT_SORT_VAL);
+    toggleClearButton();
+    loadNews(1, true);
+  }
+
+  function syncUIFromUrl(params) {
+    $("#searchInput").val(params.get('tu-khoa') || "");
+    const sortField = params.get('thuoc-tinh') || DEFAULT_SORT_FIELD;
+    const sortDir = params.get('kieu-sap-xep') || DEFAULT_SORT_DIR;
+    $("#sortSelect").val(`${sortField},${sortDir}`);
+  }
+
+  function loadNews(page, pushToHistory = true) {
+    if (!window.jQuery) return window.ensureJQuery().then(function() { loadNews(page, pushToHistory); });
+    const keyword = $("#searchInput").val();
+    const sortValue = $("#sortSelect").val().split(',');
+    const sortField = sortValue[0];
+    const sortDir = sortValue[1];
+    $("#news-container").css("opacity", "0.4");
+    $("#search-loader").removeClass("hidden");
+    if (pushToHistory) {
+      const newUrl = new URL(window.location.href);
+      keyword.trim() !== "" ? newUrl.searchParams.set('tu-khoa', keyword) : newUrl.searchParams.delete('tu-khoa');
+      page !== DEFAULT_PAGE ? newUrl.searchParams.set('trang', page) : newUrl.searchParams.delete('trang');
+      sortField !== DEFAULT_SORT_FIELD ? newUrl.searchParams.set('thuoc-tinh', sortField) : newUrl.searchParams.delete('thuoc-tinh');
+      sortDir !== DEFAULT_SORT_DIR ? newUrl.searchParams.set('kieu-sap-xep', sortDir) : newUrl.searchParams.delete('kieu-sap-xep');
+      window.history.pushState({}, '', newUrl);
+    }
+    $.get(API_BASE, { "tu-khoa": keyword, "trang": page - 1, "thuoc-tinh": sortField, "kieu-sap-xep": sortDir }, function (res) {
+      const data = res.body || res;
+      renderNewsList(data.content || []);
+      renderPagination(data.totalPages, page);
+      $("#news-container").css("opacity", "1");
+      $("#search-loader").addClass("hidden");
+      if (pushToHistory) window.scrollTo({ top: 0, behavior: 'smooth' });
+    });
+  }
+
+  function renderNewsList(list) {
+    const $container = $("#news-container").empty();
+    if (list.length === 0) {
+      $container.append(`<div class="py-24 text-center text-gray-600 text-lg">Không tìm thấy bài viết nào phù hợp.</div>`);
+      return;
+    }
+    list.forEach((item, index) => {
+      const date = item.createdDate ? new Date(item.createdDate).toLocaleDateString('vi-VN') : 'N/A';
+      const fetchPriority = index === 0 ? 'high' : 'auto';
+      const loading = index === 0 ? 'eager' : 'lazy';
+      const decoding = index === 0 ? 'sync' : 'async';
+      const baseImg = item.thumbnail || 'https://placehold.co/600x400?text=No+Thumb';
+
+      $container.append(`
+        <article class="article-card bg-white rounded-xl overflow-hidden border border-gray-100 flex flex-col md:flex-row shadow-sm cursor-pointer group">
+            <div class="fixed-thumb">
+                <picture>
+                    <source media="(min-width: 1024px)" srcset="${baseImg}_pc.webp">
+                    <source media="(min-width: 768px)" srcset="${baseImg}_tablet.webp">
+                    <img src="${baseImg}_mobile.webp" alt="${item.title}" width="400" height="225" fetchpriority="${fetchPriority}" loading="${loading}" decoding="${decoding}" class="img-zoom w-full h-full object-cover">
+                </picture>
+            </div>
+            <div class="p-8 flex flex-col flex-1 justify-center">
+                <div class="flex items-center gap-4 text-xs text-gray-600 mb-4 font-medium uppercase tracking-wider">
+                    <span class="flex items-center gap-1.5"><svg class="" data-icon="calendar" aria-hidden="true" focusable="false" viewBox="0 0 24 24" width="1em" height="1em" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" ><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg> ${date}</span>
+                    <span class="flex items-center gap-1.5"><svg class="" data-icon="show" aria-hidden="true" focusable="false" viewBox="0 0 24 24" width="1em" height="1em" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" ><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg> ${item.viewCount || 0} xem</span>
+                </div>
+                <h2 class="text-2xl font-semibold text-gray-700 mb-4 line-clamp-2 leading-tight transition-colors duration-300">
+                    <a href="/tin-tuc/${item.slug}">${item.title}</a>
+                </h2>
+                <p class="text-gray-600 text-base line-clamp-3 mb-6 leading-relaxed">${item.summary || ''}</p>
+                <div class="mt-auto pt-6 border-t border-gray-50">
+                    <a href="/tin-tuc/${item.slug}" class="text-blue-600 font-semibold text-sm flex items-center gap-2 group/btn">
+                        XEM CHI TIẾT <svg class="text-2xl transition-transform group-hover/btn:translate-x-1" data-icon="right-arrow-alt" aria-hidden="true" focusable="false" viewBox="0 0 24 24" width="1em" height="1em" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" ><path d="M5 12h14"/><path d="m13 6 6 6-6 6"/></svg>
+                    </a>
+                </div>
+            </div>
+        </article>
+      `);
+    });
+  }
+
+  function renderPagination(totalPages, current) {
+    const $buttons = $("#pagination").empty();
+    if (totalPages <= 1) return;
+    for (let i = 1; i <= totalPages; i++) {
+      const activeClass = i === current ? "bg-blue-600 text-white shadow-lg shadow-blue-200" : "bg-white text-gray-600 border border-gray-100 hover:border-blue-600 hover:text-blue-900";
+      $buttons.append(`<button onclick="loadNews(${i})" class="page-btn w-12 h-12 rounded-xl font-semibold transition-all ${activeClass}">${i}</button>`);
+    }
+  }
+
+  function debounce(fn, delay) {
+    let timeout;
+    return function(...args) {
+      clearTimeout(timeout);
+      timeout = setTimeout(() => fn.apply(this, args), delay);
+    };
+  }
+</script>
+</body>
+</html>

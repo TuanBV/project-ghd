@@ -1,0 +1,329 @@
+<!doctype html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{common/admin/header :: header(~{::title}, ~{::link})}">
+  <title th:text="${titlePage}"></title>
+</head>
+<body>
+<div th:replace="common/admin/sidebar :: sidebar"></div>
+<section id="content">
+  <nav th:replace="common/admin/navbar :: navbar"></nav>
+  <main>
+    <div class="max-w-full mx-auto p-6">
+      <div class="flex items-center justify-between mb-6">
+        <h1 class="text-2xl font-semibold text-gray-700">
+          Quản lý người dùng
+        </h1>
+        <button
+                class="bg-blue-600 text-white px-4 py-2 rounded-xl shadow hover:bg-blue-700 transition"
+                onclick="openModal()"
+        >
+          + Thêm người dùng
+        </button>
+      </div>
+
+      <div class="bg-white rounded-xl shadow">
+        <div class="overflow-x-auto">
+          <table class="min-w-full border-collapse">
+            <thead class="bg-gray-50 border-b">
+            <tr>
+              <th class="px-6 py-3 text-left text-sm font-medium text-gray-600">STT</th>
+              <th class="px-6 py-3 text-left text-sm font-medium text-gray-600">Tên đăng nhập</th>
+              <th class="px-6 py-3 text-left text-sm font-medium text-gray-600">Email</th>
+              <th class="px-6 py-3 text-left text-sm font-medium text-gray-600">Số điện thoại</th>
+              <th class="px-6 py-3 text-left text-sm font-medium text-gray-600">Vai trò</th>
+              <th class="px-6 py-3 text-right text-sm font-medium text-gray-600">Thao tác</th>
+            </tr>
+            </thead>
+            <tbody class="divide-y" id="users">
+            <tr th:each="user, stat : ${users}" class="hover:bg-gray-50 transition">
+              <td class="px-6 py-4 text-sm text-gray-600" th:text="${stat.index + 1}"></td>
+              <td class="px-6 py-4 text-sm text-gray-700" th:text="${user.username}"></td>
+              <td class="px-6 py-4 text-sm text-gray-600" th:text="${user.email}"></td>
+              <td class="px-6 py-4 text-sm text-gray-600" th:text="${user.phone}"></td>
+              <td class="px-6 py-4 text-sm text-gray-600">
+                      <span
+                              th:text="${user.role == 0 || user.role?.toString() == 'ADMIN' ? 'QUẢN TRỊ' : 'NGƯỜI DÙNG'}"
+                              th:classappend="${user.role == 0 || user.role?.toString() == 'ADMIN' ? 'bg-purple-100 text-purple-700' : 'bg-green-100 text-green-700'}"
+                              class="px-2 py-1 rounded text-xs font-semibold"
+                      >
+                      </span>
+              </td>
+              <td class="px-6 py-4 text-right space-x-2">
+                <button th:attr="onclick=${'viewUser('''+user.id+''')'}" class="text-blue-600 hover:underline text-sm">Xem</button>
+                <button th:attr="onclick=${'editUser('''+user.id+''')'}" class="text-yellow-600 hover:underline text-sm">Sửa</button>
+                <button th:attr="onclick=${'deleteUser('''+user.id+''')'}" class="text-red-600 hover:underline text-sm">Xóa</button>
+              </td>
+            </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div id="createUserModal" class="modal hidden fixed inset-0 bg-[#697284b3] flex items-center justify-center z-50">
+        <div class="modal-content bg-white p-6 rounded-xl w-96 shadow-xl relative max-h-[90vh] overflow-y-auto">
+          <button type="button" class="absolute top-4 right-4 text-gray-600 hover:text-gray-600 text-2xl" onclick="closeModal()">&times;</button>
+          <h2 id="modalTitle" class="text-xl font-semibold mb-4">Thêm người dùng mới</h2>
+
+          <form id="createUserForm" class="space-y-4">
+            <div class="flex flex-col items-center justify-center space-y-2 mb-4">
+              <div class="relative group">
+                <img
+                        id="avatarPreview"
+                        src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7"
+                        alt="Avatar Preview"
+                        class="w-24 h-24 rounded-full object-cover border-2 border-blue-500 p-1 shadow-md bg-gray-100"
+                        onerror="this.src='data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7';"
+                />
+                <label
+                        for="avatarInput"
+                        id="labelAvatar"
+                        class="absolute bottom-0 right-0 bg-blue-600 text-white p-1.5 rounded-full cursor-pointer shadow-lg hover:bg-blue-700 transition"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
+                  </svg>
+                </label>
+                <input type="file" id="avatarInput" name="avatar" accept="image/*" class="hidden" />
+              </div>
+            </div>
+
+            <input type="hidden" id="userId" name="id" />
+            <div>
+              <label class="block text-sm font-medium text-gray-700">Tên đăng nhập</label>
+              <input type="text" id="username" class="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500" />
+              <span id="error-username" class="text-red-500 text-xs mt-1 hidden"></span>
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700">Email</label>
+              <input type="email" id="email" class="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500" />
+              <span id="error-email" class="text-red-500 text-xs mt-1 hidden"></span>
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700">Số điện thoại</label>
+              <input type="text" id="phone" class="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500" />
+              <span id="error-phone" class="text-red-500 text-xs mt-1 hidden"></span>
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700">Vai trò</label>
+              <select id="role" class="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500">
+                <option value="1">NGƯỜI DÙNG (USER)</option>
+                <option value="0">QUẢN TRỊ (ADMIN)</option>
+              </select>
+              <span id="error-role" class="text-red-500 text-xs mt-1 hidden"></span>
+            </div>
+            <div id="passwordField">
+              <label class="block text-sm font-medium text-gray-700">Mật khẩu</label>
+              <input type="password" id="password" class="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500" />
+              <span id="error-password" class="text-red-500 text-xs mt-1 hidden"></span>
+            </div>
+            <div class="flex gap-2 pt-2">
+              <button type="button" onclick="closeModal()" class="flex-1 bg-gray-200 text-gray-700 py-2 rounded-xl hover:bg-gray-300 transition">Hủy bỏ</button>
+              <button type="submit" id="submitBtn" class="flex-1 bg-blue-600 text-white py-2 rounded-xl hover:bg-blue-700 transition">Lưu lại</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </main>
+</section>
+
+<script th:src="@{/admin/js/main.js}"></script>
+<script>
+  // SỬA ĐỔI: Sử dụng ảnh Base64 trắng 1x1 thay cho placeholder có chữ
+  const DEFAULT_AVATAR = "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7";
+
+  const getRoleLabel = (role) => role === 0 || role === "ADMIN" ? "QUẢN TRỊ" : "NGƯỜI DÙNG";
+  const getRoleValue = (role) => (role === 0 || role === "ADMIN" ? 0 : 1);
+  const getRoleClass = (role) => role === 0 || role === "ADMIN" ? "bg-purple-100 text-purple-700" : "bg-green-100 text-green-700";
+
+  function openModal() {
+    clearErrors();
+    $("#createUserModal").removeClass("hidden");
+    $("#modalTitle").text("Thêm người dùng mới");
+    $("#passwordField").show();
+    $("#labelAvatar").show();
+    $("#avatarPreview").attr("src", DEFAULT_AVATAR);
+  }
+
+  function closeModal() {
+    $("#createUserModal").addClass("hidden");
+    $("#createUserForm")[0].reset();
+    $("#userId").val("");
+    $("#avatarPreview").attr("src", DEFAULT_AVATAR);
+    clearErrors();
+    $("#username, #email, #phone, #role").prop("readonly", false).prop("disabled", false);
+    $("#passwordField").show();
+    $("#labelAvatar").show();
+    $("#submitBtn").show().text("Lưu lại");
+  }
+
+  function viewUser(id) {
+    $.get(`/api/v1/user/${id}`, function (response) {
+      const user = response.body;
+      $("#modalTitle").text("Chi tiết người dùng");
+
+      // SỬA ĐỔI: Kiểm tra ảnh trống triệt để
+      const avatarSrc = (user.avatar && user.avatar.trim() !== "") ? user.avatar : DEFAULT_AVATAR;
+      $("#avatarPreview").attr("src", avatarSrc);
+
+      $("#username").val(user.username).prop("readonly", true);
+      $("#email").val(user.email).prop("readonly", true);
+      $("#phone").val(user.phone).prop("readonly", true);
+      $("#role").val(getRoleValue(user.role)).prop("disabled", true);
+      $("#passwordField").hide();
+      $("#labelAvatar").hide();
+      $("#submitBtn").hide();
+      $("#createUserModal").removeClass("hidden");
+    });
+  }
+
+  function editUser(id) {
+    $.get(`/api/v1/user/${id}`, function (response) {
+      const user = response.body;
+      $("#modalTitle").text("Chỉnh sửa người dùng");
+      $("#userId").val(user.id);
+
+      // SỬA ĐỔI: Kiểm tra ảnh trống triệt để
+      const avatarSrc = (user.avatar && user.avatar.trim() !== "") ? user.avatar : DEFAULT_AVATAR;
+      $("#avatarPreview").attr("src", avatarSrc);
+
+      $("#username").val(user.username).prop("readonly", false);
+      $("#email").val(user.email).prop("readonly", false);
+      $("#phone").val(user.phone).prop("readonly", false);
+      $("#role").val(getRoleValue(user.role)).prop("disabled", false);
+      $("#passwordField").hide();
+      $("#labelAvatar").show();
+      $("#submitBtn").show().text("Cập nhật người dùng");
+      $("#createUserModal").removeClass("hidden");
+    });
+  }
+
+  function clearErrors() {
+    $('[id^="error-"]').addClass("hidden").text("");
+    $("#createUserForm input, #createUserForm select").removeClass("border-red-500");
+  }
+
+  $("#createUserForm").on("submit", function (event) {
+    event.preventDefault();
+    clearErrors();
+
+    const id = $("#userId").val();
+    const formData = new FormData();
+    formData.append("username", $("#username").val());
+    formData.append("email", $("#email").val());
+    formData.append("phone", $("#phone").val());
+    formData.append("role", $("#role").val());
+
+    const password = $("#password").val();
+    if (password) formData.append("password", password);
+
+    const avatarFile = $("#avatarInput")[0].files[0];
+    if (avatarFile) formData.append("avatar", avatarFile);
+
+    const url = id ? `/api/v1/user/${id}` : "/api/v1/user";
+    const actualMethod = id ? "PUT" : "POST";
+
+    $.ajax({
+      url: url,
+      method: actualMethod,
+      data: formData,
+      processData: false,
+      contentType: false,
+      success: function () {
+        Toast.fire({ icon: "success", title: id ? "Đã cập nhật!" : "Đã thêm thành công!" });
+        closeModal();
+        fetchUsers();
+      },
+      error: function (xhr) {
+        if (xhr.status === 400 && xhr.responseJSON?.data) {
+          const errors = xhr.responseJSON.data;
+          Object.keys(errors).forEach((key) => {
+            $(`#error-${key}`).text(errors[key]).removeClass("hidden");
+            $(`#${key}`).addClass("border-red-500");
+          });
+        } else {
+          Toast.fire({ icon: "error", title: "Hệ thống gặp sự cố!" });
+        }
+      },
+    });
+  });
+
+  function deleteUser(id) {
+    Swal.fire({
+      title: "Bạn có chắc chắn?",
+      text: "Xóa người dùng này?",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#ef4444",
+      confirmButtonText: "Đồng ý xóa",
+      cancelButtonText: "Hủy bỏ",
+    }).then((result) => {
+      if (result.isConfirmed) {
+        $.ajax({
+          url: `/api/v1/user/${id}`,
+          method: "DELETE",
+          success: function () {
+            Toast.fire({ icon: "success", title: "Đã xóa người dùng." });
+            fetchUsers();
+          },
+          error: function (xhr) {
+            Toast.fire({ icon: "error", title: "Thất bại: " + xhr.responseText });
+          },
+        });
+      }
+    });
+  }
+
+  function fetchUsers() {
+    $.get("/api/v1/user", function (response) {
+      $("#users").empty();
+      const users = response.body || response;
+      users.forEach(function (user, index) {
+        const roleLabel = getRoleLabel(user.role);
+        const roleClass = getRoleClass(user.role);
+
+        $("#users").append(`
+          <tr class="hover:bg-gray-50 transition">
+              <td class="px-6 py-4 text-sm text-gray-600">${index + 1}</td>
+              <td class="px-6 py-4 text-sm text-gray-700">${user.username}</td>
+              <td class="px-6 py-4 text-sm text-gray-600">${user.email}</td>
+              <td class="px-6 py-4 text-sm text-gray-600">${user.phone || "-"}</td>
+              <td class="px-6 py-4 text-sm">
+                  <span class="px-2 py-1 rounded text-xs font-semibold ${roleClass}">
+                      ${roleLabel}
+                  </span>
+              </td>
+              <td class="px-6 py-4 text-right space-x-2">
+                  <button onclick="viewUser('${user.id}')" class="text-blue-600 hover:underline text-sm">Xem</button>
+                  <button onclick="editUser('${user.id}')" class="text-yellow-600 hover:underline text-sm">Sửa</button>
+                  <button onclick="deleteUser('${user.id}')" class="text-red-600 hover:underline text-sm">Xóa</button>
+              </td>
+          </tr>
+        `);
+      });
+    });
+  }
+
+  $("#avatarInput").on("change", function (event) {
+    const file = event.target.files[0];
+    if (file && file.type.match("image.*")) {
+      const reader = new FileReader();
+      reader.onload = (e) => $("#avatarPreview").attr("src", e.target.result);
+      reader.readAsDataURL(file);
+    } else {
+      // SỬA ĐỔI: Reset về ảnh trắng nếu hủy chọn
+      $("#avatarPreview").attr("src", DEFAULT_AVATAR);
+    }
+  });
+
+  const modalElement = document.getElementById("createUserModal");
+  modalElement.addEventListener("click", (e) => {
+    if (e.target === modalElement) closeModal();
+  });
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape") closeModal();
+  });
+</script>
+</body>
+</html>

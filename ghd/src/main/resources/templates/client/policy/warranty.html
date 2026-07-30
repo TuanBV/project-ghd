@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{common/head :: common_head('Chính sách bảo hành sản phẩm - Green Home Shop', ~{:: #header-style}, null, null)}">
+    <th:block id="header-style">
+        <meta name="description" content="Chính sách bảo hành chính hãng từ 12-24 tháng tại Green Home Shop. Cam kết hỗ trợ kỹ thuật tận tâm cho Robot hút bụi, Tivi và thiết bị gia dụng thông minh.">
+        <meta name="keywords" content="bảo hành Green Home Shop, bảo hành robot hút bụi, trung tâm bảo hành ecovacs, bảo hành xiaomi hà nội">
+        <link rel="canonical" href="https://greenhomeshop.vn/chinh-sach/bao-hanh" />
+
+        <meta property="og:title" content="Chính sách Bảo hành Sản phẩm - Green Home Shop">
+        <meta property="og:description" content="Cam kết hàng chính hãng. Bảo hành 12-24 tháng, hỗ trợ gửi hãng tận nơi.">
+        <meta property="og:image" content="https://greenhomeshop.vn/client/images/logo.png">
+        <meta property="og:url" content="https://greenhomeshop.vn/chinh-sach/bao-hanh">
+
+        <script type="application/ld+json" th:inline="javascript">
+            [
+                {
+                    "@context": "https://schema.org",
+                    "@type": "BreadcrumbList",
+                    "itemListElement": [{
+                        "@type": "ListItem",
+                        "position": 1,
+                        "name": "Trang chủ",
+                        "item": {
+                            "@id": "https://greenhomeshop.vn/",
+                            "name": "Trang chủ"
+                        }
+                    },{
+                        "@type": "ListItem",
+                        "position": 2,
+                        "name": "Chính sách bảo hành",
+                        "item": {
+                            "@id": "https://greenhomeshop.vn/chinh-sach/bao-hanh",
+                            "name": "Chính sách bảo hành"
+                        }
+                    }]
+                },
+                {
+                    "@context": "https://schema.org",
+                    "@type": "WebPage",
+                    "@id": "https://greenhomeshop.vn/chinh-sach/bao-hanh#webpage",
+                    "url": "https://greenhomeshop.vn/chinh-sach/bao-hanh",
+                    "name": "Chính sách bảo hành sản phẩm - Green Home Shop",
+                    "description": "Chính sách bảo hành chính hãng từ 12-24 tháng tại Green Home Shop cho Robot hút bụi, Tivi và thiết bị gia dụng.",
+                    "publisher": {
+                        "@id": "https://greenhomeshop.vn/#organization"
+                    },
+                    "mainEntity": {
+                        "@type": "Service",
+                        "name": "Dịch vụ bảo hành Green Home Shop",
+                        "description": "Bảo hành thiết bị chính hãng từ 12-24 tháng, hỗ trợ gửi hãng tận nơi.",
+                        "serviceType": "Product Warranty",
+                        "provider": {
+                            "@id": "https://greenhomeshop.vn/#organization"
+                        },
+                        "areaServed": "VN"
+                    }
+                }
+            ]
+        </script>
+    </th:block>
+</head>
+<body class="bg-gray-50 text-gray-700">
+<div th:replace="common/client/gtm :: gtm-body"></div>
+<div th:replace="common/client/header :: header"></div>
+
+<main class="container mx-auto px-4 pb-12">
+    <div th:replace="~{common/client/breadcrumb :: breadcrumb(${ {{name: 'Chính sách bảo hành', url: '/chinh-sach/bao-hanh'}}})}"></div>
+
+    <article class="bg-white p-6 md:p-12 rounded-xl shadow-sm border border-gray-100 mt-6 leading-relaxed">
+        
+        <header class="text-center mb-16">
+            <h1 class="text-3xl md:text-5xl font-semibold text-blue-700 mb-6 uppercase tracking-tight">
+                Chính sách bảo hành
+            </h1>
+            <p class="text-gray-600 max-w-3xl mx-auto text-lg">
+                Cam kết sản phẩm có nguồn gốc rõ ràng. Mọi thiết bị được cung cấp bởi <strong>Green Home Shop</strong> đều đi kèm chế độ hậu mãi tận tâm và minh bạch.
+            </p>
+        </header>
+
+        <section class="mb-16">
+            <h2 class="text-xl font-semibold text-gray-900 mb-6 flex items-center border-l-4 border-blue-600 pl-4 uppercase">
+                1. Thời gian bảo hành
+            </h2>
+            <div class="grid md:grid-cols-2 gap-6">
+                <div class="p-6 bg-gray-50 rounded-xl border border-gray-100">
+                    <p class="font-semibold text-blue-700 mb-2">Thiết bị chính:</p>
+                    <p class="text-sm">Robot hút bụi, Tivi, Máy lọc không khí... bảo hành từ <strong class="text-gray-900">12 - 24 tháng</strong> theo tiêu chuẩn của hãng (Xiaomi, Ecovacs, LG...).</p>
+                </div>
+                <div class="p-6 bg-gray-50 rounded-xl border border-gray-100">
+                    <p class="font-semibold text-blue-700 mb-2">Phụ kiện & Linh kiện:</p>
+                    <p class="text-sm">Pin, sạc, điều khiển... bảo hành từ <strong class="text-gray-900">01 - 06 tháng</strong> (không áp dụng cho màng lọc, chổi quét tiêu hao).</p>
+                </div>
+            </div>
+        </section>
+
+        <section class="mb-16">
+            <h2 class="text-xl font-semibold text-gray-900 mb-6 flex items-center border-l-4 border-blue-600 pl-4 uppercase">
+                2. Điều kiện được bảo hành
+            </h2>
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                <div class="p-5 bg-emerald-50 border border-emerald-100 rounded-xl text-sm font-medium text-emerald-800">
+                    <span class="block text-2xl mb-2">📅</span>
+                    Sản phẩm còn trong thời hạn bảo hành.
+                </div>
+                <div class="p-5 bg-emerald-50 border border-emerald-100 rounded-xl text-sm font-medium text-emerald-800">
+                    <span class="block text-2xl mb-2">⚙️</span>
+                    Lỗi kỹ thuật do Nhà sản xuất phát sinh.
+                </div>
+                <div class="p-5 bg-emerald-50 border border-emerald-100 rounded-xl text-sm font-medium text-emerald-800">
+                    <span class="block text-2xl mb-2">🏷️</span>
+                    Còn nguyên tem bảo hành, không bị rách/vỡ.
+                </div>
+                <div class="p-5 bg-emerald-50 border border-emerald-100 rounded-xl text-sm font-medium text-emerald-800">
+                    <span class="block text-2xl mb-2">📄</span>
+                    IMEI/Serial Number trùng khớp hệ thống.
+                </div>
+            </div>
+        </section>
+
+        <section class="mb-16">
+            <h2 class="text-xl font-semibold text-gray-900 mb-6 flex items-center border-l-4 border-blue-600 pl-4 uppercase">
+                3. Các trường hợp từ chối bảo hành
+            </h2>
+            <div class="bg-rose-50 p-6 rounded-xl border border-rose-100">
+                <ul class="grid md:grid-cols-2 gap-4 text-sm text-rose-900 font-medium">
+                    <li class="flex items-start"><span class="mr-2 text-rose-500">✕</span> Sản phẩm hết hạn bảo hành.</li>
+                    <li class="flex items-start"><span class="mr-2 text-rose-500">✕</span> Rơi vỡ, móp méo, vào nước, cháy nổ do nguồn điện.</li>
+                    <li class="flex items-start"><span class="mr-2 text-rose-500">✕</span> Tự ý tháo dỡ hoặc sửa chữa tại các trung tâm không ủy quyền.</li>
+                    <li class="flex items-start"><span class="mr-2 text-rose-500">✕</span> Hư hỏng do côn trùng xập nhập, thiên tai, hỏa hoạn.</li>
+                </ul>
+            </div>
+        </section>
+
+        <section class="mb-16">
+            <h2 class="text-xl font-semibold text-gray-900 mb-8 flex items-center border-l-4 border-blue-600 pl-4 uppercase">
+                4. Địa điểm & Phương thức bảo hành
+            </h2>
+            <div class="grid md:grid-cols-2 gap-8">
+                <div class="relative p-8 bg-white border-2 border-gray-100 rounded-xl hover:shadow-xl transition-all">
+                    <div class="absolute -top-4 left-6 px-4 py-1 bg-blue-600 text-white text-[10px] font-semibold uppercase rounded-lg">Lựa chọn 1</div>
+                    <div class="font-semibold text-gray-900 mb-4">Tại trung tâm bảo hành hãng</div>
+                    <p class="text-sm text-gray-600 leading-relaxed">
+                        Quý khách có thể mang trực tiếp đến các trạm bảo hành ủy quyền toàn quốc (Xiaomi, LG, Sony...). Đây là cách nhanh nhất để được hỗ trợ kỹ thuật từ chuyên gia của hãng.
+                    </p>
+                </div>
+                <div class="relative p-8 bg-white border-2 border-indigo-100 rounded-xl hover:shadow-xl transition-all">
+                    <div class="absolute -top-4 left-6 px-4 py-1 bg-indigo-600 text-white text-[10px] font-semibold uppercase rounded-lg">Lựa chọn 2</div>
+                    <div class="font-semibold text-gray-900 mb-4">Gửi qua Green Home Shop</div>
+                    <p class="text-sm text-gray-600 leading-relaxed">
+                        Green Home Shop sẽ đại diện khách hàng gửi sản phẩm về hãng và theo dõi tiến độ sửa chữa. Quý khách vui lòng gửi hàng về phòng bảo hành của chúng tôi.
+                    </p>
+                </div>
+            </div>
+
+            <div class="mt-8 bg-gray-900 text-white p-8 rounded-xl flex flex-col md:flex-row items-center justify-between gap-6">
+                <div>
+                    <p class="text-blue-400 font-semibold text-xs uppercase tracking-widest mb-2">Thông tin tiếp nhận</p>
+                        <p class="font-semibold text-lg mb-1">📍 LK7-142, Khu tái định cư phục vụ giải phóng mặt bằng, Xã Tứ Hiệp, Huyện Thanh Trì, Thành phố Hà Nội, Việt Nam</p>
+                    <p class="text-[#191919] text-sm italic">* Chi phí vận chuyển bảo hành do khách hàng thanh toán.</p>
+                </div>
+                <a th:href="'tel:' + ${sysParams['hotline']}" class="bg-blue-600 hover:bg-blue-500 text-white px-8 py-4 rounded-xl font-semibold transition-transform active:scale-95 shadow-lg shadow-blue-900/20">
+                    HOTLINE: <span th:text="${sysParams['hotline']}">0852 262 666</span>
+                </a>
+            </div>
+        </section>
+
+        <section>
+            <h2 class="text-xl font-semibold text-gray-900 mb-6 flex items-center border-l-4 border-blue-600 pl-4 uppercase">
+                5. Thời gian xử lý
+            </h2>
+            <div class="flex items-center p-6 bg-amber-50 border border-amber-100 rounded-xl">
+                <div class="text-3xl mr-6">⏳</div>
+                <p class="text-sm text-amber-900 leading-relaxed">
+                    Thời gian xử lý trung bình từ <strong>07 đến 15 ngày làm việc</strong>. Với các linh kiện đặc thù cần nhập khẩu, Green Home Shop sẽ cập nhật thời gian cụ thể đến quý khách qua số điện thoại đăng ký.
+                </p>
+            </div>
+        </section>
+
+    </article>
+</main>
+
+<div th:replace="common/client/footer :: footer"></div>
+</body>
+</html>

@@ -1,0 +1,366 @@
+<head
+  th:fragment="common_head(title, additionalContent, description, keywords)"
+>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="google-site-verification" content="gHHD8Q5FXa3tB-0z8t1Ytvsd0EUpZ0JbXf49laYODzY" />
+  <title th:text="${title} + ' - Green Home Shop'"></title>
+  <meta name="theme-color" content="#16a34a">
+  <meta property="og:locale" content="vi_VN">
+  <meta
+    name="description"
+    th:content="${description ?: 'Green Home Shop - Giải pháp nhà thông minh toàn diện'}"
+  />
+  <meta
+    name="keywords"
+    th:content="${keywords ?: 'smart home, nhà thông minh, green home'}"
+  />
+  <meta name="robots" content="index, follow" />
+  <link rel="canonical" th:content="${currentUrl}" />
+
+  <link
+    rel="icon"
+    th:href="@{/common/images/favicon-32x32.webp}"
+    sizes="32x32"
+    type="image/webp"
+  />
+
+  <meta property="og:type"
+        th:content="${jsonLd != null ? 'product' : 'website'}" />
+  <meta property="og:title" th:content="${title} + ' - Green Home Shop'" />
+  <meta
+    property="og:description"
+    th:content="${description ?: 'Giải pháp nhà thông minh toàn diện'}"
+  />
+  <meta property="og:url" th:content="${currentUrl}" />
+  <meta property="og:site_name" content="Green Home Shop" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" th:content="${title} + ' - Green Home Shop'" />
+  <meta
+    name="twitter:description"
+    th:content="${description ?: 'Giải pháp nhà thông minh toàn diện'}"
+  />
+
+  <th:block
+    th:if="${additionalContent != null}"
+    th:replace="${additionalContent}"
+  ></th:block>
+
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    window.gtag = window.gtag || function(){ window.dataLayer.push(arguments); };
+    window.__loadScriptOnce = window.__loadScriptOnce || {};
+    window.loadScriptOnce = window.loadScriptOnce || function(src) {
+      if (window.__loadScriptOnce[src]) return window.__loadScriptOnce[src];
+      window.__loadScriptOnce[src] = new Promise(function(resolve, reject) {
+        var existing = document.querySelector('script[src="' + src + '"]');
+        if (existing && existing.dataset.loaded === "true") return resolve();
+        if (existing) {
+          existing.addEventListener("load", resolve, { once: true });
+          existing.addEventListener("error", reject, { once: true });
+          return;
+        }
+        var script = document.createElement("script");
+        script.src = src;
+        script.async = true;
+        script.defer = true;
+        script.onload = function() {
+          script.dataset.loaded = "true";
+          resolve();
+        };
+        script.onerror = reject;
+        document.head.appendChild(script);
+      });
+      return window.__loadScriptOnce[src];
+    };
+    window.ensureJQuery = window.ensureJQuery || function() {
+      return window.jQuery
+        ? Promise.resolve(window.jQuery)
+        : window.loadScriptOnce("https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js").then(function() {
+            return window.jQuery;
+          });
+    };
+    window.ensureSwal = window.ensureSwal || function() {
+      return window.Swal
+        ? Promise.resolve(window.Swal)
+        : window.loadScriptOnce("https://cdn.jsdelivr.net/npm/sweetalert2@11.26.17").then(function() {
+            return window.Swal;
+          });
+    };
+    window.getToast = window.getToast || function() {
+      return window.ensureSwal().then(function(Swal) {
+        if (!window.Toast) {
+          window.Toast = Swal.mixin({
+            toast: true,
+            position: "top-end",
+            width: "350px",
+            showConfirmButton: false,
+            timer: 3000,
+            timerProgressBar: true,
+            customClass: {
+              title: "text-sm! text-gray-700!",
+            },
+            didOpen: function(toast) {
+              toast.addEventListener("mouseenter", Swal.stopTimer);
+              toast.addEventListener("mouseleave", Swal.resumeTimer);
+            },
+          });
+        }
+        return window.Toast;
+      });
+    };
+    window.showToast = window.showToast || function(options) {
+      return window.getToast().then(function(Toast) {
+        return Toast.fire(options);
+      });
+    };
+    window.addEventListener("load", function() {
+      var loadGtm = function() {
+        if (window.__gtmLoaded) return;
+        window.__gtmLoaded = true;
+        window.dataLayer.push({ "gtm.start": new Date().getTime(), event: "gtm.js" });
+        window.loadScriptOnce("https://www.googletagmanager.com/gtm.js?id=GTM-57RQW6K3");
+      };
+      if ("requestIdleCallback" in window) {
+        window.requestIdleCallback(loadGtm, { timeout: 3000 });
+      } else {
+        window.setTimeout(loadGtm, 2500);
+      }
+    });
+  </script>
+  <link
+    rel="preload"
+    th:href="@{/common/fonts/MiSansLatin-Regular.woff2}"
+    as="font"
+    type="font/woff2"
+    crossorigin
+  />
+  <link
+    rel="preload"
+    th:href="@{/common/fonts/MiSansLatin-Medium.woff2}"
+    as="font"
+    type="font/woff2"
+    crossorigin
+  />
+  <link
+    rel="preload"
+    th:href="@{/common/fonts/MiSansLatin-Demibold.woff2}"
+    as="font"
+    type="font/woff2"
+    crossorigin
+  />
+  <link
+    rel="preload"
+    th:href="@{/common/fonts/MiSansLatin-Bold.woff2}"
+    as="font"
+    type="font/woff2"
+    crossorigin
+  />
+  <link rel="preconnect" href="https://www.googletagmanager.com" crossorigin />
+  <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin />
+  <link
+    rel="preload"
+    th:href="@{/client/css/app.css}"
+    as="style"
+    th:attr="onload=|this.onload=null;this.rel='stylesheet'|"
+  />
+  <noscript><link rel="stylesheet" th:href="@{/client/css/app.css}" /></noscript>
+
+  <!-- Chỉ render Organization riêng nếu KHÔNG phải trang sản phẩm -->
+  <th:block th:if="${jsonLd == null}">
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": ["Organization", "Store", "ElectronicsStore"],
+        "@id": "https://greenhomeshop.vn/#organization",
+        "name": "Green Home Shop",
+        "alternateName": "Công ty TNHH Thương mại và Công nghệ GHD",
+        "url": "https://greenhomeshop.vn",
+        "logo": {
+          "@type": "ImageObject",
+          "url": "https://greenhomeshop.vn/client/images/logo.png"
+        },
+        "email": "lienheghd@gmail.com",
+        "telephone": "+84852262666",
+        "taxID": "0110891976",
+        "sameAs": [
+          "https://www.facebook.com/greenhomeshop.vn"
+        ],
+        "contactPoint": {
+          "@type": "ContactPoint",
+          "telephone": "+84852262666",
+          "contactType": "customer service",
+          "areaServed": "VN",
+          "availableLanguage": ["vi"]
+        },
+        "address": {
+          "@type": "PostalAddress",
+          "streetAddress": "LK7-142, Khu tái định cư phục vụ giải phóng mặt bằng, Xã Tứ Hiệp, Huyện Thanh Trì, Thành phố Hà Nội, Việt Nam",
+          "addressLocality": "Thanh Trì",
+          "addressRegion": "Hà Nội",
+          "postalCode": "100000",
+          "addressCountry": "VN"
+        }
+      }
+    </script>
+  </th:block>
+
+  <style>
+    /* Chỉ khai báo những trọng lượng font hay dùng để giảm tải */
+    @font-face {
+      font-family: "MiSans-Web";
+      src: url("/common/fonts/MiSansLatin-Thin.woff2") format("woff2");
+      font-weight: 100;
+      font-style: normal;
+      font-display: optional;
+    }
+
+    @font-face {
+      font-family: "MiSans-Web";
+      src: url("/common/fonts/MiSansLatin-ExtraLight.woff2") format("woff2");
+      font-weight: 200;
+      font-style: normal;
+      font-display: optional;
+    }
+
+    @font-face {
+      font-family: "MiSans-Web";
+      src: url("/common/fonts/MiSansLatin-Light.woff2") format("woff2");
+      font-weight: 300;
+      font-style: normal;
+      font-display: optional;
+    }
+
+    @font-face {
+      font-family: "MiSans-Web";
+      src: url("/common/fonts/MiSansLatin-Regular.woff2") format("woff2");
+      font-weight: 400;
+      font-style: normal;
+      font-display: optional;
+    }
+
+    @font-face {
+      font-family: "MiSans-Web";
+      src: url("/common/fonts/MiSansLatin-Normal.woff2") format("woff2");
+      font-weight: 450; /* Normal hơi dày hơn Regular một chút */
+      font-style: normal;
+      font-display: optional;
+    }
+
+    @font-face {
+      font-family: "MiSans-Web";
+      src: url("/common/fonts/MiSansLatin-Medium.woff2") format("woff2");
+      font-weight: 500;
+      font-style: normal;
+      font-display: optional;
+    }
+
+    @font-face {
+      font-family: "MiSans-Web";
+      src: url("/common/fonts/MiSansLatin-Demibold.woff2") format("woff2");
+      font-weight: 600;
+      font-style: normal;
+      font-display: optional;
+    }
+
+    @font-face {
+      font-family: "MiSans-Web";
+      src: url("/common/fonts/MiSansLatin-Semibold.woff2") format("woff2");
+      font-weight: 650;
+      font-style: normal;
+      font-display: optional;
+    }
+
+    @font-face {
+      font-family: "MiSans-Web";
+      src: url("/common/fonts/MiSansLatin-Bold.woff2") format("woff2");
+      font-weight: 700;
+      font-style: normal;
+      font-display: optional;
+    }
+
+    svg[data-icon] {
+      display: inline-block;
+      width: 1em;
+      height: 1em;
+      vertical-align: -0.125em;
+      flex-shrink: 0;
+      line-height: 1;
+    }
+
+    button svg[data-icon],
+    a svg[data-icon],
+    [role="button"] svg[data-icon],
+    .flex > svg[data-icon],
+    .inline-flex > svg[data-icon] {
+      align-self: center;
+    }
+
+    [x-cloak] {
+      display: none !important;
+    }
+
+    #header {
+      min-height: 118px;
+    }
+
+    .category-nav {
+      display: none;
+      height: 48px;
+      min-height: 48px;
+      overflow: hidden;
+    }
+
+body {
+      font-family:
+        "MiSans-Web",
+        system-ui,
+        -apple-system,
+        sans-serif;
+    }
+
+    main {
+      padding-top: 140px;
+    }
+
+    @media (min-width: 768px) and (max-width: 1023px) {
+      #header {
+        min-height: 160px;
+      }
+
+      .category-nav {
+        display: flex;
+      }
+
+      main {
+        padding-top: 200px;
+      }
+    }
+
+    @media (min-width: 1024px) {
+      #header {
+        min-height: 112px;
+      }
+
+      .category-nav {
+        display: flex;
+      }
+    }
+
+    button,
+    a {
+      cursor: pointer;
+    }
+
+    .sr-only {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      padding: 0;
+      margin: -1px;
+      overflow: hidden;
+      clip: rect(0, 0, 0, 0);
+      border: 0;
+    }
+  </style>
+</head>

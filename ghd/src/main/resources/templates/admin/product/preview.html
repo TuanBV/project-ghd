@@ -1,0 +1,238 @@
+<!doctype html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{common/head :: common_head(${titlePage}, ~{:: #header-style}, null, null)}">
+  <th:block id="header-style">
+    <link rel="preload" href="https://cdn.jsdelivr.net/npm/swiper@12.1.0/swiper-bundle.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/suneditor@2.47.8/dist/css/suneditor.min.css">
+    <style>
+      .product-content { line-height: 1.8; color: #334155; height: auto !important; max-height: none !important; overflow: visible !important; }
+      .product-content table { width: 100% !important; border-collapse: collapse !important; margin: 1.5rem 0 !important; border: 1px solid #e2e8f0 !important; }
+      .product-content table td, .product-content table th { padding: 10px 15px !important; border: 1px solid #e2e8f0 !important; vertical-align: middle; }
+      .product-content h2 { font-size: 1.25rem; font-weight: 700; margin: 2rem 0 1rem; color: #0f172a; border-left: 4px solid #2563eb; padding-left: 12px; }
+      aside .spec-table { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+      aside .spec-table table { width: 100% !important; table-layout: fixed; border-collapse: collapse !important; }
+      aside .spec-table td { padding: 12px 10px !important; border: 1px solid #f1f5f9 !important; font-size: 14px !important; background-color: #ffffff !important; color: #334155; }
+      .sun-editor-editable .__se__float-center { display: flex !important; flex-direction: column !important; align-items: center !important; width: 100% !important; }
+      .thumbSwiper .swiper-slide div { transition: all 0.3s ease; }
+      .swiper-button-next, .swiper-button-prev { background: rgba(255, 255, 255, 0.9); width: 36px !important; height: 36px !important; border-radius: 50%; color: #1e293b !important; z-index: 10; }
+      .btn-hover-effect { transition: all 0.3s ease; }
+      .btn-hover-effect:active { transform: scale(0.96); }
+      .preview-badge { background: #ef4444; color: white; padding: 2px 8px; border-radius: 4px; font-size: 10px; position: fixed; top: 10px; left: 10px; z-index: 9999; }
+    </style>
+  </th:block>
+</head>
+<body class="bg-[#f1f5f9] text-gray-800">
+<div class="preview-badge uppercase font-semibold">Chế độ xem trước</div>
+
+<main class="container mx-auto px-4 md:px-6 lg:px-12 py-8 pt-8!">
+  <div class="bg-white rounded-xl shadow-sm border border-gray-200/60 overflow-hidden">
+    <div class="flex flex-col lg:flex-row">
+      <div class="w-full lg:w-1/2 p-5 border-r border-gray-50">
+        <div class="sticky">
+          <div class="main-image aspect-16/11 rounded-xl overflow-hidden bg-white mb-6 group cursor-zoom-in">
+            <picture id="mainPicture">
+              <source id="source-pc" media="(min-width: 1024px)" srcset="" />
+              <source id="source-tablet" media="(min-width: 768px)" srcset="" />
+              <img id="expandedImg" src="" class="w-full h-full object-contain transition-transform duration-500 group-hover:scale-103 bg-white" alt="Product Image" />
+            </picture>
+          </div>
+          <div class="relative px-2">
+            <div class="swiper thumbSwiper">
+              <div class="swiper-wrapper" id="preview-gallery-wrapper">
+              </div>
+            </div>
+            <div class="swiper-button-prev"></div>
+            <div class="swiper-button-next"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="w-full lg:w-1/2 p-5 bg-gray-50/30">
+        <div class="flex flex-col h-full">
+          <div class="mb-auto">
+            <div class="text-xs font-semibold text-blue-600 uppercase mb-2">
+              <span id="preview-category">Danh mục</span> &bull; <span id="preview-brand">Thương hiệu</span>
+            </div>
+            <h1 id="preview-title" class="text-base md:text-2xl font-semibold text-gray-900 mb-4 leading-tight"></h1>
+
+            <div class="flex flex-row items-baseline gap-3 md:gap-4 mb-4">
+              <span id="preview-sale-price" class="text-xl md:text-[30px] font-semibold text-[#dd2f2c] leading-none"></span>
+              <span id="preview-price" class="text-xs md:text-[18px] text-[#191919] line-through font-medium leading-none"></span>
+            </div>
+
+            <div class="mb-6">
+              <div class="flex items-start gap-3 text-sm text-gray-700 bg-white border border-dashed border-blue-300 p-4 rounded-lg w-full">
+                <div class="w-full">
+                                        <span class="flex items-center font-semibold text-blue-700 uppercase text-[12px] mb-2">
+                                            <svg class="text-blue-600 text-2xl mr-2" data-icon="gift" aria-hidden="true" focusable="false" viewBox="0 0 24 24" width="1em" height="1em" fill="currentColor" ><path d="M20 7h-2.2A3 3 0 0 0 12 4.8 3 3 0 0 0 6.2 7H4a2 2 0 0 0-2 2v3h9V7h2v5h9V9a2 2 0 0 0-2-2zM9 7a1 1 0 1 1 1-1 1 1 0 0 1-1 1zm6 0a1 1 0 1 1 1-1 1 1 0 0 1-1 1zM3 14h8v8H5a2 2 0 0 1-2-2v-6zm10 0h8v6a2 2 0 0 1-2 2h-6v-8z"/></svg>
+                                            Dịch vụ hậu mãi (Preview)
+                                        </span>
+                  <p class="text-[11px] italic text-gray-500">Nội dung quà tặng & chính sách sẽ hiển thị theo cấu hình thực tế khi lưu.</p>
+                </div>
+              </div>
+            </div>
+
+            <div id="preview-variants-area" class="mb-6 hidden">
+              <label class="block font-semibold text-gray-700 mb-3 uppercase tracking-wide text-xs">Phiên bản có sẵn</label>
+              <div class="flex flex-wrap gap-3" id="preview-variants-list">
+              </div>
+            </div>
+
+            <div class="flex flex-col sm:flex-row gap-4 mb-8">
+              <button class="flex-[1.5] bg-blue-600 text-white font-semibold py-4 rounded-xl opacity-50 cursor-not-allowed">MUA NGAY (PREVIEW)</button>
+              <button class="flex-1 bg-white border-2 border-gray-900 text-gray-900 font-semibold py-4 rounded-xl opacity-50 cursor-not-allowed">GIỎ HÀNG</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="mt-8 grid grid-cols-1 lg:grid-cols-12 gap-5">
+    <div class="lg:col-span-8">
+      <div class="bg-white rounded-xl border border-gray-200/60 shadow-sm overflow-hidden">
+        <div class="px-8 py-6 border-b border-gray-100 flex items-center gap-3">
+          <div class="w-2 h-8 bg-blue-600 rounded-full"></div>
+          <h3 class="text-base md:text-xl font-semibold text-gray-900">Mô tả chi tiết</h3>
+        </div>
+        <div id="preview-content" class="product-content p-8 pt-6 text-sm md:text-base sun-editor-editable">
+        </div>
+      </div>
+    </div>
+
+    <aside class="lg:col-span-4">
+      <div class="sticky top-8">
+        <div class="bg-white rounded-xl border border-gray-200/60 shadow-sm overflow-hidden">
+          <div class="px-6 py-5 bg-gray-50 border-b border-gray-100 flex items-center gap-3">
+            <svg class="text-blue-600 text-xl font-semibold" data-icon="list-ul" aria-hidden="true" focusable="false" viewBox="0 0 24 24" width="1em" height="1em" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" ><path d="M8 6h13M8 12h13M8 18h13"/><path d="M3 6h.01M3 12h.01M3 18h.01"/></svg>
+            <h3 class="text-base font-semibold text-gray-900 uppercase">Thông số kỹ thuật</h3>
+          </div>
+          <div id="preview-specification" class="spec-table p-4 sun-editor-editable">
+          </div>
+        </div>
+      </div>
+    </aside>
+  </div>
+</main>
+
+<script src="https://cdn.jsdelivr.net/npm/swiper@12.1.0/swiper-bundle.min.js"></script>
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+    // 1. Lấy dữ liệu từ LocalStorage
+    const rawData = localStorage.getItem("productPreviewClient");
+    if (!rawData) {
+      alert("Không có dữ liệu để xem trước. Vui lòng quay lại trang thêm sản phẩm.");
+      return;
+    }
+
+    const data = JSON.parse(rawData);
+
+    // 2. Render Text cơ bản
+    document.getElementById("preview-title").innerText = data.title || "Chưa nhập tên sản phẩm";
+    document.getElementById("preview-category").innerText = data.category || "Chưa chọn danh mục";
+    document.getElementById("preview-brand").innerText = data.brand || "Chưa chọn thương hiệu";
+    document.getElementById("preview-content").innerHTML = data.content || "<p class='text-gray-400'>Chưa có mô tả chi tiết...</p>";
+    document.getElementById("preview-specification").innerHTML = data.specification || "<p class='text-gray-400'>Chưa có thông số...</p>";
+
+    // 3. Render Giá & Biến thể
+    const formatter = new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' });
+
+    if (data.variants && data.variants.length > 0) {
+      const firstV = data.variants[0];
+      renderPrice(firstV.price, firstV.salePrice);
+
+      // Hiển thị danh sách biến thể nếu có nhiều hơn 1
+      if (data.variants.length > 0) {
+        document.getElementById("preview-variants-area").classList.remove("hidden");
+        let variantHtml = "";
+        data.variants.forEach((v, index) => {
+          variantHtml += `
+                            <div onclick="selectVariant(${index})" class="variant-item cursor-pointer px-4 py-2 border rounded-lg text-[12px] font-semibold transition-all ${index === 0 ? 'border-blue-600 bg-blue-50 text-blue-700' : 'border-gray-200 text-gray-600'}">
+                                <div>${v.color || ''} ${v.size || ''}</div>
+                                <div class="text-blue-600">${formatter.format(v.salePrice || v.price)}</div>
+                            </div>`;
+        });
+        document.getElementById("preview-variants-list").innerHTML = variantHtml;
+      }
+    }
+
+    // 4. Render Gallery
+    if (data.gallery && data.gallery.length > 0) {
+      const wrapper = document.getElementById("preview-gallery-wrapper");
+      let html = "";
+      data.gallery.forEach(img => {
+        html += `
+                        <div class="swiper-slide">
+                            <div class="aspect-square rounded-xl border-2 border-transparent cursor-pointer overflow-hidden bg-gray-50">
+                                <img src="${img}" class="w-full h-full object-cover" onclick="changeImagePreview(this)">
+                            </div>
+                        </div>`;
+      });
+      wrapper.innerHTML = html;
+
+      // Khởi tạo Swiper
+      new Swiper(".thumbSwiper", {
+        slidesPerView: 4,
+        spaceBetween: 10,
+        navigation: { nextEl: ".swiper-button-next", prevEl: ".swiper-button-prev" }
+      });
+
+      // Set ảnh chính ban đầu
+      updateMainImage(data.gallery[0]);
+    }
+
+    // Lưu data vào window để dùng cho function selectVariant
+    window.previewData = data;
+  });
+
+  function renderPrice(price, salePrice) {
+    const formatter = new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' });
+    const sPrice = parseFloat(salePrice) || 0;
+    const rPrice = parseFloat(price) || 0;
+
+    document.getElementById("preview-sale-price").innerText = formatter.format(sPrice > 0 ? sPrice : rPrice);
+    if (sPrice > 0 && sPrice < rPrice) {
+      document.getElementById("preview-price").innerText = formatter.format(rPrice);
+      document.getElementById("preview-price").style.display = "inline";
+    } else {
+      document.getElementById("preview-price").style.display = "none";
+    }
+  }
+
+  function updateMainImage(url) {
+    const mainImg = document.getElementById("expandedImg");
+    const sourcePc = document.getElementById("source-pc");
+    const sourceTablet = document.getElementById("source-tablet");
+
+    mainImg.style.opacity = "0";
+    setTimeout(() => {
+      mainImg.src = url;
+      sourcePc.srcset = url;
+      sourceTablet.srcset = url;
+      mainImg.style.opacity = "1";
+    }, 150);
+  }
+
+  function changeImagePreview(el) {
+    updateMainImage(el.src);
+    document.querySelectorAll(".thumbSwiper .swiper-slide div").forEach(d => d.classList.remove("border-blue-500"));
+    el.parentElement.classList.add("border-blue-500");
+  }
+
+  function selectVariant(index) {
+    const v = window.previewData.variants[index];
+    renderPrice(v.price, v.salePrice);
+    if (v.image) updateMainImage(v.image);
+
+    // UI active
+    document.querySelectorAll(".variant-item").forEach((el, idx) => {
+      if (idx === index) {
+        el.classList.add("border-blue-600", "bg-blue-50", "text-blue-700");
+      } else {
+        el.classList.remove("border-blue-600", "bg-blue-50", "text-blue-700");
+      }
+    });
+  }
+</script>
+</body>
+</html>

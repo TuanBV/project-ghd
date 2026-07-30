@@ -1,0 +1,92 @@
+<div th:fragment="slider" xmlns:x-transition="http://www.w3.org/1999/xhtml">
+  <article
+    x-data="slider"
+    th:attr="data-slider-images=${sliderImages}"
+    class="relative w-full aspect-16/9 overflow-hidden rounded-xl bg-gray-100 hover:cursor-pointer"
+    style="touch-action: pan-y;"
+    @mouseenter="pause = true"
+    @mouseleave="pause = false"
+    @touchstart="handleTouchStart($event)"
+    @touchend="handleTouchEnd($event)"
+  >
+    <div th:if="${sliderImages != null and !sliderImages.isEmpty()}" class="h-full w-full">
+      <div class="absolute inset-0 w-full h-full opacity-100 z-10">
+        <picture class="w-full h-full">
+          <source
+            media="(min-width: 1024px)"
+            th:srcset="|https://images.weserv.nl/?url=https://greenhomeshop.vn${sliderImages[0]}_pc.webp&w=1440&output=webp&q=85|"
+          />
+          <source
+            media="(min-width: 768px)"
+            th:srcset="|https://images.weserv.nl/?url=https://greenhomeshop.vn${sliderImages[0]}_tablet.webp&w=800&output=webp&q=85|"
+          />
+          <img
+            th:src="|https://images.weserv.nl/?url=https://greenhomeshop.vn${sliderImages[0]}_mobile.webp&w=450&output=webp&q=85|"
+            alt="Slider Image"
+            class="w-full h-full object-cover select-none"
+            fetchpriority="high"
+            loading="eager"
+            decoding="sync"
+            width="450"
+            height="253"
+          />
+        </picture>
+      </div>
+
+      <template x-for="(image, index) in images" :key="index">
+        <div
+          x-cloak
+          class="absolute inset-0 w-full h-full z-20"
+          x-show="index > 0 && currentIndex == index + 1"
+          x-transition:enter="transition opacity duration-300 ease-in-out"
+          x-transition:leave="transition opacity duration-300 ease-in-out"
+          x-transition:enter-start="opacity-0"
+          x-transition:enter-end="opacity-100"
+          x-transition:leave-start="opacity-100"
+          x-transition:leave-end="opacity-0"
+        >
+          <picture class="w-full h-full">
+            <source
+              media="(min-width: 1024px)"
+              :srcset="`https://images.weserv.nl/?url=https://greenhomeshop.vn${image}_pc.webp&w=1440&output=webp&q=85`"
+            />
+            <source
+              media="(min-width: 768px)"
+              :srcset="`https://images.weserv.nl/?url=https://greenhomeshop.vn${image}_tablet.webp&w=800&output=webp&q=85`"
+            />
+            <img
+              :src="`https://images.weserv.nl/?url=https://greenhomeshop.vn${image}_mobile.webp&w=450&output=webp&q=85`"
+              alt="Slider Image"
+              class="w-full h-full object-cover select-none"
+              loading="lazy"
+              decoding="async"
+              width="450"
+              height="253"
+            />
+          </picture>
+        </div>
+      </template>
+
+      <div x-cloak class="absolute bottom-3 left-1/2 transform -translate-x-1/2 z-30 flex items-center justify-center">
+        <template x-for="(image, index) in images" :key="'dot-' + index">
+          <button
+            @click="currentIndex = index + 1"
+            type="button"
+            :aria-label="'Go to slide ' + (index + 1)"
+            :aria-current="currentIndex == index + 1 ? 'true' : 'false'"
+            class="group flex items-center justify-center w-11 h-11 focus:outline-none"
+          >
+            <div
+              :class="currentIndex == index + 1 ? 'bg-white w-8' : 'bg-white/60 w-2 group-hover:bg-white'"
+              class="h-2 rounded-full transition-all duration-300 shadow-sm"
+            ></div>
+          </button>
+        </template>
+      </div>
+    </div>
+
+    <div th:if="${sliderImages == null or sliderImages.isEmpty()}" class="flex items-center justify-center h-full text-gray-800 font-medium">
+      Chua co hinh anh slider
+    </div>
+  </article>
+</div>

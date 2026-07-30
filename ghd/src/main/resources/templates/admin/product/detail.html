@@ -1,0 +1,822 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{common/admin/header :: header(~{::title}, ~{::link-extra})}">
+  <th:block th:fragment="link-extra">
+    <link href="https://cdn.jsdelivr.net/npm/tom-select@2.2.2/dist/css/tom-select.bootstrap5.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/tom-select@2.2.2/dist/js/tom-select.complete.min.js"></script>
+    <style>
+      .ts-control {
+        border-radius: 0.75rem !important;
+        padding: 0.5rem 0.75rem !important;
+        border: 1px solid #e2e8f0 !important;
+        box-shadow: none !important;
+        min-height: 45px;
+        max-height: 120px;
+        overflow-y: auto !important;
+        font-weight: 400 !important;
+        color: #475569 !important;
+        transition: all 0.2s ease;
+      }
+
+      .ts-control.focus {
+        border-color: #bae6fd !important;
+        ring: 3px rgba(186, 230, 253, 0.4);
+      }
+
+      .ts-dropdown .active {
+        background-color: #f0f9ff !important;
+        color: #0369a1 !important;
+        font-weight: 400;
+      }
+
+      .ts-control .item {
+        background: #f1f5f9 !important;
+        color: #334155 !important;
+        border: 1px solid #e2e8f0 !important;
+        border-radius: 0.5rem !important;
+        font-weight: 400 !important;
+      }
+
+      input[type=number]::-webkit-inner-spin-button {
+        -webkit-appearance: none;
+      }
+
+      .variant-img-wrapper {
+        width: 140px;
+        height: 140px;
+        position: relative;
+        cursor: pointer;
+        border: 2px dashed #cbd5e1;
+        border-radius: 1.25rem;
+        overflow: visible;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        background: #f8fafc;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      .variant-img-wrapper:hover {
+        border-color: #3b82f6;
+        background: #f1f7ff;
+        box-shadow: 0 10px 15px -3px rgba(59, 130, 246, 0.1);
+      }
+
+      #productImgPreview {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        border-radius: 1.1rem;
+        position: absolute;
+        inset: 0;
+        z-index: 10;
+        border: 1px solid #e2e8f0;
+      }
+
+      #btnRemoveImg {
+        position: absolute;
+        top: -8px;
+        right: -8px;
+        background: #ef4444;
+        color: white;
+        width: 26px;
+        height: 26px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        z-index: 30;
+        cursor: pointer;
+        transition: all 0.2s;
+        border: 2px solid white;
+      }
+
+      #btnRemoveImg:hover {
+        background: #dc2626;
+        transform: scale(1.1);
+      }
+
+      #productImgPlaceholder {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 8px;
+        color: #94a3b8;
+      }
+
+      #productImgPlaceholder svg[data-icon] {
+        font-size: 2rem;
+        transition: color 0.2s;
+      }
+
+      .variant-img-wrapper:hover #productImgPlaceholder svg[data-icon] {
+        color: #3b82f6;
+      }
+
+      .hidden {
+        display: none !important;
+      }
+
+      .sun-editor-editable img {
+        max-width: 100% !important;
+        height: auto !important;
+        object-fit: contain;
+      }
+
+      .ts-wrapper.multi .ts-control > div {
+        margin: 0 3px 3px 0;
+        padding: 2px 8px;
+        background: #eff6ff;
+        color: #1e40af;
+        border-radius: 5px;
+      }
+
+      /* Style cho mô tả ngắn gọn (Textarea thuần) */
+      #description {
+        width: 100%;
+        min-height: 120px;
+        padding: 12px 16px;
+        border-radius: 0.75rem;
+        border: 1px solid #e2e8f0;
+        background-color: #f8fafc;
+        font-size: 0.875rem;
+        line-height: 1.6;
+        color: #334155;
+        outline: none;
+        transition: all 0.2s ease;
+        resize: vertical; /* Cho phép kéo giãn chiều cao */
+        font-family: inherit;
+      }
+
+      #description:focus {
+        background-color: #ffffff;
+        border-color: #3b82f6;
+        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+      }
+
+      #description::placeholder {
+        color: #94a3b8;
+        font-style: italic;
+      }
+
+      .gallery-item {
+        position: relative;
+        transition: transform 0.2s ease, box-shadow 0.2s ease, opacity 0.2s ease;
+      }
+
+      .gallery-item:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 10px 20px rgba(15, 23, 42, 0.15);
+      }
+
+      .gallery-item:hover img {
+        border-color: #3b82f6;
+      }
+
+      .gallery-item.sortable-chosen {
+        transform: scale(1.05);
+        box-shadow: 0 16px 30px rgba(37, 99, 235, 0.25);
+        z-index: 50;
+      }
+
+      .gallery-item.sortable-ghost {
+        opacity: 0.35;
+        border: 2px dashed #3b82f6;
+        border-radius: 0.75rem;
+        background: #eff6ff;
+      }
+
+      .gallery-item.sortable-drag {
+        cursor: grabbing;
+        transform: scale(1.08);
+      }
+    </style>
+    <link href="https://cdn.jsdelivr.net/npm/suneditor@2.47.8/dist/css/suneditor.min.css" rel="stylesheet" />
+    <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.2/Sortable.min.js"></script>
+  </th:block>
+  <title th:text="${titlePage} + ' - Green Home Shop'"></title>
+
+</head>
+<body class="bg-gray-50">
+<div th:replace="common/admin/sidebar :: sidebar"></div>
+
+<section id="content" class="min-h-screen flex flex-col">
+  <nav th:replace="common/admin/navbar :: navbar"></nav>
+
+  <main class="flex-1 p-6" th:with="data=${product}">
+    <form id="productForm" class="mx-auto grid grid-cols-1 gap-6 items-start">
+      <input type="hidden" id="productId" th:value="${data?.id}" />
+      <input type="hidden" id="id" name="id" th:value="${product.id}">
+      <input type="hidden" id="isDuplicate" th:value="${isDuplicate}">
+      <input type="hidden" id="duplicateSourceId" name="duplicateSourceId" th:value="${duplicateSourceId}">
+      <input type="hidden" id="existingImageMain" th:value="${data?.image}">
+
+      <div class="col-span-1 space-y-6">
+        <div class="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm space-y-5">
+          <div class="flex justify-between items-center border-b pb-4">
+            <h2 class="font-semibold text-gray-700 uppercase text-xs tracking-widest">Thông tin sản phẩm</h2>
+            <div class="flex gap-2">
+              <button type="button" onclick="history.back()" class="px-4 py-2 text-xs font-semibold text-gray-600 bg-gray-100 rounded-xl hover:bg-gray-200 transition uppercase">Hủy</button>
+              <button type="button" onclick="previewProduct()" class="px-4 py-2 text-xs font-semibold text-blue-600 bg-blue-50 border border-blue-200 rounded-xl hover:bg-blue-100 transition uppercase flex items-center gap-2">
+
+                <svg class="text-lg" data-icon="show" aria-hidden="true" focusable="false" viewBox="0 0 24 24" width="1em" height="1em" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" ><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg> Xem trước
+
+              </button>
+              <button type="submit" id="btnSave" class="px-6 py-2 text-xs font-semibold text-white bg-blue-600 rounded-xl hover:bg-blue-700 transition uppercase shadow-md flex items-center gap-2">
+                <svg class="text-lg" data-icon="save" aria-hidden="true" focusable="false" viewBox="0 0 24 24" width="1em" height="1em" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" ><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><path d="M17 21v-8H7v8"/><path d="M7 3v5h8"/></svg> Lưu sản phẩm
+              </button>
+            </div>
+          </div>
+
+          <div class="space-y-4">
+            <div>
+              <label class="block text-[11px] font-semibold text-gray-600 uppercase tracking-widest mb-2">Tên sản phẩm *</label>
+              <input type="text" id="title" th:value="${data?.title}" required class="w-full px-4 py-3 text-sm font-semibold rounded-xl border border-gray-200 focus:ring-2 focus:ring-blue-500 outline-none transition" placeholder="Nhập tên sản phẩm..." />
+            </div>
+            <div>
+              <label class="block text-[11px] font-semibold text-gray-600 uppercase tracking-widest mb-2">
+                Tên hiển thị phiên bản
+              </label>
+              <input
+                type="text"
+                id="variantName"
+                th:value="${data?.variantName}"
+                class="w-full px-4 py-3 text-sm font-semibold rounded-xl border border-gray-200 focus:ring-2 focus:ring-blue-500 outline-none transition"
+                placeholder="VD: Sihoo M57, Bản 1.2m, Màu trắng..."
+              />
+              <p class="mt-1 text-[11px] text-gray-400">
+                Dùng để hiển thị ngắn gọn trong phần phiên bản khác. Nếu bỏ trống sẽ dùng tên sản phẩm.
+              </p>
+            </div>
+            <div class="grid grid-cols-3 gap-4">
+              <div>
+                <label class="block text-[11px] font-semibold text-gray-600 uppercase tracking-widest mb-2">Danh mục *</label>
+                <select id="categoryId" required class="w-full px-4 py-2.5 rounded-xl border border-gray-200 bg-white text-sm outline-none focus:ring-2 focus:ring-blue-500">
+                  <option value="">Chọn danh mục...</option>
+                  <option th:each="cat : ${categories}" th:value="${cat.id}" th:text="${cat.title}" th:selected="${product?.categoryId?.toString() == cat.id?.toString()}"></option>
+                </select>
+              </div>
+              <div>
+                <label class="block text-[11px] font-semibold text-gray-600 uppercase tracking-widest mb-2">Thương hiệu *</label>
+                <select id="brandId" required class="w-full px-4 py-2.5 rounded-xl border border-gray-200 bg-white text-sm outline-none focus:ring-2 focus:ring-blue-500">
+                  <option value="">Chọn thương hiệu...</option>
+                  <option th:each="brand : ${brands}" th:value="${brand.id}" th:text="${brand.title}" th:selected="${product?.brandId?.toString() == brand.id?.toString()}"></option>
+                </select>
+              </div>
+              <div>
+                <label class="block text-[11px] font-semibold text-gray-600 uppercase tracking-widest mb-2">Chính sách ...</label>
+                <select id="policyId" class="w-full px-4 py-2.5 rounded-xl border border-gray-200 bg-white text-sm outline-none focus:ring-2 focus:ring-blue-500">
+                  <option value="">Chọn chính sách...</option>
+                  <option th:each="policy : ${policies}"
+                          th:value="${policy.id}"
+                          th:text="${policy.packageName}"
+                          th:selected="${product?.policyId?.toString() == policy.id?.toString()}"></option>
+                </select>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+        <div class="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm space-y-5">
+          <div class="flex justify-between items-center">
+            <h2 class="font-semibold text-gray-700 uppercase text-xs tracking-widest">Giá bán & Kho hàng</h2>
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-4 gap-6 items-start">
+            <div class="col-span-1 flex flex-col items-center">
+              <div class="variant-img-wrapper" onclick="$('#productFileInput').click()">
+
+                <div id="btnRemoveImg" th:classappend="${data?.image == null ? 'hidden' : ''}"
+                     onclick="removeProductImage(event)">
+                  <svg class="text-lg" data-icon="x" aria-hidden="true" focusable="false" viewBox="0 0 24 24" width="1em" height="1em" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" ><path d="M18 6 6 18M6 6l12 12"/></svg>
+                </div>
+
+                <img id="productImgPreview"
+                     th:with="rawPath=${data?.image}"
+                     th:src="${rawPath != null ? (rawPath.contains('.') ? rawPath : rawPath + '_pc.webp') : ''}"
+                     th:classappend="${data?.image == null ? 'hidden' : ''}" />
+
+                <div id="productImgPlaceholder" th:classappend="${data?.image != null ? 'hidden' : ''}">
+                  <svg class="" data-icon="cloud-upload" aria-hidden="true" focusable="false" viewBox="0 0 24 24" width="1em" height="1em" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" ><path d="M16 16l-4-4-4 4"/><path d="M12 12v9"/><path d="M20.4 17.6A5 5 0 0 0 18 8.1 7 7 0 0 0 4.7 10.3 4.5 4.5 0 0 0 5.5 19H8"/></svg>
+                  <span class="text-[10px] font-bold uppercase tracking-tight">Tải ảnh lên</span>
+                </div>
+              </div>
+
+              <input type="file" id="productFileInput" class="hidden" accept="image/*" onchange="handleProductImageChange(event)" />
+            </div>
+
+            <div class="col-span-3 grid grid-cols-2 md:grid-cols-3 gap-4">
+              <div class="col-span-2 md:col-span-1">
+                <label class="block text-[11px] font-semibold text-gray-600 uppercase mb-2">SKU / Model *</label>
+                <input type="text" id="sku" th:value="${data?.sku}" required class="w-full px-4 py-2.5 border border-gray-200 rounded-xl text-sm font-mono" placeholder="Mã sản phẩm">
+              </div>
+              <div>
+                <label class="block text-[11px] font-semibold text-gray-600 uppercase mb-2">Giá niêm yết *</label>
+                <input type="number" id="price" th:value="${data?.price}" required class="w-full px-4 py-2.5 border border-gray-200 rounded-xl text-sm font-semibold text-blue-600" placeholder="0">
+              </div>
+              <div>
+                <label class="block text-[11px] font-semibold text-gray-600 uppercase mb-2 text-orange-500">Giá ưu đãi *</label>
+                <input type="number" id="salePrice" th:value="${data?.salePrice}" required class="w-full px-4 py-2.5 border border-gray-200 rounded-xl text-sm font-semibold text-orange-600" placeholder="0">
+              </div>
+              <div>
+                <label class="block text-[11px] font-semibold text-gray-600 uppercase mb-2">Tồn kho</label>
+                <input type="number" id="stockQty" th:value="${data?.stockQty}" class="w-full px-4 py-2.5 border border-gray-200 rounded-xl text-sm" placeholder="0">
+              </div>
+              <div>
+                <label class="block text-[11px] font-semibold text-gray-600 uppercase mb-2">Màu sắc</label>
+                <input type="text" id="color" th:value="${data?.color}" class="w-full px-4 py-2.5 border border-gray-200 rounded-xl text-sm" placeholder="VD: Trắng">
+              </div>
+              <div>
+                <label class="block text-[11px] font-semibold text-gray-600 uppercase mb-2">Kích thước</label>
+                <input type="text" id="size" th:value="${data?.size}" class="w-full px-4 py-2.5 border border-gray-200 rounded-xl text-sm" placeholder="VD: XL, 42">
+              </div>
+            </div>
+          </div>
+
+          <div class="w-full border-t border-gray-100 pt-4">
+            <label class="block text-[11px] font-semibold text-gray-600 uppercase tracking-widest mb-2 flex items-center">
+              <svg class="me-2 text-blue-500" data-icon="package" aria-hidden="true" focusable="false" viewBox="0 0 24 24" width="1em" height="1em" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" ><path d="m21 8-9-5-9 5 9 5 9-5z"/><path d="M3 8v8l9 5 9-5V8"/><path d="M12 13v8"/></svg>Sản phẩm cùng loại
+            </label>
+            <select id="productGroup" multiple placeholder="Tìm kiếm sản phẩm theo tên..."
+                    autocomplete="off" class="w-full border border-gray-200 rounded-xl"></select>
+          </div>
+        </div>
+
+        <div class="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm">
+          <h3 class="text-xs font-semibold text-gray-700 uppercase tracking-widest mb-4 flex items-center gap-2">
+            <svg class="text-lg text-blue-500" data-icon="images" aria-hidden="true" focusable="false" viewBox="0 0 24 24" width="1em" height="1em" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" ><rect x="5" y="5" width="14" height="14" rx="2"/><path d="M3 7V5a2 2 0 0 1 2-2h12"/><path d="m19 15-4-4-6 6"/></svg> Album ảnh Slider
+          </h3>
+
+          <div class="flex flex-wrap gap-3" id="galleryContainer">
+
+            <label class="w-24 h-24 border-2 border-dashed border-gray-200 rounded-xl flex flex-col items-center justify-center cursor-pointer hover:border-blue-300 hover:bg-blue-50 transition-all shrink-0">
+              <input type="file" id="galleryFiles" accept="image/*" multiple class="hidden" onchange="handleGalleryUpload(event)" />
+              <svg class="text-2xl text-gray-300" data-icon="plus" aria-hidden="true" focusable="false" viewBox="0 0 24 24" width="1em" height="1em" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" ><path d="M12 5v14M5 12h14"/></svg>
+            </label>
+
+            <th:block th:if="${product != null and product.listImages != null}">
+              <div th:each="img, stat : ${product.listImages}"
+                   class="relative w-24 h-24 group old-gallery-item gallery-item cursor-move"
+                   th:data-type="'old'"
+                   th:data-url="${img.imageUrl}"
+                   th:data-sort-order="${stat.index}">
+                <img th:src="${img.imageUrl + '_pc.webp'}"
+                     class="w-full h-full object-cover rounded-xl border border-gray-100"
+                     onerror="this.src = 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7'"
+                >
+                <button type="button" onclick="removeOldGalleryImg(this)"
+                        class="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center shadow-md z-30 opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer">
+                  <svg class="text-xs" data-icon="x" aria-hidden="true" focusable="false" viewBox="0 0 24 24" width="1em" height="1em" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" ><path d="M18 6 6 18M6 6l12 12"/></svg>
+                </button>
+              </div>
+            </th:block>
+
+          </div>
+        </div>
+
+        <div class="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm space-y-4">
+          <div class="flex justify-between items-center">
+            <h2 class="font-semibold text-gray-700 uppercase text-xs tracking-widest flex items-center gap-2">
+              <svg class="text-lg text-blue-500" data-icon="edit-alt" aria-hidden="true" focusable="false" viewBox="0 0 24 24" width="1em" height="1em" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" ><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/></svg> Mô tả ngắn gọn
+            </h2>
+          </div>
+
+          <div class="relative">
+            <textarea id="description"
+              name="description"
+              th:text="${data?.description}"
+              placeholder="Ví dụ: Sản phẩm chất liệu cao cấp, bảo hành 12 tháng, phù hợp cho không gian hiện đại..."></textarea>
+          </div>
+        </div>
+
+        <div class="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm space-y-4">
+          <h2 class="font-semibold text-gray-700 uppercase text-xs tracking-widest">Mô tả chi tiết</h2>
+          <div class="spec-editor-container">
+            <textarea id="editor_content" th:text="${data?.content}"></textarea>
+          </div>
+        </div>
+        <div class="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm space-y-4">
+          <h2 class="font-semibold text-gray-700 uppercase text-xs tracking-widest">Thông số kỹ thuật</h2>
+          <div class="spec-editor-container">
+            <textarea id="editor_spec" th:text="${data?.specification}"></textarea>
+          </div>
+        </div>
+
+        <div class="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm space-y-4">
+          <h3 class="text-xs font-semibold text-gray-700 uppercase tracking-widest mb-2">Thiết lập</h3>
+          <div>
+            <label class="block text-[10px] font-semibold text-gray-600 uppercase mb-2">Trạng thái kinh doanh</label>
+            <select id="status" class="w-full px-4 py-2.5 rounded-xl border border-gray-200 bg-gray-50 font-semibold text-sm outline-none focus:ring-2 focus:ring-blue-500 transition">
+              <option value="1" th:selected="${data?.status == 1}">ĐANG KINH DOANH</option>
+              <option value="0" th:selected="${data?.status == 0}">TẠM NGƯNG</option>
+            </select>
+          </div>
+        </div>
+
+        <div id="removedGalleryImagesContainer" class="hidden"></div>
+      </div>
+    </form>
+  </main>
+</section>
+
+<script src="https://cdn.jsdelivr.net/npm/suneditor@2.47.8/dist/suneditor.min.js"></script>
+<script th:inline="javascript">
+  let API_PRODUCT = "/api/v1/product";
+  let isOptimizing = false;
+  let productGroup;
+  let galleryFiles = [];
+  let productImageFile = null;
+  let removedOldImages = [];
+  const initialProductGroup = [[${product?.productGroup}]] || [];
+
+  function handleProductImageChange(event) {
+    const file = event.target.files[0];
+    if (file) {
+      productImageFile = file;
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        $("#productImgPreview").attr("src", e.target.result).removeClass("hidden");
+        $("#productImgPlaceholder").addClass("hidden");
+        $("#btnRemoveImg").removeClass("hidden");
+      };
+      reader.readAsDataURL(file);
+    }
+  }
+
+  function removeProductImage(event) {
+    event.preventDefault();
+    event.stopPropagation();
+    productImageFile = null;
+    $("#productFileInput").val('');
+    $("#productImgPreview").attr("src", "").addClass("hidden");
+    $("#productImgPlaceholder").removeClass("hidden");
+    $("#btnRemoveImg").addClass("hidden");
+  }
+
+  function initProductGroup() {
+    const selectEl = document.getElementById('productGroup');
+    const currentProductId = $("#productId").val();
+
+    if (typeof TomSelect === "undefined") {
+      setTimeout(initProductGroup, 200);
+      return;
+    }
+
+    if (selectEl && !productGroup) {
+      productGroup = new TomSelect("#productGroup", {
+        valueField: 'id',
+        labelField: 'name',
+        searchField: 'name',
+        dropdownParent: 'body',
+        load: function(query, callback) {
+          let url = `/api/v1/product/find?keyword=${encodeURIComponent(query)}`;
+          if (currentProductId) {
+            url += `&excludeId=${currentProductId}`;
+          }
+
+          fetch(url)
+                  .then(res => res.json())
+                  .then(json => callback(json.body || json))
+                  .catch(() => callback());
+        },
+        render: {
+          option: (item, escape) => `<div class="py-2 px-3 border-b border-gray-50">
+                    <div class="font-medium text-gray-700">${escape(item.name)}</div>
+                    <div class="text-[10px] text-[#191919]">ID: ${escape(item.id)}</div>
+                </div>`,
+          item: (item, escape) => `<div class="font-normal">${escape(item.name)}</div>`
+        }
+      });
+      if (initialProductGroup && initialProductGroup.length > 0) {
+        productGroup.addOption(initialProductGroup);
+        const selectedIds = initialProductGroup.map(item => item.id);
+        productGroup.setValue(selectedIds);
+      }
+    }
+  }
+
+  // PREVIEW Ở CLIENT
+  function previewProduct() {
+    localStorage.removeItem("productPreviewClient");
+    const variants = [];
+    $(".variant-row").each(function() {
+      const tempId = $(this).data("temp-id");
+      variants.push({
+        color: $(this).find(".v-color").val(),
+        size: $(this).find(".v-size").val(),
+        sku: $(this).find(".v-sku").val(),
+        price: $(this).find(".v-price").val(),
+        salePrice: $(this).find(".v-sale-price").val(),
+        image: $(this).find(`.img-preview-${tempId}`).attr("src")
+      });
+    });
+
+    const gallery = [];
+    $("#galleryContainer img").each(function() { gallery.push($(this).attr("src")); });
+
+    const previewData = {
+      title: $("#title").val(),
+      variantName: $("#variantName").val(),
+      category: $("#categoryId option:selected").text(),
+      brand: $("#brandId option:selected").text(),
+      content: editorContent.getContents(),
+      specification: editorSpec.getContents(),
+      variants: variants,
+      gallery: gallery
+    };
+
+    localStorage.setItem("productPreviewClient", JSON.stringify(previewData));
+
+    window.open("/admin/v1/product/preview", "_blank");
+  }
+
+  function optimizeImageForResponsive(targetImgElement, info) {
+    if (isOptimizing) return;
+
+    const pcUrl = info.src || targetImgElement.src;
+    if (!pcUrl || !pcUrl.includes('_pc.webp')) return;
+
+    isOptimizing = true;
+
+    const baseUrl = pcUrl.replace('_pc.webp', '');
+    const mobileUrl = baseUrl + "_mobile.webp";
+    const tabletUrl = baseUrl + "_tablet.webp";
+
+    const wrapper = document.createElement("div");
+    wrapper.className = "se-component se-image-container __se__float-center";
+    wrapper.style.width = "100%";
+
+    wrapper.innerHTML = `
+      <figure style="margin: 0 auto; display: inline-block; max-width: 100%;">
+        <img
+          src="${pcUrl}"
+          srcset="${mobileUrl} 400w, ${tabletUrl} 800w, ${pcUrl} 1200w"
+          sizes="(max-width:640px) 100vw, (max-width:1024px) 800px, 1200px"
+          loading="lazy"
+          style="display: block; max-width: 100%; height: auto;"
+          alt="product image"
+        />
+      </figure>
+      `;
+
+    const oldContainer = targetImgElement.closest(".se-component") || targetImgElement;
+    oldContainer.replaceWith(wrapper);
+    setTimeout(() => {
+      isOptimizing = false;
+    }, 100);
+  }
+
+  // EDITORS CONFIG
+  const commonConfig = {
+    width: "100%",
+    fontSize: Array.from({ length: 93 }, (_, i) => i + 8),
+    font: [
+      "Arial",
+      "tahoma",
+      "Courier New",
+      "Montserrat",
+      "Roboto",
+      "Open Sans",
+      "Times New Roman",
+      "Verdana"
+    ],
+    attributesWhitelist: {
+      all: 'srcset|sizes|loading|data-*',
+      img: 'srcset|sizes|loading|alt|style',
+      figure: 'style',
+      div: 'style|class',
+      a: 'href|target|rel',
+    },
+    imageUploadUrl: "/api/v1/image/upload",
+    imageAccept: ".jpg, .jpeg, .png, .webp",
+    buttonList: [
+      ["undo", "redo"],
+      ["font", "formatBlock", "fontSize"],
+      ["bold", "underline", "italic"],
+      ["fontColor", "hiliteColor"],
+      ["align", "list"],
+      ["link", "image", "table"],
+      ["codeView", "preview"],
+    ],
+    placeholder: "Bắt đầu viết...",
+  };
+
+  const editorContent = SUNEDITOR.create("editor_content", {
+    ...commonConfig,
+    height: "450px",
+  });
+
+  const editorSpec = SUNEDITOR.create("editor_spec", {
+    ...commonConfig,
+    height: "250px",
+    buttonList: [
+      ["undo", "redo"],
+      ["font", "formatBlock", "fontSize"],
+      ["bold", "underline", "italic"],
+      ["fontColor", "hiliteColor"],
+      ["align", "list"],
+      ["link", "table"],
+      ["codeView", "preview"],
+    ],
+    placeholder: "Nhập thông số kỹ thuật",
+  });
+
+  editorContent.onImageUpload = function (targetImgElement, index, state, info, remainingFilesCount) {
+    if ((state === 'create' || state === 'update') && !isOptimizing) {
+      optimizeImageForResponsive(targetImgElement, info, editorContent);
+    }
+  };
+
+  editorSpec.onImageUpload = function (targetImgElement, index, state, info, remainingFilesCount) {
+    if ((state === 'create' || state === 'update') && !isOptimizing) {
+      optimizeImageForResponsive(targetImgElement, info, editorSpec);
+    }
+  };
+
+  // GALLERY LOGIC
+  let gallerySortable = null;
+
+  function initGallerySortable() {
+    const el = document.getElementById("galleryContainer");
+
+    if (!el || typeof Sortable === "undefined") return;
+
+    gallerySortable = new Sortable(el, {
+      animation: 150,
+      draggable: ".gallery-item",
+      filter: "button, input, label",
+      preventOnFilter: false,
+
+      ghostClass: "sortable-ghost",
+      chosenClass: "sortable-chosen",
+      dragClass: "sortable-drag",
+
+      onEnd: function () {
+        updateGalleryOrderBadges();
+      }
+    });
+
+    updateGalleryOrderBadges();
+  }
+
+  function updateGalleryOrderBadges() {
+    $("#galleryContainer .gallery-item").each(function(index) {
+      $(this).attr("data-sort-order", index);
+      $(this).find(".gallery-order-badge").text(index + 1);
+    });
+  }
+
+  function getGalleryOrder() {
+    updateGalleryOrderBadges();
+
+    return $("#galleryContainer .gallery-item").map(function(index) {
+      const $item = $(this);
+
+      return {
+        type: $item.attr("data-type"),        // old | new
+        imageUrl: $item.attr("data-url") || null,
+        fileId: $item.attr("data-file-id") || null,
+        sortOrder: index
+      };
+    }).get();
+  }
+
+  function handleGalleryUpload(event) {
+    const files = Array.from(event.target.files);
+
+    files.forEach(file => {
+      const fileId = "new_" + Date.now() + "_" + Math.random().toString(36).substr(2, 5);
+
+      file.uniqueId = fileId;
+      galleryFiles.push(file);
+
+      const html = `
+      <div class="relative w-24 h-24 sm:w-28 sm:h-28 group gallery-item new-gallery-item cursor-move"
+           id="${fileId}"
+           data-type="new"
+           data-file-id="${fileId}">
+
+        <span class="gallery-order-badge absolute left-1 top-1 z-20 bg-blue-600 text-white text-[10px] font-bold rounded-full w-5 h-5 flex items-center justify-center">
+        </span>
+
+        <img src=""
+             class="w-full h-full object-cover rounded-xl border border-gray-100 shadow-sm">
+
+        <button type="button" onclick="removeNewGalleryImg('${fileId}')"
+                class="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center shadow-md z-30">
+          <svg class="text-xs" data-icon="x" aria-hidden="true" focusable="false" viewBox="0 0 24 24" width="1em" height="1em" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" ><path d="M18 6 6 18M6 6l12 12"/></svg>
+        </button>
+      </div>
+    `;
+
+      $("#galleryContainer").append(html);
+      updateGalleryOrderBadges();
+
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        $(`#${fileId}`).find("img").attr("src", e.target.result);
+      };
+      reader.readAsDataURL(file);
+    });
+
+    event.target.value = "";
+  }
+
+  function removeOldGalleryImg(button) {
+    const $imgWrapper = $(button).closest('.old-gallery-item');
+    const imageUrl = $imgWrapper.data('url');
+
+    if (imageUrl) removedOldImages.push(imageUrl);
+
+    $imgWrapper.remove();
+    updateGalleryOrderBadges();
+  }
+
+  function removeNewGalleryImg(fileId) {
+    galleryFiles = galleryFiles.filter(f => f.uniqueId !== fileId);
+    $(`#${fileId}`).remove();
+    updateGalleryOrderBadges();
+  }
+  // SUBMIT
+  $("#productForm").on("submit", function(e) {
+    e.preventDefault();
+
+    let productId = $("#productId").val();
+    const btn = $("#btnSave");
+    const formData = new FormData();
+    const isDuplicate = $("#isDuplicate").val() === "true";
+
+    if (isDuplicate) {
+      productId = "";
+    }
+    const productData = {
+      id: productId || null,
+      title: $("#title").val(),
+      variantName: $("#variantName").val(),
+      categoryId: $("#categoryId").val(),
+      brandId: $("#brandId").val(),
+      policyId: $("#policyId").val(),
+      description: $("#description").val(),
+      content: editorContent.getContents(),
+      specification: editorSpec.getContents(),
+      status: parseInt($("#status").val()),
+      sku: $("#sku").val(),
+      price: parseFloat($("#price").val()) || 0,
+      salePrice: parseFloat($("#salePrice").val()) || parseFloat($("#price").val()),
+      stockQty: parseInt($("#stockQty").val()) || 0,
+      color: $("#color").val(),
+      size: $("#size").val(),
+      removedImages: removedOldImages,
+      productGroup: productGroup ? productGroup.getValue() : [],
+      galleryOrder: getGalleryOrder(),
+      newGalleryFileIds: galleryFiles.map(file => file.uniqueId),
+
+      duplicate: isDuplicate,
+      duplicateSourceId: isDuplicate ? ($("#duplicateSourceId").val() || null) : null,
+      existingImageMain: isDuplicate ? ($("#existingImageMain").val() || null) : null
+    };
+
+    formData.append("data", new Blob([JSON.stringify(productData)], { type: "application/json" }));
+    if (productImageFile) {
+      formData.append("mainImage", productImageFile);
+    }
+
+    galleryFiles.forEach(file => formData.append("gallery", file));
+
+    btn.prop("disabled", true).html('<svg class="animate-spin text-lg" data-icon="loader-alt" aria-hidden="true" focusable="false" viewBox="0 0 24 24" width="1em" height="1em" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-6.2-8.6"/></svg> Đang lưu...');
+
+    const method = productId ? "PUT" : "POST";
+    const url = productId ? `${API_PRODUCT}/${productId}` : API_PRODUCT;
+    $.ajax({
+      url: url,
+      method: method,
+      data: formData,
+      processData: false,
+      contentType: false,
+      success: (res) => {
+        Swal.fire({
+          icon: "success",
+          title: "Sản phẩm đã được lưu.",
+          timer: 1500,
+          showConfirmButton: false,
+          popup: 'rounded-2xl'
+        }).then(() => {
+          window.location.href = "/admin/v1/product";
+        });
+      },
+      error: (err) => {
+        Swal.fire({ icon: "error", title: "Lỗi hệ thống", text: err.responseJSON?.message });
+        btn.prop("disabled", false).html('<svg class="text-lg" data-icon="save" aria-hidden="true" focusable="false" viewBox="0 0 24 24" width="1em" height="1em" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" ><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><path d="M17 21v-8H7v8"/><path d="M7 3v5h8"/></svg> Lưu sản phẩm');
+      }
+    });
+  });
+
+  $(window).on('load', function() {
+    initProductGroup();
+    initGallerySortable();
+  });
+</script>
+</body>
+</html>

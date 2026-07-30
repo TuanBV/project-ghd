@@ -1,0 +1,58 @@
+User-agent: Googlebot
+Allow: /api/v1/product/search
+Allow: /api/v1/categories/
+Allow: /api/v1/brands/
+Allow: /api/v1/news/list/
+Allow: /api/v1/review/
+
+Allow: /static/
+Allow: /images/
+Allow: /seo/
+Allow: /uploads/
+Allow: /client/
+Allow: /css/
+Allow: /js/
+
+Disallow: /api/
+Disallow: /admin/
+Disallow: /login
+Disallow: /register
+Disallow: /gio-hang/
+
+User-agent: Googlebot-image
+Allow: /static/
+Allow: /images/
+Allow: /seo/
+Allow: /uploads/
+Allow: /client/
+Allow: /css/
+Allow: /js/
+
+Disallow: /api/
+Disallow: /admin/
+Disallow: /login
+Disallow: /register
+Disallow: /gio-hang/
+
+User-agent: *
+Allow: /api/v1/product/search
+Allow: /api/v1/categories/
+Allow: /api/v1/brands/
+Allow: /api/v1/news/list/
+Allow: /api/v1/review/
+
+Allow: /static/
+Allow: /images/
+Allow: /seo/
+Allow: /uploads/
+Allow: /client/
+Allow: /css/
+Allow: /js/
+
+Disallow: /api/
+Disallow: /admin/
+Disallow: /login
+Disallow: /register
+Disallow: /gio-hang/
+
+Sitemap: https://greenhomeshop.vn/seo/sitemap.xml

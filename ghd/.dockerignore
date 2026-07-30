@@ -1,0 +1,36 @@
+# VCS
+.git
+.gitignore
+
+# IDE
+.idea
+.vscode
+*.iml
+
+# Build output (rebuilt inside the image)
+target/
+out/
+build/
+node_modules/
+
+# Local runtime data - must not be baked into the image
+uploads/
+logs/
+seo/backup/
+*.log
+
+# Local secrets / environment
+.env
+.env.*
+!.env.example
+
+# Database dumps / scratch SQL (Flyway migrations under src/main/resources/db/migration are kept)
+/*.sql
+/scripts/*.sql
+dump-core*.sql
+
+# Docs / misc
+docs/
+HELP.md
+README
+*.md

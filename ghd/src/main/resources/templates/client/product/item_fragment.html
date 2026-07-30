@@ -1,0 +1,188 @@
+<!doctype html>
+<html xmlns:th="http://www.thymeleaf.org">
+  <body>
+    <div
+      th:fragment="product_item(item)"
+      class="product-card bg-white rounded-2xl overflow-hidden border border-gray-100 flex flex-col shadow-sm group relative h-full hover:shadow-md transition-shadow duration-300"
+    >
+      <div class="aspect-4/3 relative overflow-hidden bg-gray-50">
+        <div
+          th:if="${item.price > 0 and item.salePrice > 0 and item.price > item.salePrice}"
+          class="absolute top-3 left-3 z-20 bg-red-600 text-white text-[10px] font-semibold px-2 py-1 rounded-lg shadow-sm"
+        >
+          <span
+            th:text="${'-' + #numbers.formatInteger((1 - (item.salePrice / item.price)) * 100, 0) + '%'}"
+          ></span>
+        </div>
+
+        <a th:href="@{'/san-pham/' + ${item.slug}}" class="block w-full h-full">
+          <picture
+            th:if="${item.image != null and !item.image.contains('.')}"
+            class="w-full h-full"
+          >
+            <source
+              media="(min-width: 1024px)"
+              th:srcset="|https://images.weserv.nl/?url=https://greenhomeshop.vn${item.image}_pc.webp&w=1200&output=webp&q=85|"
+            />
+            <source
+              media="(min-width: 640px)"
+              th:srcset="|https://images.weserv.nl/?url=https://greenhomeshop.vn${item.image}_tablet.webp&w=800&output=webp&q=85|"
+            />
+            <img th:src="|https://images.weserv.nl/?url=https://greenhomeshop.vn${item.image}_mobile.webp&w=450&output=webp&q=85|"
+              class="w-full h-full object-contain transition-transform duration-500 group-hover:scale-103 bg-white"
+              th:alt="${item.title}"
+              width="450"
+              height="338"
+              onerror="this.src='data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7'"
+              loading="lazy"
+              decoding="async"
+            />
+          </picture>
+          <img
+            th:if="${item.image == null or item.image.contains('.')}"
+            th:src="${item.image != null ? '|https://images.weserv.nl/?url=https://greenhomeshop.vn' + item.image + '&w=450&output=webp&q=80|' : 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7'}"
+            class="w-full h-full object-contain transition-transform duration-500 group-hover:scale-103 bg-white"
+            th:alt="${item.title}"
+            width="450"
+            height="338"
+            onerror="this.src='data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7'"
+            loading="lazy"
+            decoding="async"
+          />
+        </a>
+        <div
+          th:if="${item.stockQty == 0}"
+          class="absolute inset-0 bg-white/60 flex items-center justify-center z-20"
+        >
+          <span
+            class="bg-gray-800 text-white text-[10px] font-semibold px-3 py-1 rounded uppercase tracking-wider"
+          >
+            Hết hàng
+          </span>
+        </div>
+      </div>
+
+      <div class="px-3 py-2 flex flex-col flex-1 mb-2">
+        <div class="flex justify-between items-start mb-1">
+          <span
+            class="text-[9px] font-semibold text-blue-600 uppercase tracking-widest"
+            th:text="${item.brandName ?: 'GREEN HOME SHOP'}"
+            >BRAND</span
+          >
+        </div>
+        <h2 class="text-xs md:text-sm font-semibold text-gray-700 mb-1 group-hover:text-blue-900 transition-colors line-clamp-3 leading-[18px] h-[55px] overflow-hidden"
+        >
+          <a
+            th:href="@{'/san-pham/' + ${item.slug}}"
+            th:text="${item.title}"
+          >
+          </a>
+        </h2>
+        <div class="flex flex-col text-center">
+          <th:block th:if="${item.salePrice != null and item.salePrice > 0}">
+            <div class="flex flex-col text-center">
+              <span
+                class="text-[18px] font-semibold text-[#dd2f2c]"
+                th:text="${#numbers.formatDecimal(item.salePrice, 0, 'POINT', 0, 'COMMA') + ' VND'}"
+                >0 VND</span
+              >
+              <span
+                th:if="${item.price != null and item.price > item.salePrice}"
+                class="text-[11px] md:text-xs text-[#191919] line-through decoration-[#191919] font-medium"
+                th:text="${#numbers.formatDecimal(item.price, 0, 'POINT', 0, 'COMMA') + ' VND'}"
+                >0 VND</span
+              >
+            </div>
+          </th:block>
+
+          <th:block
+            th:if="${(item.salePrice == null or item.salePrice == 0) and item.price != null and item.price > 0}"
+          >
+            <div class="flex flex-col text-center">
+              <span
+                class="text-sm md:text-base font-semibold text-gray-700"
+                th:text="${#numbers.formatDecimal(item.price, 0, 'POINT', 0, 'COMMA') + ' VND'}"
+                >0 VND</span
+              >
+            </div>
+          </th:block>
+          <th:block
+            th:if="${(item.salePrice == null or item.salePrice == 0) and (item.price == null or item.price == 0)}"
+          >
+            <span class="text-[18px] font-medium text-gray-600 italic"
+              >Giá liên hệ</span
+            >
+          </th:block>
+        </div>
+        <div class="mt-auto border-t border-gray-50 pt-2 flex justify-center">
+          <button
+                  type="button"
+                  class="btn-add-to-cart w-full min-h-[34px] px-2 py-2 rounded-full text-[9px] md:text-[10px] font-bold leading-none transition-all duration-300 flex items-center justify-center gap-1 uppercase active:scale-95 disabled:opacity-100 disabled:cursor-not-allowed"
+                  th:classappend="${item.status == 0}
+      ? ' bg-red-50 text-red-700 border border-red-200 hover:bg-red-50'
+      : (${item.stockQty <= 0}
+        ? ' bg-slate-500 text-white border border-slate-500 hover:bg-slate-500'
+        : ' bg-gray-700 text-white border border-gray-700 hover:bg-blue-600 hover:border-blue-600 cursor-pointer')"
+                  th:disabled="${item.status == 0 or item.stockQty <= 0}"
+                  th:data-id="${item.id}"
+                  th:data-title="${item.title}"
+                  th:data-price="${(item.salePrice != null and item.salePrice > 0) ? item.salePrice : item.price}"
+                  th:data-image="${item.image != null ? item.image + '_mobile.webp' : ''}"
+                  th:data-slug="${item.slug}"
+                  th:data-category="${item.categoryName}"
+                  th:data-stock="${item.stockQty ?: 0}"
+                  th:data-status="${item.status ?: 1}"
+          >
+            <svg
+                    th:if="${item.status == 0}"
+                    class="shrink-0 text-[13px]"
+                    data-icon="ban"
+                    aria-hidden="true"
+                    focusable="false"
+                    viewBox="0 0 24 24"
+                    width="1em"
+                    height="1em"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2.4"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+            >
+              <circle cx="12" cy="12" r="10"/>
+              <path d="m4.9 4.9 14.2 14.2"/>
+            </svg>
+
+            <svg
+                    th:if="${item.status != 0}"
+                    class="shrink-0 text-[13px]"
+                    data-icon="cart-add"
+                    aria-hidden="true"
+                    focusable="false"
+                    viewBox="0 0 24 24"
+                    width="1em"
+                    height="1em"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+            >
+              <circle cx="9" cy="21" r="1"/>
+              <circle cx="20" cy="21" r="1"/>
+              <path d="M1 1h4l2.7 13.4a2 2 0 0 0 2 1.6h8.8a2 2 0 0 0 2-1.6L22 6H6"/>
+              <path d="M12 8v6M9 11h6"/>
+            </svg>
+
+            <span
+                    data-cart-label
+                    class="truncate whitespace-nowrap"
+                    th:text="${item.status == 0 ? 'Ngừng kinh doanh' : (item.stockQty <= 0 ? 'Hết hàng' : 'Giỏ hàng')}"
+            >
+      Giỏ hàng
+    </span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>

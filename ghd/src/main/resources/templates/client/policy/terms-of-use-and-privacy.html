@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{common/head :: common_head('Điều khoản & Bảo mật - Green Home Shop', ~{:: #header-style}, null, null)}">
+    <th:block id="header-style">
+        <meta name="description" content="Điều khoản sử dụng và chính sách bảo mật thông tin khách hàng tại Green Home Shop. Cam kết bảo mật dữ liệu tuyệt đối và minh bạch trong giao dịch.">
+        <meta name="keywords" content="điều khoản Green Home Shop, chính sách bảo mật, quy định mua hàng">
+        <link rel="canonical" href="https://greenhomeshop.vn/dieu-khoan-bao-mat" />
+
+        <meta property="og:title" content="Điều khoản & Bảo mật - Green Home Shop">
+        <meta property="og:description" content="Minh bạch thông tin - Bảo mật dữ liệu. Tìm hiểu quy định mua hàng và chính sách bảo mật của chúng tôi.">
+        <meta property="og:image" content="https://greenhomeshop.vn/client/images/logo.png">
+        <meta property="og:url" content="https://greenhomeshop.vn/dieu-khoan-bao-mat">
+        <script type="application/ld+json" th:inline="javascript">
+            [
+                {
+                    "@context": "https://schema.org",
+                    "@type": "BreadcrumbList",
+                    "itemListElement": [{
+                        "@type": "ListItem",
+                        "position": 1,
+                        "name": "Trang chủ",
+                        "item": {
+                            "@id": "https://greenhomeshop.vn/",
+                            "name": "Trang chủ"
+                        }
+                    },{
+                        "@type": "ListItem",
+                        "position": 2,
+                        "name": "Điều khoản & Bảo mật",
+                        "item": {
+                            "@id": "https://greenhomeshop.vn/dieu-khoan-bao-mat",
+                            "name": "Điều khoản & Bảo mật"
+                        }
+                    }]
+                },
+                {
+                    "@context": "https://schema.org",
+                    "@type": "WebPage",
+                    "@id": "https://greenhomeshop.vn/dieu-khoan-bao-mat#webpage",
+                    "url": "https://greenhomeshop.vn/dieu-khoan-bao-mat",
+                    "name": "Điều khoản & Bảo mật - Green Home Shop",
+                    "description": "Điều khoản sử dụng và chính sách bảo mật thông tin khách hàng tại Green Home Shop. Cam kết bảo mật dữ liệu tuyệt đối và minh bạch.",
+                    "publisher": {
+                        "@id": "https://greenhomeshop.vn/#organization"
+                    }
+                },
+                {
+                    "@context": "https://schema.org",
+                    "@type": "FAQPage",
+                    "mainEntity": [
+                        {
+                            "@type": "Question",
+                            "name": "Green Home Shop thu thập những thông tin gì?",
+                            "acceptedAnswer": {
+                                "@type": "Answer",
+                                "text": "Chúng tôi thu thập Họ tên, Email, Số điện thoại và Địa chỉ để xác nhận đơn hàng, hỗ trợ bảo hành và tri ân khách hàng."
+                            }
+                        },
+                        {
+                            "@type": "Question",
+                            "name": "Thông tin cá nhân của tôi có bị chia sẻ cho bên thứ ba không?",
+                            "acceptedAnswer": {
+                                "@type": "Answer",
+                                "text": "Green Home Shop cam kết không bán hoặc chia sẻ dữ liệu cho bên thứ ba vì mục đích quảng cáo. Thông tin chỉ cung cấp cho đơn vị vận chuyển để thực hiện giao hàng."
+                            }
+                        }
+                    ]
+                }
+            ]
+        </script>
+    </th:block>
+</head>
+<body class="bg-gray-50 text-gray-700">
+<div th:replace="common/client/gtm :: gtm-body"></div>
+<div th:replace="common/client/header :: header"></div>
+
+<main class="container mx-auto px-4 pb-12">
+    <div th:replace="~{common/client/breadcrumb :: breadcrumb(${ {{name: 'Điều khoản & Bảo mật', url: '/dieu-khoan-bao-mat'}}})}"></div>
+
+    <article class="bg-white p-6 md:p-12 rounded-xl shadow-sm border border-gray-100 mt-6 leading-relaxed">
+        <header class="text-center mb-16">
+            <div class="inline-flex items-center bg-emerald-50 text-emerald-700 px-4 py-2 rounded-full text-xs font-semibold mb-6 tracking-wide uppercase border border-emerald-100">
+                <span class="mr-2">🛡️</span> Bảo vệ dữ liệu khách hàng là ưu tiên hàng đầu
+            </div>
+            <h1 class="text-3xl md:text-5xl font-semibold text-gray-900 mb-6 uppercase tracking-tight leading-tight">
+                Điều khoản dịch vụ <br class="hidden md:block"> & Bảo mật thông tin
+            </h1>
+            <p class="text-gray-600 max-w-2xl mx-auto text-lg">
+                Chào mừng Quý khách đến với <strong>Green Home Shop</strong>. Khi truy cập và đặt hàng, quý khách đồng ý tuân thủ các quy định nhằm đảm bảo quyền lợi tối ưu cho cả hai bên.
+            </p>
+        </header>
+
+        <section class="mb-20">
+            <h2 class="text-2xl font-semibold text-blue-700 mb-8 pb-4 border-b border-gray-100 flex items-center">
+                <span class="mr-3">I.</span> Quy định chung về mua hàng
+            </h2>
+            <p class="mb-8 text-gray-600">Để đảm bảo trải nghiệm mua sắm minh bạch, quý khách vui lòng xem chi tiết các chính sách thành phần dưới đây:</p>
+
+            <div class="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                <a href="/chinh-sach/van-chuyen" class="p-6 bg-gray-50 border border-gray-100 rounded-xl hover:border-blue-500 hover:bg-white transition-all group">
+                    <div class="text-3xl mb-4">🚚</div>
+                    <p class="font-semibold text-gray-900 mb-1 group-hover:text-blue-900">Vận chuyển</p>
+                    <p class="text-xs text-gray-600">Giao hàng toàn quốc & đồng kiểm.</p>
+                </a>
+                <a href="/chinh-sach/doi-tra" class="p-6 bg-gray-50 border border-gray-100 rounded-xl hover:border-blue-500 hover:bg-white transition-all group">
+                    <div class="text-3xl mb-4">📦</div>
+                    <p class="font-semibold text-gray-900 mb-1 group-hover:text-blue-900">Đổi trả</p>
+                    <p class="text-xs text-gray-600">Hỗ trợ đổi mới trong 07 ngày.</p>
+                </a>
+                <a href="/chinh-sach/bao-hanh" class="p-6 bg-gray-50 border border-gray-100 rounded-xl hover:border-blue-500 hover:bg-white transition-all group">
+                    <div class="text-3xl mb-4">🛠️</div>
+                    <p class="font-semibold text-gray-900 mb-1 group-hover:text-blue-900">Bảo hành</p>
+                    <p class="text-xs text-gray-600">Chính hãng từ 12-24 tháng.</p>
+                </a>
+                <a href="/chinh-sach/thanh-toan" class="p-6 bg-gray-50 border border-gray-100 rounded-xl hover:border-blue-500 hover:bg-white transition-all group">
+                    <div class="text-3xl mb-4">💳</div>
+                    <p class="font-semibold text-gray-900 mb-1 group-hover:text-blue-900">Thanh toán</p>
+                    <p class="text-xs text-gray-600">COD hoặc chuyển khoản ngân hàng.</p>
+                </a>
+            </div>
+
+            <div class="mt-8 bg-blue-50 p-6 rounded-xl border-l-4 border-blue-600">
+                <p class="text-sm text-blue-900 italic mb-0">
+                    <strong>Lưu ý:</strong> Việc quý khách thực hiện đặt hàng và tích vào ô "Tôi đồng ý" đồng nghĩa với việc chấp thuận toàn bộ các quy định trên của Green Home Shop.
+                </p>
+            </div>
+        </section>
+
+        <section class="mb-20">
+            <h2 class="text-2xl font-semibold text-blue-700 mb-8 pb-4 border-b border-gray-100 flex items-center">
+                <span class="mr-3">II.</span> Chính sách bảo mật dữ liệu
+            </h2>
+
+            <div class="space-y-12">
+                <div class="grid md:grid-cols-3 gap-8">
+                    <div class="md:col-span-1">
+                        <h3 class="text-lg font-semibold text-gray-900 uppercase tracking-wider">1. Thu thập dữ liệu</h3>
+                    </div>
+                    <div class="md:col-span-2 space-y-4">
+                        <p>Chúng tôi thu thập các thông tin: <strong>Họ tên, Email, Số điện thoại và Địa chỉ</strong> nhằm mục đích:</p>
+                        <ul class="space-y-3">
+                            <li class="flex items-center text-sm"><span class="w-1.5 h-1.5 bg-blue-500 rounded-full mr-3"></span> Xác nhận và thực hiện quy trình giao hàng chính xác.</li>
+                            <li class="flex items-center text-sm"><span class="w-1.5 h-1.5 bg-blue-500 rounded-full mr-3"></span> Hỗ trợ bảo hành và bảo trì định kỳ cho sản phẩm.</li>
+                            <li class="flex items-center text-sm"><span class="w-1.5 h-1.5 bg-blue-500 rounded-full mr-3"></span> Thông báo các chương trình tri ân khách hàng thân thiết.</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="grid md:grid-cols-3 gap-8">
+                    <div class="md:col-span-1">
+                        <h3 class="text-lg font-semibold text-gray-900 uppercase tracking-wider">2. Phạm vi sử dụng</h3>
+                    </div>
+                    <div class="md:col-span-2">
+                        <p class="mb-4 text-justify leading-relaxed text-gray-600">
+                            Thông tin cá nhân chỉ được sử dụng nội bộ. Chúng tôi chỉ cung cấp các thông tin giao nhận (Tên, SĐT, Địa chỉ) cho các đơn vị vận chuyển đối tác.
+                        </p>
+                        <p class="p-3 bg-rose-50 border border-rose-100 rounded-lg text-rose-700 font-semibold text-xs inline-block">
+                            🚫 Tuyệt đối không bán hoặc chia sẻ dữ liệu cho bên thứ ba vì mục đích quảng cáo.
+                        </p>
+                    </div>
+                </div>
+
+                <div class="grid md:grid-cols-3 gap-8">
+                    <div class="md:col-span-1">
+                        <h3 class="text-lg font-semibold text-gray-900 uppercase tracking-wider">3. Cookie & Lưu trữ</h3>
+                    </div>
+                    <div class="md:col-span-2 text-gray-600 text-sm space-y-4">
+                        <p>Dữ liệu khách hàng được lưu trữ an toàn cho đến khi có yêu cầu xóa từ chủ sở hữu. Chúng tôi sử dụng Cookie để ghi nhớ giỏ hàng và tối ưu hóa tốc độ tải trang cho lần truy cập sau.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="legal" class="border-t pt-16">
+            <div class="bg-gradient-to-br from-blue-700 to-indigo-700 text-white p-10 md:p-16 rounded-[2.5rem] shadow-2xl relative overflow-hidden">
+                <div class="relative z-10">
+                    <h2 class="text-3xl font-semibold mb-10 flex items-center">
+                        Thông tin pháp lý chính thức
+                    </h2>
+                    <div class="grid md:grid-cols-2 gap-12">
+                        <div class="space-y-5">
+                            <p class="text-2xl font-semibold text-blue-300">CÔNG TY TNHH THƯƠNG MẠI VÀ CÔNG NGHỆ GHD</p>
+                            <ul class="space-y-3">
+                                <li><strong>MST:</strong> 0110891976</li>
+                                <li><strong>Địa chỉ:</strong> LK7-142, Khu tái định cư phục vụ giải phóng mặt bằng, Xã Tứ Hiệp, Huyện Thanh Trì, Thành phố Hà Nội, Việt Nam.</li>
+                                <li><strong>Đại diện:</strong> CÔNG TY TNHH THƯƠNG MẠI VÀ CÔNG NGHỆ GHD </li>
+                                <li><strong>Giờ làm việc:</strong> 08:00 - 18:00 (Thứ 2 - Chủ nhật)</li>
+                            </ul>
+                        </div>
+                        <div class="space-y-5 md:border-l md:pl-12 border-blue-700/50">
+                            <div class="flex items-center space-x-4">
+                                <div class="bg-blue-800 p-3 rounded-xl">📞</div>
+                                <div>
+                                    <p class="text-sm opacity-70">Hotline tư vấn</p>
+                                    <p class="text-xl font-semibold" th:text="${sysParams['consulting_hotline']}">0852 262 666</p>
+                                </div>
+                            </div>
+                            <div class="flex items-center space-x-4">
+                                <div class="bg-blue-800 p-3 rounded-xl">✉️</div>
+                                <div>
+                                    <p class="text-sm opacity-70">Email liên hệ</p>
+                                    <p class="text-lg font-semibold" th:text="${sysParams['email_contact']}">lienheghd@gmail.com</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </article>
+</main>
+
+<div th:replace="common/client/footer :: footer"></div>
+</body>
+</html>

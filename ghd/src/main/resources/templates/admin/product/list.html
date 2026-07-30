@@ -1,0 +1,417 @@
+<!doctype html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+  <head th:replace="~{common/admin/header :: header(~{::title}, ~{::link})}">
+    <title>Product Management - Green Home Shop</title>
+  </head>
+  <body class="bg-gray-50">
+    <div th:replace="common/admin/sidebar :: sidebar"></div>
+
+    <section id="content">
+      <nav th:replace="common/admin/navbar :: navbar"></nav>
+
+      <main class="p-6">
+        <div class="max-w-full mx-auto">
+          <div class="flex items-center justify-between mb-6">
+            <div>
+              <h1 class="text-2xl font-semibold text-gray-700">
+                Quản lý sản phẩm
+              </h1>
+              <p class="text-sm text-gray-600">
+                Xem danh sách, giá bán và tồn kho của các phiên bản
+              </p>
+            </div>
+            <div class="flex items-center gap-2">
+              <button
+                      onclick="exportToExcel()"
+                      class="inline-flex items-center px-5 py-2.5 text-sm font-medium text-gray-700 bg-white border border-gray-200 rounded-xl shadow-sm hover:bg-gray-50 transition-all active:scale-95"
+              >
+                <svg class="me-2 text-lg" data-icon="download" aria-hidden="true" focusable="false" viewBox="0 0 24 24" width="1em" height="1em" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" ><path d="M12 3v12"/><path d="m7 10 5 5 5-5"/><path d="M5 21h14"/></svg>
+                Xuất Excel
+              </button>
+
+              <a
+                      th:href="@{/admin/v1/product/add}"
+                      class="inline-flex items-center px-5 py-2.5 text-sm font-medium text-white bg-blue-600 rounded-xl shadow hover:bg-blue-700 transition-all active:scale-95"
+              >
+                <svg class="me-2 text-lg" data-icon="plus" aria-hidden="true" focusable="false" viewBox="0 0 24 24" width="1em" height="1em" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" ><path d="M12 5v14M5 12h14"/></svg>
+                Thêm sản phẩm mới
+              </a>
+            </div>
+          </div>
+
+          <div
+            class="bg-white p-4 rounded-xl shadow-sm border border-gray-100 mb-6 space-y-4"
+          >
+            <div class="flex flex-col md:flex-row gap-4">
+              <div class="relative flex-1">
+                <span
+                  class="absolute inset-y-0 left-0 flex items-center ps-3 pointer-events-none"
+                >
+                  <svg class="text-gray-600 text-xl" data-icon="search" aria-hidden="true" focusable="false" viewBox="0 0 24 24" width="1em" height="1em" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" ><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
+                </span>
+                <input
+                  id="searchInput"
+                  type="text"
+                  placeholder="Tìm theo tên sản phẩm..."
+                  class="w-full h-11 ps-10 pe-4 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-blue-500 outline-none transition-all"
+                />
+              </div>
+
+              <select
+                id="filterCategory"
+                onchange="fetchProducts(0)"
+                class="h-11 px-4 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-blue-500 outline-none bg-white cursor-pointer min-w-[180px]"
+              >
+                <option value="">Tất cả danh mục</option>
+                <option
+                  th:each="cat : ${categories}"
+                  th:value="${cat.id}"
+                  th:text="${cat.title}"
+                ></option>
+              </select>
+
+              <select
+                id="filterBrand"
+                onchange="fetchProducts(0)"
+                class="h-11 px-4 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-blue-500 outline-none bg-white cursor-pointer min-w-[180px]"
+              >
+                <option value="">Tất cả thương hiệu</option>
+                <option
+                  th:each="brand : ${brands}"
+                  th:value="${brand.id}"
+                  th:text="${brand.title}"
+                ></option>
+              </select>
+
+              <button
+                onclick="clearFilters()"
+                class="h-11 px-4 text-gray-600 hover:text-red-600 bg-gray-100 hover:bg-red-50 rounded-xl transition-all flex items-center justify-center shadow-sm"
+              >
+                <svg class="text-2xl" data-icon="refresh" aria-hidden="true" focusable="false" viewBox="0 0 24 24" width="1em" height="1em" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" ><path d="M21 12a9 9 0 0 1-15.3 6.4L3 16"/><path d="M3 21v-5h5"/><path d="M3 12A9 9 0 0 1 18.3 5.6L21 8"/><path d="M21 3v5h-5"/></svg>
+                <span class="md:hidden lg:inline ms-1 text-sm font-medium"
+                  >Làm mới</span
+                >
+              </button>
+            </div>
+          </div>
+
+          <div
+            class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden"
+          >
+            <div class="overflow-x-auto">
+              <table class="min-w-full">
+                <thead class="bg-gray-50 border-b border-gray-100">
+                  <tr>
+                    <th
+                      class="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase"
+                    >
+                      Sản phẩm
+                    </th>
+                    <th
+                      class="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase"
+                    >
+                      Danh mục/Hãng
+                    </th>
+                    <th
+                      class="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase"
+                    >
+                      Tồn kho
+                    </th>
+                    <th
+                      class="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase"
+                    >
+                      Trạng thái
+                    </th>
+                    <th
+                      class="px-6 py-4 text-right text-xs font-semibold text-gray-600 uppercase"
+                    >
+                      Hành động
+                    </th>
+                  </tr>
+                </thead>
+                <tbody
+                  id="productList"
+                  class="divide-y divide-gray-100 transition-opacity duration-200"
+                ></tbody>
+              </table>
+            </div>
+
+            <div
+              id="pagination-container"
+              class="px-6 py-4 border-t border-gray-100 bg-gray-50 flex flex-col md:flex-row items-center justify-between gap-4"
+            >
+              <span id="page-info" class="text-sm text-gray-600 font-medium"
+                >Đang tải dữ liệu...</span
+              >
+              <div
+                id="pagination-buttons"
+                class="flex items-center gap-1"
+              ></div>
+            </div>
+          </div>
+        </div>
+      </main>
+    </section>
+
+    <script th:src="@{/admin/js/main.js}"></script>
+    <script th:inline="javascript">
+      const API_PRODUCT = "/api/v1/product";
+      const EMPTY_IMG =
+        "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7";
+      let currentPage = 0;
+      let searchTimer;
+
+      window.addEventListener("load", function () {
+        fetchProducts(0);
+      });
+
+      function handleImageError(img) {
+        let attempts = parseInt(img.getAttribute("data-retry") || "0");
+        if (attempts < 3) {
+          // Giảm xuống 3 lần để tránh lặp quá nhiều
+          attempts++;
+          img.setAttribute("data-retry", attempts);
+          setTimeout(() => {
+            const timestamp = new Date().getTime();
+            img.src = `${img.src.split("?")[0]}?retry=${timestamp}`;
+          }, 1000);
+        } else {
+          img.onerror = null;
+          img.src = EMPTY_IMG;
+          $(img)
+            .closest(".img-wrapper")
+            .addClass("bg-gray-100")
+            .html('<svg class="text-gray-300 text-xl" data-icon="image" aria-hidden="true" focusable="false" viewBox="0 0 24 24" width="1em" height="1em" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" ><rect x="3" y="5" width="18" height="14" rx="2"/><circle cx="8.5" cy="10.5" r="1.5"/><path d="m21 15-5-5L5 19"/></svg>');
+        }
+      }
+
+      function clearFilters() {
+        $("#searchInput").val("");
+        $("#filterCategory").val("");
+        $("#filterBrand").val("");
+        fetchProducts(0);
+      }
+
+      function fetchProducts(page = 0) {
+        currentPage = page;
+        const params = {
+          title: $("#searchInput").val().trim(),
+          categoryId: $("#filterCategory").val(),
+          brandId: $("#filterBrand").val(),
+          pageNumber: page,
+          pageSize: 10,
+          sortField: "updated_date",
+          sortDir: "desc",
+        };
+
+        $("#productList").css("opacity", "0.5");
+
+        $.get(API_PRODUCT, params, function (response) {
+          // Xử lý cả trường hợp response là Page object hoặc List trực tiếp
+          const products =
+            response.content !== undefined ? response.content : response;
+          renderTable(products);
+          renderPagination(response);
+          $("#page-info").text(
+            `Tổng cộng ${response.totalElements || products.length} sản phẩm`,
+          );
+        })
+          .fail(() => {
+            $("#page-info").text("Lỗi tải dữ liệu");
+          })
+          .always(() => {
+            $("#productList").css("opacity", "1");
+          });
+      }
+
+      function renderTable(products) {
+        const $tbody = $("#productList").empty();
+        const t = new Date().getTime();
+
+        if (!products || products.length === 0) {
+          $tbody.append(`
+        <tr>
+          <td colspan="5" class="py-20 text-center text-gray-600">
+            <svg class="text-6xl mb-4 opacity-20" data-icon="search-alt" aria-hidden="true" focusable="false" viewBox="0 0 24 24" width="1em" height="1em" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" ><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
+            <p class="text-lg font-medium">Không tìm thấy sản phẩm nào</p>
+          </td>
+        </tr>`);
+          return;
+        }
+
+        products.forEach((p) => {
+          const imgPath =
+            p.image && !p.image.includes("placeholder") ? p.image : null;
+          const statusHtml =
+            p.status === 1
+              ? '<span class="px-2.5 py-1 text-[10px] font-semibold bg-green-100 text-green-700 rounded-lg uppercase">Hoạt động</span>'
+              : '<span class="px-2.5 py-1 text-[10px] font-semibold bg-gray-100 text-gray-600 rounded-lg uppercase">Ẩn</span>';
+
+          let imageHtml = `<div class="w-12 h-12 rounded-lg border border-gray-100 flex items-center justify-center overflow-hidden bg-gray-50 img-wrapper">`;
+          if (imgPath) {
+            imageHtml += `
+          <picture>
+            <source media="(min-width: 1024px)" srcset="${imgPath}_pc.webp?t=${t}">
+            <img src="${imgPath}_mobile.webp?t=${t}"
+                 onerror="handleImageError(this)"
+                 class="w-full h-full object-cover"
+                 loading="lazy">
+          </picture>`;
+          } else {
+            imageHtml += `<svg class="text-gray-300 text-xl" data-icon="image" aria-hidden="true" focusable="false" viewBox="0 0 24 24" width="1em" height="1em" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" ><rect x="3" y="5" width="18" height="14" rx="2"/><circle cx="8.5" cy="10.5" r="1.5"/><path d="m21 15-5-5L5 19"/></svg>`;
+          }
+          imageHtml += `</div>`;
+
+          const row = `
+        <tr class="hover:bg-gray-50/50 transition border-b border-gray-50 last:border-0">
+          <td class="px-6 py-4">
+            <div class="flex items-center gap-3">
+              ${imageHtml}
+              <div>
+                <div class="text-sm font-semibold text-gray-700 line-clamp-1">${p.title}</div>
+              </div>
+            </div>
+          </td>
+          <td class="px-6 py-4">
+            <div class="text-sm text-gray-600 font-medium">${p.categoryName || "N/A"}</div>
+            <div class="text-xs text-gray-600">${p.brandName || "N/A"}</div>
+          </td>
+          <td class="px-6 py-4 text-sm">
+            <div class="flex items-center">
+              <span class="${p.totalStock > 0 ? "bg-green-500" : "bg-red-500"} w-2 h-2 rounded-full me-2"></span>
+              <span class="text-gray-600 font-medium">${p.totalStock || 0}</span>
+              <span class="text-gray-600 ms-1 text-xs">tồn kho</span>
+            </div>
+          </td>
+          <td class="px-6 py-4">${statusHtml}</td>
+          <td class="px-6 py-4 text-right space-x-1">
+          <a href="/product/${p.id}" target="_blank">
+            <button type="button" class="p-2 text-emerald-600 hover:bg-emerald-50 rounded-xl transition cursor-pointer" title="Xem chi tiết sản phẩm">
+              <svg class="text-xl" data-icon="show" aria-hidden="true" focusable="false" viewBox="0 0 24 24" width="1em" height="1em" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" ><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg>
+            </button>
+          </a>
+          <a href="/admin/v1/product/duplicate/${p.id}">
+            <button type="button" class="p-2 text-purple-600 hover:bg-purple-50 rounded-xl transition cursor-pointer" title="Nhân bản sản phẩm">
+              <svg class="text-xl" data-icon="copy" aria-hidden="true" focusable="false" viewBox="0 0 24 24" width="1em" height="1em" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" ><rect x="9" y="9" width="11" height="11" rx="2"/><rect x="4" y="4" width="11" height="11" rx="2"/></svg>
+            </button>
+          </a>
+          <a href="/admin/v1/product/edit/${p.id}">
+            <button type="button" class="p-2 text-blue-600 hover:bg-blue-50 rounded-xl transition cursor-pointer" title="Sửa bản ghi"><svg class="text-xl" data-icon="edit-alt" aria-hidden="true" focusable="false" viewBox="0 0 24 24" width="1em" height="1em" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" ><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/></svg></button>
+           </a>
+            <button type="button" onclick="deleteProduct('${p.id}')" class="p-2 text-rose-600 hover:bg-rose-50 rounded-xl transition cursor-pointer" title="Xóa bản ghi"><svg class="text-xl" data-icon="trash" aria-hidden="true" focusable="false" viewBox="0 0 24 24" width="1em" height="1em" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" ><path d="M3 6h18"/><path d="M8 6V4h8v2"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v5M14 11v5"/></svg></button>
+          </td>
+        </tr>`;
+          $tbody.append(row);
+        });
+      }
+
+      function renderPagination(data) {
+        const $container = $("#pagination-buttons").empty();
+        const totalPages = data.totalPages;
+        if (!totalPages || totalPages <= 1) return;
+
+        // Giới hạn hiển thị số trang (Ví dụ: hiện 5 trang xung quanh trang hiện tại)
+        const range = 2;
+        for (let i = 0; i < totalPages; i++) {
+          if (
+            i === 0 ||
+            i === totalPages - 1 ||
+            (i >= currentPage - range && i <= currentPage + range)
+          ) {
+            const isActive = i === currentPage;
+            const btn = $(`
+                <button class="w-9 h-9 rounded-xl text-xs font-semibold transition-all
+                ${isActive ? "bg-blue-600 text-white shadow-md shadow-blue-200" : "bg-white text-gray-600 border border-gray-100 hover:bg-gray-50"}">
+                    ${i + 1}
+                </button>`);
+            btn.on("click", () => fetchProducts(i));
+            $container.append(btn);
+          } else if (
+            i === currentPage - range - 1 ||
+            i === currentPage + range + 1
+          ) {
+            $container.append(`<span class="px-2 text-gray-600">...</span>`);
+          }
+        }
+      }
+
+      $("#searchInput").on("input", function () {
+        clearTimeout(searchTimer);
+        searchTimer = setTimeout(() => fetchProducts(0), 500);
+      });
+
+      function deleteProduct(id) {
+        Swal.fire({
+          title: "Xác nhận xóa?",
+          text: "Bạn không thể hoàn tác sau khi xóa sản phẩm này!",
+          icon: "warning",
+          showCancelButton: true,
+          confirmButtonColor: "#ef4444",
+          confirmButtonText: "Vẫn xóa",
+          cancelButtonText: "Đóng",
+          customClass: {
+            confirmButton: "rounded-xl",
+            cancelButton: "rounded-xl",
+          },
+        }).then((result) => {
+          if (result.isConfirmed) {
+            $.ajax({
+              url: API_PRODUCT + "/" + id,
+              method: "DELETE",
+              success: function () {
+                Swal.fire("Đã xóa!", "Sản phẩm đã được loại bỏ.", "success");
+                fetchProducts(currentPage);
+              },
+              error: function () {
+                Swal.fire(
+                  "Lỗi!",
+                  "Không thể xóa sản phẩm vào lúc này.",
+                  "error",
+                );
+              },
+            });
+          }
+        });
+      }
+
+      function exportToExcel() {
+        // Lấy các tham số lọc hiện tại để xuất đúng dữ liệu đang xem
+        const title = $("#searchInput").val().trim();
+        const categoryId = $("#filterCategory").val();
+        const brandId = $("#filterBrand").val();
+
+        // Tạo URL với query params
+        const url = `/api/v1/product/export?title=${encodeURIComponent(title)}&categoryId=${categoryId}&brandId=${brandId}`;
+
+        // Hiển thị thông báo đang xử lý (tùy chọn)
+        Swal.fire({
+          title: 'Đang khởi tạo file...',
+          text: 'Vui lòng chờ trong giây lát',
+          allowOutsideClick: false,
+          didOpen: () => { Swal.showLoading(); }
+        });
+
+        // Thực hiện tải file
+        fetch(url)
+                .then(response => {
+                  if (response.ok) return response.blob();
+                  throw new Error('Network response was not ok.');
+                })
+                .then(blob => {
+                  const url = window.URL.createObjectURL(blob);
+                  const a = document.createElement('a');
+                  a.href = url;
+                  a.download = `Products_Export_${new Date().getTime()}.xlsx`;
+                  document.body.appendChild(a);
+                  a.click();
+                  a.remove();
+                  Swal.close();
+                })
+                .catch(error => {
+                  console.error('Export failed:', error);
+                  Swal.fire("Lỗi!", "Không thể xuất file vào lúc này.", "error");
+                });
+      }
+    </script>
+  </body>
+</html>

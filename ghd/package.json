@@ -1,0 +1,13 @@
+{
+  "private": true,
+  "scripts": {
+    "build:css": "tailwindcss -i ./src/main/frontend/app.css -o ./src/main/resources/static/client/css/app.css --minify",
+    "copy:alpine": "node -e \"require('fs').mkdirSync('src/main/resources/static/client/js',{recursive:true}); require('fs').copyFileSync('node_modules/alpinejs/dist/cdn.min.js','src/main/resources/static/client/js/alpine.min.js')\"",
+    "build:frontend": "npm run build:css && npm run copy:alpine"
+  },
+  "devDependencies": {
+    "@tailwindcss/cli": "^4.3.0",
+    "alpinejs": "^3.14.9",
+    "tailwindcss": "^4.3.0"
+  }
+}

@@ -1,0 +1,1497 @@
+<!doctype html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+  <head
+    th:replace="~{common/head :: common_head(${titlePage}, ~{:: #header-style}, null, null)}"
+  >
+    <th:block id="header-style">
+      <meta
+              name="twitter:image"
+              th:content="${'https://greenhomeshop.vn' + product.getImage() + '_pc.webp'}"
+      />
+      <meta
+              property="og:image"
+              th:content="${'https://greenhomeshop.vn' + product.getImage() + '_pc.webp'}"
+      />
+      <link
+              rel="preload"
+              as="image"
+              th:href="|${product.listImages[0].imageUrl}_mobile.webp|"
+              th:attr="imagesrcset=|${product.listImages[0].imageUrl}_mobile.webp 450w, ${product.listImages[0].imageUrl}_pc.webp 900w|"
+              imagesizes="(min-width: 1024px) 50vw, 100vw"
+              type="image/webp"
+              fetchpriority="high"
+      />
+      <link rel="preload" href="https://cdn.jsdelivr.net/npm/swiper@12.1.0/swiper-bundle.min.css"
+            as="style" onload="this.onload=null;this.rel='stylesheet'">
+
+      <noscript>
+        <link rel="stylesheet"
+              href="https://cdn.jsdelivr.net/npm/suneditor@2.47.8/dist/css/suneditor.min.css"
+              as="style" onload="this.onload=null;this.rel='stylesheet'">
+      </noscript>
+      <script type="application/ld+json" th:utext="${jsonLd}"></script>
+      <style>
+        .product-content {
+          line-height: 1.8;
+          color: #334155;
+          height: auto !important;
+          max-height: none !important;
+          overflow: visible !important;
+        }
+
+        /* Style cho bảng bên trong nội dung chi tiết */
+        .product-content table {
+          width: 100% !important;
+          border-collapse: collapse !important;
+          margin: 1.5rem 0 !important;
+          border: 1px solid #e2e8f0 !important; /* Đường viền ngoài */
+        }
+
+        .product-content table td,
+        .product-content table th {
+          padding: 10px 15px !important;
+          border: 1px solid #e2e8f0 !important; /* Đường viền cho từng ô */
+          vertical-align: middle;
+        }
+
+        /* Tùy chọn: Tô màu nền nhẹ cho dòng đầu tiên (Header) nếu muốn */
+        .product-content table tr:first-child td {
+          background-color: #f8fafc;
+          font-weight: 600;
+        }
+
+        /* Reset lại các span do SunEditor tự sinh ra để không làm mất size chữ chung */
+        .product-content td span {
+          font-size: inherit !important;
+          line-height: inherit !important;
+        }
+
+        .sun-editor-editable strong,
+        .sun-editor-editable b {
+          font-family: inherit !important;
+          font-weight: bold;
+        }
+
+        .product-content a {
+          color: #007bff !important;
+          text-decoration: underline;
+        }
+
+        .product-content a:hover {
+          color: #0056b3;
+        }
+
+        .product-content h2 {
+          font-size: 1.25rem; /* 20px */
+          line-height: 1.1;
+          font-weight: 700;
+          color: #0f172a;
+
+          margin: 0;
+          padding: 0.5rem 0 0.5rem 0.75rem;
+
+          border-left: 4px solid #2563eb;
+          border-radius: 0 10px 10px 0;
+          background: linear-gradient(90deg, #eff6ff 0%, rgba(239, 246, 255, 0) 100%);
+
+          text-align: left !important;
+          letter-spacing: -0.01em;
+        }
+
+        /* Tablet: 768px - 1023px */
+        @media (min-width: 768px) {
+          .product-content h2 {
+            font-size: 1.375rem; /* 22px */
+            line-height: 1.1;
+            margin: 0;
+            padding: 0.625rem 0 0.5rem 0.875rem;
+            border-left-width: 5px;
+          }
+        }
+
+        /* PC: >= 1024px */
+        @media (min-width: 1024px) {
+          .product-content h2 {
+            font-size: 1.5rem; /* 24px */
+            line-height: 1.1;
+            margin: 0;
+            padding: 0.625rem 0 0.625rem 1rem;
+            border-left-width: 5px;
+          }
+        }
+
+        /* --- PHẦN SỬA LẠI: CHỈ ÁP DỤNG CHO BẢNG TRONG ASIDE (THÔNG SỐ KỸ THUẬT) --- */
+        aside .spec-table {
+          overflow-x: auto;
+          -webkit-overflow-scrolling: touch;
+        }
+
+        aside .spec-table table {
+          width: 100% !important;
+          table-layout: fixed;
+          border-collapse: collapse !important;
+          border-spacing: 0 !important;
+        }
+
+        aside .spec-table td {
+          padding: 12px 10px !important;
+          border: 1px solid #f1f5f9 !important;
+          word-break: break-word;
+          overflow-wrap: break-word;
+          font-size: 14px !important;
+          line-height: 1.25rem;
+          background-color: #ffffff !important;
+          font-weight: 400 !important;
+          color: #334155;
+        }
+
+        /* Cột bên trái (Tiêu đề thông số) */
+        aside .spec-table tr td:first-child:not(:last-child) {
+          width: 40%;
+          background-color: #f8fafc !important;
+          font-weight: 600 !important;
+          color: #475569 !important;
+        }
+
+        /* Xử lý các thẻ con bên trong td của bảng spec */
+        aside .spec-table td p,
+        aside .spec-table td span {
+          font-size: 14px !important;
+          margin: 0 !important;
+        }
+
+        /* Xóa bỏ khoảng trắng thừa do Sun Editor tạo ra trong spec-table */
+        aside .spec-table br { display: none; }
+
+        /* Reset các style của Sun Editor trong bảng spec để không bị vỡ layout */
+        aside .spec-table .sun-editor-editable div,
+        aside .spec-table div[style*="width"] {
+          width: auto !important;
+          white-space: normal !important;
+          position: static !important;
+          float: none !important;
+        }
+
+        .sun-editor-editable .__se__float-center {
+          display: flex !important;
+          flex-direction: column !important;
+          align-items: center !important; /* Căn giữa nội dung bên trong */
+          justify-content: center !important;
+          width: 100% !important;
+          float: none !important;
+        }
+
+        .sun-editor-editable .__se__float-center figure,
+        .sun-editor-editable .__se__float-center img {
+          margin-left: auto !important;
+          margin-right: auto !important;
+          max-width: 100%;
+        }
+        /* ----------------------------------------------------------------------- */
+        .swiper {
+          position: relative;
+          display: block;
+          width: 100%;
+          overflow: hidden;
+          list-style: none;
+          padding: 0;
+          z-index: 1;
+        }
+
+        .swiper-wrapper {
+          position: relative;
+          z-index: 1;
+          display: flex;
+          width: 100%;
+          height: 100%;
+          box-sizing: content-box;
+          transition-property: transform;
+        }
+
+        .swiper-slide {
+          position: relative;
+          flex-shrink: 0;
+          width: 100%;
+          height: 100%;
+          transition-property: transform;
+        }
+
+        .thumbSwiper:not(.swiper-initialized) .swiper-wrapper {
+          gap: 6px;
+        }
+
+        .thumbSwiper:not(.swiper-initialized) .swiper-slide {
+          flex: 0 0 calc((100% - 18px) / 4);
+          width: calc((100% - 18px) / 4) !important;
+        }
+
+        @media (min-width: 768px) {
+          .thumbSwiper:not(.swiper-initialized) .swiper-wrapper {
+            gap: 10px;
+          }
+
+          .thumbSwiper:not(.swiper-initialized) .swiper-slide {
+            flex-basis: calc((100% - 40px) / 5);
+            width: calc((100% - 40px) / 5) !important;
+          }
+        }
+
+        .thumbSwiper .swiper-slide div {
+          transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .swiper-button-next, .swiper-button-prev {
+          position: absolute;
+          top: 50%;
+          z-index: 10;
+          background: rgba(255, 255, 255, 0.9);
+          backdrop-filter: blur(4px);
+          width: 48px !important;
+          height: 48px !important;
+          border-radius: 50%;
+          box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+          color: #1e293b !important;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          line-height: 1;
+          transform: translateY(-50%);
+        }
+        .swiper-button-prev { left: 8px; }
+        .swiper-button-next { right: 8px; }
+        .swiper-button-next:after, .swiper-button-prev:after {
+          font-size: 14px !important;
+          line-height: 1 !important;
+          margin: 0 !important;
+        }
+
+        .thumb-swiper-shell {
+          min-height: 0;
+        }
+
+        .thumb-swiper-shell .swiper-button-prev,
+        .thumb-swiper-shell .swiper-button-next {
+          top: 50%;
+          margin-top: 0 !important;
+        }
+
+        .thumb-swiper-shell .swiper-button-prev {
+          left: 0;
+        }
+
+        .thumb-swiper-shell .swiper-button-next {
+          right: 0;
+        }
+
+        .thumbSwiper {
+          width: 100% !important;
+          overflow: hidden !important;
+          padding: 0 5px;
+        }
+
+        .thumbSwiper {
+          width: 100%;
+          max-width: 100%;
+          overflow: hidden;
+          padding: 0;
+        }
+
+        .thumbSwiper .swiper-wrapper {
+          align-items: stretch;
+        }
+
+        .thumbSwiper .swiper-slide {
+          box-sizing: border-box;
+          padding: 0 !important;
+          display: block !important;
+        }
+
+        .thumbSwiper .swiper-slide > div {
+          width: 100%;
+          aspect-ratio: 1 / 1;
+        }
+
+        .thumbSwiper img {
+          display: block;
+          width: 100%;
+          height: 100%;
+          object-fit: cover;
+        }
+
+        .thumbSwiper .swiper-slide div {
+          width: 100%;
+        }
+
+        .thumbSwiper .swiper-slide-thumb-active div {
+          border-color: #3b82f6;
+          opacity: 1;
+        }
+
+        .thumbSwiper .swiper-slide div {
+          opacity: 0.6;
+        }
+
+        .thumbSwiper .swiper-slide-thumb-active div {
+          opacity: 1;
+        }
+
+        .swiper-button-next:after,
+        .swiper-button-prev:after {
+          font-size: 14px !important;
+          font-weight: bold;
+        }
+
+        .swiper-button-next:hover,
+        .swiper-button-prev:hover {
+          background: #2563eb !important;
+          color: #ffffff !important;
+          box-shadow: 0 6px 15px rgba(37, 99, 235, 0.3);
+          transform: translateY(-50%) scale(1.1);
+        }
+
+        .swiper-navigation-icon {
+          height: 15px!important;
+        }
+
+        .btn-hover-effect { transition: all 0.3s ease; }
+        .btn-hover-effect:active { transform: scale(0.96); }
+
+        input::-webkit-outer-spin-button, input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+        input[type="number"] { -moz-appearance: textfield; }
+
+        .sun-editor-editable .__se__float-center {
+          text-align: center !important;
+          float: none !important;
+          display: block !important;
+          width: 100% !important;
+        }
+        .bundle {
+          @apply flex items-center gap-1 bg-blue-600 text-white text-xs
+          px-3 py-1.5 rounded
+          hover:bg-blue-700 transition-all duration-200;
+        }
+
+        .bundle span {
+          @apply flex items-center gap-1 opacity-90;
+        }
+
+        .bundle svg[data-icon] {
+          @apply text-[10px];
+        }
+         #reviewFormContainer {
+           background-color: #f9fafb; /* màu nền nhẹ */
+           border-radius: 1rem;
+           border: 1px solid #e5e7eb;
+           width: 100%;
+           max-width: 600px;
+           margin: 0 auto;
+           box-shadow: 0 8px 20px rgba(0,0,0,0.05);
+         }
+
+        #reviewFormContainer h4 {
+          font-size: 1.5rem;
+          color: #111827;
+        }
+
+        #reviewForm input[type="text"],
+        #reviewForm input[type="email"],
+        #reviewForm textarea {
+          width: 100%;
+          padding: 0.75rem 1rem;
+          border: 1px solid #d1d5db;
+          border-radius: 0.75rem;
+          font-size: 1rem;
+          outline: none;
+          transition: all 0.3s;
+        }
+
+        #reviewForm input[type="text"]:focus,
+        #reviewForm input[type="email"]:focus,
+        #reviewForm textarea:focus {
+          border-color: #3b82f6;
+          box-shadow: 0 0 0 3px rgba(59,130,246,0.2);
+        }
+
+        .star-rating {
+          display: flex;
+          flex-direction: row-reverse;
+          gap: 0.25rem;
+          font-size: 2rem;
+        }
+
+        .star-rating input[type="radio"] {
+          display: none;
+        }
+
+        .star-rating label {
+          color: #d1d5db;
+          cursor: pointer;
+          transition: color 0.2s;
+        }
+
+        .star-rating label:hover,
+        .star-rating label:hover ~ label {
+          color: #fbbf24;
+        }
+
+        .star-rating input[type="radio"]:checked + label,
+        .star-rating input[type="radio"]:checked + label ~ label {
+          color: #fbbf24;
+        }
+
+        #reviewGalleryContainer label {
+          position: relative;
+          background-color: #f3f4f6;
+          transition: all 0.3s;
+        }
+
+        #reviewGalleryContainer label:hover {
+          border-color: #3b82f6;
+          background-color: #e0f2fe;
+        }
+
+        #reviewGalleryContainer svg[data-icon] {
+          font-size: 2rem;
+          color: red;
+        }
+
+        #reviewForm button[type="submit"] {
+          background-color: #1d4ed8;
+          color: #ffffff;
+          padding: 0.75rem 1.5rem;
+          font-size: 1rem;
+          border-radius: 0.75rem;
+          transition: all 0.3s;
+          border: none;
+          cursor: pointer;
+        }
+
+        #reviewForm button[type="submit"]:hover {
+          background-color: #1e40af; /* blue-800 */
+          box-shadow: 0 4px 12px rgba(30, 64, 175, 0.3);
+        }
+
+        @media (max-width: 640px) {
+          .grid.grid-cols-2 {
+            grid-template-columns: 1fr;
+          }
+        }
+        .review-item {
+          animation: fadeIn 0.3s ease;
+        }
+        @keyframes fadeIn {
+          from {opacity:0; transform: translateY(10px);}
+          to {opacity:1;}
+        }
+        #reviewList.scrollable {
+          max-height: 600px; /* ~ 5 item (tuỳ chỉnh) */
+          overflow-y: auto;
+          padding-right: 4px;
+        }
+
+        /* custom scrollbar (optional, đẹp hơn) */
+        #reviewList.scrollable::-webkit-scrollbar {
+          width: 6px;
+        }
+        #reviewList.scrollable::-webkit-scrollbar-thumb {
+          background: #d1d5db;
+          border-radius: 10px;
+        }
+        #reviewList.scrollable::after {
+          content: "";
+          position: sticky;
+          bottom: 0;
+          display: block;
+          height: 40px;
+          background: linear-gradient(to bottom, transparent, white);
+        }
+        /* Giảm forced reflow khi Swiper đo kích thước */
+        .mainSwiper {
+          width: 100%;
+          aspect-ratio: 1 / 1;
+          contain: layout paint;
+        }
+
+        .mainSwiper .swiper-wrapper,
+        .mainSwiper .swiper-slide,
+        .mainSwiper picture {
+          height: 100%;
+        }
+
+        .mainSwiper img {
+          width: 100%;
+          height: 100% !important;
+          object-fit: contain;
+        }
+
+        .thumbSwiper {
+          contain: layout paint;
+        }
+
+        /* Fix Lighthouse: Touch targets do not have sufficient size or spacing */
+        .mainSwiper .swiper-pagination {
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          gap: 4px;
+          bottom: 8px !important;
+        }
+
+        .mainSwiper .swiper-pagination .swiper-pagination-bullet {
+          width: 48px !important;
+          height: 48px !important;
+          margin: 0 !important;
+          padding: 0 !important;
+
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+
+          background: transparent !important;
+          opacity: 1 !important;
+          border-radius: 9999px;
+          cursor: pointer;
+        }
+
+        /* Chấm hiển thị thật bên trong, còn vùng bấm vẫn là 48x48 */
+        .mainSwiper .swiper-pagination .swiper-pagination-bullet::before {
+          content: "";
+          width: 9px;
+          height: 9px;
+          border-radius: 9999px;
+          background: #cbd5e1;
+          transition: all 0.2s ease;
+        }
+
+        .mainSwiper .swiper-pagination .swiper-pagination-bullet-active::before {
+          width: 22px;
+          background: #2563eb;
+        }
+
+        .variant-name {
+          display: -webkit-box;
+          -webkit-line-clamp: 2;
+          -webkit-box-orient: vertical;
+
+          overflow: hidden;
+          white-space: normal;
+          text-align: center;
+
+          line-height: 1.2rem;
+        }
+      </style>
+    </th:block>
+  </head>
+  <body class="bg-[#f1f5f9] text-gray-800">
+    <div th:replace="~{common/client/header :: header}"></div>
+    <main
+      class="container mx-auto px-4 md:px-6 lg:px-12 py-8"
+      th:if="${product != null}"
+    >
+      <nav
+        class="flex overflow-x-auto whitespace-nowrap pb-2 no-scrollbar"
+      >
+        <ol class="inline-flex items-center space-x-2 text-sm text-gray-900">
+          <li>
+            <a href="/" class="hover:text-blue-900 transition-colors"
+              >Trang chủ</a
+            >
+          </li>
+          <li><svg class="text-lg text-gray-300" data-icon="chevron-right" aria-hidden="true" focusable="false" viewBox="0 0 24 24" width="1em" height="1em" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" ><path d="m9 18 6-6-6-6"/></svg></li>
+          <li class="hover:text-blue-900 cursor-pointer">
+            <a
+              th:href="@{/san-pham(danh-muc=${product.categorySlug})}"
+              class="hover:text-blue-900 transition-colors"
+              th:text="${product.categoryName}"
+              >Danh mục</a
+            >
+          </li>
+          <li><svg class="text-lg text-gray-300" data-icon="chevron-right" aria-hidden="true" focusable="false" viewBox="0 0 24 24" width="1em" height="1em" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" ><path d="m9 18 6-6-6-6"/></svg></li>
+          <li
+            class="text-gray-900 font-medium truncate max-w-[200px] md:max-w-none"
+            th:text="${product.title}"
+          ></li>
+        </ol>
+      </nav>
+      <div
+        class="bg-white rounded-xl shadow-sm border border-gray-200/60 overflow-hidden"
+      >
+        <div class="flex flex-col lg:flex-row">
+          <div class="w-full lg:w-1/2 p-5 border-r border-gray-50">
+            <div class="sticky" data-product-gallery x-data="{ mainImage: '[[${product.image}]]' }">
+              <div class="swiper mainSwiper rounded-xl overflow-hidden bg-white mb-6 group cursor-zoom-in">
+                <div class="swiper-wrapper">
+                  <div class="swiper-slide" th:with="firstImg=${product.listImages[0]}">
+                    <picture>
+                      <source
+                          media="(min-width: 1024px)"
+                          th:srcset="|${firstImg.imageUrl}_pc.webp|"
+                      />
+
+                      <img
+                        th:src="|${firstImg.imageUrl}_mobile.webp|"
+                        th:srcset="|${firstImg.imageUrl}_mobile.webp 450w, ${firstImg.imageUrl}_pc.webp 900w|"
+                        sizes="(min-width: 1024px) 50vw, 100vw"
+                        class="w-full h-auto object-contain bg-white"
+                        th:alt="${product.title}"
+                        width="450"
+                        height="450"
+                        loading="eager"
+                        fetchpriority="high"
+                        decoding="sync"
+                      />
+                    </picture>
+                  </div>
+                  <div class="swiper-slide" th:each="img, iterStat : ${product.listImages}" th:if="${iterStat.index > 0}">
+                    <picture>
+                      <source
+                          media="(min-width: 1024px)"
+                          th:srcset="|${img.imageUrl}_pc.webp|"
+                      />
+
+                      <img
+                        th:src="|${img.imageUrl}_mobile.webp|"
+                        th:srcset="|${img.imageUrl}_mobile.webp 450w, ${img.imageUrl}_pc.webp 900w|"
+                        sizes="(min-width: 1024px) 50vw, 100vw"
+                        class="w-full h-auto object-contain bg-white"
+                        th:alt="${product.title}"
+                        width="450"
+                        height="450"
+                        loading="lazy"
+                        fetchpriority="low"
+                        decoding="async"
+                      />
+                    </picture>
+                  </div>
+                </div>
+                <div class="swiper-pagination lg:hidden"></div>
+              </div>
+
+              <div class="thumb-swiper-shell relative px-2" th:if="${not #lists.isEmpty(product.listImages)}">
+                <div class="swiper thumbSwiper">
+                  <div class="swiper-wrapper">
+                    <div class="swiper-slide" th:with="firstImg=${product.listImages[0]}">
+                      <div class="aspect-square rounded-xl border-2 border-transparent cursor-pointer hover:border-blue-500 transition-all overflow-hidden bg-gray-50">
+                        <img th:src="|${firstImg.imageUrl}_mobile.webp|"
+                             class="w-full h-full object-cover"
+                             th:alt="${product.title}"
+                             width="96"
+                             height="96"
+                             loading="eager"
+                             fetchpriority="high"
+                             decoding="sync" />
+                      </div>
+                    </div>
+                    <div th:each="img, iterStat : ${product.listImages}" th:if="${iterStat.index > 0}" class="swiper-slide">
+                      <div class="aspect-square rounded-xl border-2 border-transparent cursor-pointer hover:border-blue-500 transition-all overflow-hidden bg-gray-50">
+                        <img th:src="|${img.imageUrl}_mobile.webp|"
+                             class="w-full h-full object-cover"
+                             th:alt="${product.title}"
+                             width="96"
+                             height="96"
+                             loading="lazy"
+                             fetchpriority="low"
+                             decoding="async" />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div th:if="${#lists.size(product.listImages) > 4}"
+                     th:classappend="${#lists.size(product.listImages) <= 5} ? ' md:hidden' : ''"
+                     class="swiper-button-prev !text-gray-400 after:!text-xs"></div>
+                <div th:if="${#lists.size(product.listImages) > 4}"
+                     th:classappend="${#lists.size(product.listImages) <= 5} ? ' md:hidden' : ''"
+                     class="swiper-button-next !text-gray-400 after:!text-xs"></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="w-full lg:w-1/2 p-5 bg-gray-50/30">
+            <div class="flex flex-col h-full">
+              <div class="mb-auto">
+                <h1
+                  class="text-base md:text-2xl font-semibold text-gray-900 mb-4 leading-tight"
+                  th:text="|${product.title}|"
+                ></h1>
+                <div class="flex flex-row flex-wrap items-baseline gap-x-4 gap-y-1 mb-4">
+                  <div class="flex items-baseline gap-3 md:gap-4">
+                    <span class="text-xl md:text-[30px] font-semibold text-[#dd2f2c] leading-none"
+                          th:text="${#numbers.formatDecimal(product.salePrice ?: product.price, 0, 'POINT', 0, 'COMMA') + ' VND'}">
+                    </span>
+                    <span th:if="${product.salePrice != null and product.salePrice > 0 and product.salePrice < product.price}"
+                          class="text-xs md:text-[18px] text-[#191919] line-through font-medium leading-none"
+                          th:text="${#numbers.formatDecimal(product.price, 0, 'POINT', 0, 'COMMA') + ' VND'}">
+                    </span>
+                  </div>
+                </div>
+                <div class="flex flex-row flex-wrap items-baseline gap-x-4 gap-y-1 mb-4">
+                  <div class="flex items-baseline gap-3 md:gap-4">
+                    Trình trạng:
+                    <span
+                            th:if="${product.stockQty > 0 and product.status != 0}"
+                            class="text-green-800 text-base font-semibold"
+                    >
+                      Còn hàng
+                    </span>
+                    <span
+                            th:if="${product.stockQty <= 0 and product.status != 0}"
+                            class="text-red-800 text-base font-semibold"
+                    >
+                      Liên hệ
+                    </span>
+                    <span
+                            th:if="${product.status == 0}"
+                            class="text-gray-500 text-base font-semibold"
+                    >
+                      Ngừng kinh doanh
+                    </span>
+                  </div>
+                </div>
+                <div class="mb-6" th:if="${policy != null}"
+                     th:with="hasPolicy=${policy.policies != null && !#lists.isEmpty(policy.policies)},
+                          hasAfterSales=${policy.afterSales != null && !#lists.isEmpty(policy.afterSales)},
+                          hasGifts=${policy.gifts != null && !#lists.isEmpty(policy.gifts)}">
+
+                  <div class="flex flex-wrap gap-4">
+                    <div class="flex items-start gap-3 text-sm text-gray-700 bg-white border border-dashed border-blue-300 p-4 rounded-lg w-full">
+                      <div class="w-full">
+                        <span class="flex items-center font-semibold text-blue-700 uppercase text-[12px] mb-3">
+                          <svg class="text-blue-600 text-2xl mr-2" data-icon="gift" aria-hidden="true" focusable="false" viewBox="0 0 24 24" width="1em" height="1em" fill="currentColor" ><path d="M20 7h-2.2A3 3 0 0 0 12 4.8 3 3 0 0 0 6.2 7H4a2 2 0 0 0-2 2v3h9V7h2v5h9V9a2 2 0 0 0-2-2zM9 7a1 1 0 1 1 1-1 1 1 0 0 1-1 1zm6 0a1 1 0 1 1 1-1 1 1 0 0 1-1 1zM3 14h8v8H5a2 2 0 0 1-2-2v-6zm10 0h8v6a2 2 0 0 1-2 2h-6v-8z"/></svg>
+                          Dịch vụ hậu mãi chất lượng cao, an tâm mua sắm
+                        </span>
+
+                        <div th:if="${hasPolicy}">
+                          <p class="font-semibold text-red-600 mb-2">I. Chính sách</p>
+                          <ul class="space-y-1 text-[13px] leading-relaxed">
+                            <li th:each="item : ${policy.policies}" class="flex items-start gap-2">
+                              <span class="text-green-800 font-semibold text-[10px] mt-0.5">✔︎</span>
+                              <span th:text="${item}"></span>
+                            </li>
+                          </ul>
+                        </div>
+
+                        <div class="mt-4" th:if="${hasAfterSales}">
+                          <p class="font-semibold text-red-600 mb-2"
+                             th:text="${hasPolicy ? 'II. Dịch vụ hậu mãi' : 'I. Dịch vụ hậu mãi'}"></p>
+                          <ul class="space-y-1 text-[13px] leading-relaxed">
+                            <li th:each="item : ${policy.afterSales}" class="flex items-start gap-2">
+                              <span class="text-green-800 font-semibold text-[10px] mt-0.5">✔︎</span>
+                              <span th:text="${item}"></span>
+                            </li>
+                          </ul>
+                        </div>
+
+                        <div class="mt-4" th:if="${hasGifts}">
+                          <p class="font-semibold text-red-600 mb-2"
+                             th:text="${(hasPolicy && hasAfterSales) ? 'III. Quà tặng kèm' : ((hasPolicy || hasAfterSales) ? 'II. Quà tặng kèm' : 'I. Quà tặng kèm')}"></p>
+                          <ul class="space-y-1 text-[13px] leading-relaxed">
+                            <li th:each="item : ${policy.gifts}" class="flex items-start gap-2">
+                              <span class="text-green-800 font-semibold text-[10px] mt-0.5">✔︎</span>
+                              <span th:text="${item}"></span>
+                            </li>
+                          </ul>
+                        </div>
+
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="mb-6" th:if="${variants != null and variants.size() > 1}">
+                  <label
+                    class="block font-semibold text-gray-700 mb-3 uppercase tracking-wide text-xs"
+                  >
+                    Phiên bản khác
+                  </label>
+                  <div class="flex flex-wrap gap-3">
+                    <a
+                      th:each="v : ${variants}"
+                      th:href="@{'/san-pham/' + ${v.slug}}"
+                      th:classappend="${v.id == product.id} ? 'border-blue-600 bg-blue-50 text-blue-700' : 'border-gray-200 hover:border-blue-400 text-gray-600'"
+                      class="px-4 py-1 border rounded-[5px] text-[12px] font-semibold transition-all duration-200 flex flex-col items-center justify-center gap-0.5 min-w-[80px] min-h-[60px]"
+                    >
+                      <span
+                        class="variant-name max-w-[130px] text-center"
+                        th:title="${v.title}"
+                        th:text="${!#strings.isEmpty(v.variantName) ? v.variantName : v.title}"
+                      >
+                        Tên biến thể
+                      </span>
+                      <span
+                        class="text-[12px] text-red-700 font-medium"
+                        th:text="${#numbers.formatDecimal(v.salePrice ?: v.price, 0, 'COMMA', 0, 'POINT') + ' VND'}"
+                      >
+                      </span>
+                    </a>
+                  </div>
+                </div>
+                <div
+                        th:if="${product.status == 0}"
+                        class="mb-8 rounded-xl border border-red-200 bg-red-50 px-5 py-4"
+                >
+                  <div class="flex items-start gap-3">
+                    <div class="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-red-100 text-red-700">
+                      <svg data-icon="alert-circle" aria-hidden="true" focusable="false" viewBox="0 0 24 24" width="1.25em" height="1.25em" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="10"/>
+                        <path d="M12 8v4"/>
+                        <path d="M12 16h.01"/>
+                      </svg>
+                    </div>
+
+                    <div>
+                      <p class="text-base font-semibold text-red-800">
+                        Sản phẩm tạm ngừng kinh doanh
+                      </p>
+                      <p class="mt-1 text-sm leading-relaxed text-red-700">
+                        Sản phẩm này hiện chưa thể đặt mua. Quý khách vui lòng tham khảo các sản phẩm khác hoặc liên hệ hotline để được tư vấn thêm.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+                <th:block th:if="${product.status != 0}">
+                  <div class="mb-8">
+                    <div class="flex items-center justify-between mb-2">
+                      <label
+                              class="block font-semibold text-gray-700 uppercase tracking-wide text-xs"
+                      >
+                        Số lượng
+                      </label>
+                    </div>
+                    <div
+                            class="flex items-center w-32 border border-gray-200 rounded-[5px] overflow-hidden bg-white"
+                    >
+                      <button
+                              type="button"
+                              onclick="changeQuantity(-1)"
+                              aria-label="Giảm số lượng"
+                              class="w-10 h-10 flex items-center justify-center hover:bg-gray-50 text-gray-600 transition-colors border-r border-gray-100"
+                              th:disabled="${product.stockQty <= 0}"
+                      >
+                        <svg class="" data-icon="minus" aria-hidden="true" focusable="false" viewBox="0 0 24 24" width="1em" height="1em" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" ><path d="M5 12h14"/></svg>
+                      </button>
+
+                      <input
+                              type="number"
+                              aria-label="Số lượng sản phẩm"
+                              id="product-quantity"
+                              value="1"
+                              min="1"
+                              th:max="${product.stockQty}"
+                              th:disabled="${product.stockQty <= 0}"
+                              class="w-12 text-center font-semibold text-gray-800 focus:outline-none bg-transparent"
+                      />
+
+                      <button
+                              type="button"
+                              onclick="changeQuantity(1)"
+                              aria-label="Tăng số lượng"
+                              class="w-10 h-10 flex items-center justify-center hover:bg-gray-50 text-gray-600 transition-colors border-l border-gray-100"
+                              th:disabled="${product.stockQty <= 0}"
+                      >
+                        <svg class="" data-icon="plus" aria-hidden="true" focusable="false" viewBox="0 0 24 24" width="1em" height="1em" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" ><path d="M12 5v14M5 12h14"/></svg>
+                      </button>
+                    </div>
+                  </div>
+
+                  <div class="flex flex-col sm:flex-row gap-4 mb-8">
+                    <button
+                      id="btn-buy-now"
+                      class="btn-hover-effect flex-[1.5] bg-[#1c62e8] hover:bg-blue-700 text-white font-semibold py-5 rounded-xl flex items-center justify-center gap-3 text-sm md:text-base"
+                      th:data-id="${product.id}"
+                      th:data-title="${product.title}"
+                      th:data-price="${product.salePrice ?: product.price}"
+                      th:data-image="${product.image}"
+                      th:data-slug="${product.slug}"
+                    >
+                      <svg class="text-2xl animate-pulse" data-icon="zap" aria-hidden="true" focusable="false" viewBox="0 0 24 24" width="1em" height="1em" fill="currentColor" ><path d="M13 2 3 14h8l-1 8 11-14h-8l1-6z"/></svg> MUA NGAY
+                    </button>
+                    <button
+                      type="button"
+                      id="btn-add-cart"
+                      class="btn-hover-effect btn-add-to-cart flex-1 bg-white border-2 border-gray-900 text-gray-900 hover:bg-gray-900 hover:text-white font-semibold py-5 rounded-xl flex items-center justify-center gap-2 text-sm md:text-base"
+                      th:data-id="${product.id}"
+                      th:data-title="${product.title}"
+                      th:data-price="${product.salePrice ?: product.price}"
+                      th:data-image="${product.image}"
+                      th:data-slug="${product.slug}"
+                      th:data-category="${product.categoryName}"
+                    >
+                      <svg class="text-2xl" data-icon="cart-add" aria-hidden="true" focusable="false" viewBox="0 0 24 24" width="1em" height="1em" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" ><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.7 13.4a2 2 0 0 0 2 1.6h8.8a2 2 0 0 0 2-1.6L22 6H6"/><path d="M12 8v6M9 11h6"/></svg> GIỎ HÀNG
+                    </button>
+                  </div>
+                </th:block>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 py-5 items-center">
+        <div class="flex items-center gap-4 group p-3 rounded-xl transition-all duration-300 hover:bg-gray-50 bg-white">
+          <div class="flex-shrink-0 w-12 h-12 flex items-center justify-center bg-blue-50 rounded-full group-hover:bg-blue-600 transition-colors">
+            <svg class="text-2xl text-blue-600 group-hover:text-white" data-icon="truck" aria-hidden="true" focusable="false" viewBox="0 0 24 24" width="1em" height="1em" fill="currentColor" ><path d="M3 5h11v10H3z"/><path d="M14 8h4l3 4v3h-7z"/><circle cx="7" cy="17" r="2"/><circle cx="17" cy="17" r="2"/></svg>
+          </div>
+          <span class="text-gray-800 font-semibold text-sm leading-snug">Miễn phí giao hàng</span>
+        </div>
+
+        <div class="flex items-center gap-4 group p-3 rounded-xl transition-all duration-300 hover:bg-gray-50 bg-white">
+          <div class="flex-shrink-0 w-12 h-12 flex items-center justify-center bg-orange-50 rounded-full group-hover:bg-orange-500 transition-colors">
+            <svg class="text-2xl text-orange-500 group-hover:text-white" data-icon="timer" aria-hidden="true" focusable="false" viewBox="0 0 24 24" width="1em" height="1em" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" ><circle cx="12" cy="13" r="8"/><path d="M12 9v4l3 2"/><path d="M9 2h6"/></svg>
+          </div>
+          <span class="text-gray-800 font-semibold text-sm leading-snug">Giao hàng nhanh chóng</span>
+        </div>
+
+        <div class="flex items-center gap-4 group p-3 rounded-xl transition-all duration-300 hover:bg-gray-50 bg-white">
+          <div class="flex-shrink-0 w-12 h-12 flex items-center justify-center bg-green-50 rounded-full group-hover:bg-green-500 transition-colors">
+            <svg class="text-2xl text-green-800 group-hover:text-white" data-icon="refresh" aria-hidden="true" focusable="false" viewBox="0 0 24 24" width="1em" height="1em" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" ><path d="M21 12a9 9 0 0 1-15.3 6.4L3 16"/><path d="M3 21v-5h5"/><path d="M3 12A9 9 0 0 1 18.3 5.6L21 8"/><path d="M21 3v5h-5"/></svg>
+          </div>
+          <span class="text-gray-800 font-semibold text-sm leading-snug">Hỗ trợ đổi mới 1:1</span>
+        </div>
+
+        <div class="flex items-center gap-4 group p-3 rounded-xl transition-all duration-300 hover:bg-gray-50 bg-white">
+          <div class="flex-shrink-0 w-12 h-12 flex items-center justify-center bg-red-50 rounded-full group-hover:bg-red-500 transition-colors">
+            <svg class="text-2xl text-red-500 group-hover:text-white" data-icon="badge-check" aria-hidden="true" focusable="false" viewBox="0 0 24 24" width="1em" height="1em" fill="currentColor" ><path d="M12 2 14.5 4.4 18 4l.8 3.4L22 9l-1.5 3L22 15l-3.2 1.6L18 20l-3.5-.4L12 22l-2.5-2.4L6 20l-.8-3.4L2 15l1.5-3L2 9l3.2-1.6L6 4l3.5.4L12 2zm-1 13.2 5.2-5.2-1.4-1.4-3.8 3.8-1.8-1.8-1.4 1.4 3.2 3.2z"/></svg>
+          </div>
+          <span class="text-gray-800 font-semibold text-sm leading-snug">Sản phẩm có nguồn gốc rõ ràng</span>
+        </div>
+
+        <div class="flex items-center gap-4 group p-3 rounded-xl transition-all duration-300 hover:bg-gray-50 bg-white">
+          <div class="flex-shrink-0 w-12 h-12 flex items-center justify-center bg-purple-50 rounded-full group-hover:bg-purple-600 transition-colors">
+            <svg class="text-2xl text-purple-600 group-hover:text-white" data-icon="credit-card" aria-hidden="true" focusable="false" viewBox="0 0 24 24" width="1em" height="1em" fill="currentColor" ><path d="M4 5h16a2 2 0 0 1 2 2v2H2V7a2 2 0 0 1 2-2zm-2 6h20v6a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2v-6zm3 4h6v2H5v-2z"/></svg>
+          </div>
+          <span class="text-gray-800 font-semibold text-sm leading-snug">Hỗ trợ trả góp theo điều kiện đối tác</span>
+        </div>
+      </div>
+      <div
+        class="mt-4 bg-gradient-to-r from-blue-700 to-blue-500 rounded-xl p-5 text-white relative overflow-hidden"
+      >
+        <div
+          class="relative z-10 flex flex-col md:flex-row items-center justify-between gap-6"
+        >
+          <div class="space-y-2">
+            <h2 class="text-base md:text-xl font-semibold flex items-center gap-2 uppercase">
+              <svg class="" data-icon="award" aria-hidden="true" focusable="false" viewBox="0 0 24 24" width="1em" height="1em" fill="currentColor" ><path d="M12 15a6 6 0 1 0 0-12 6 6 0 0 0 0 12z"/><path d="m8.5 14-1.5 8 5-3 5 3-1.5-8"/></svg> Cam kết dịch vụ vàng
+            </h2>
+            <p
+              class="text-blue-100 max-w-xl text-sm md:text-base leading-relaxed"
+            >
+              Sự hài lòng của khách hàng là ưu tiên số 1. Nếu có bất kỳ vấn đề gì, hãy gọi cho chúng tôi để được hỗ trợ nhanh trong giờ làm việc.
+            </p>
+          </div>
+          <a
+            th:href="'tel:' + ${hotline}"
+            class="btn-hover-effect flex items-center gap-3 bg-white text-blue-700 px-8 py-4 rounded-xl font-semibold shadow-lg shadow-blue-900/20 text-sm md:text-base"
+          >
+            <svg class="animate-bounce" data-icon="phone-call" aria-hidden="true" focusable="false" viewBox="0 0 24 24" width="1em" height="1em" fill="currentColor" ><path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.4 19.4 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.2 2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1 1 .4 2 .7 2.9a2 2 0 0 1-.5 2.1L8.1 9.9a16 16 0 0 0 6 6l1.2-1.2a2 2 0 0 1 2.1-.5c.9.3 1.9.6 2.9.7a2 2 0 0 1 1.7 2z"/></svg>
+            <span th:text="${hotline}"></span>
+          </a>
+        </div>
+        <div
+          class="absolute -right-10 -bottom-10 w-40 h-40 bg-white/10 rounded-full"
+        ></div>
+      </div>
+      <div class="mt-4 grid grid-cols-1 lg:grid-cols-12 gap-5">
+        <div class="lg:col-span-8">
+          <div
+            class="bg-white rounded-xl border border-gray-200/60 shadow-sm overflow-hidden"
+          >
+            <div
+              class="px-8 py-6 border-b border-gray-100 flex items-center gap-3"
+            >
+              <div class="w-2 h-8 bg-blue-600 rounded-full"></div>
+              <h3 class="text-base md:text-xl font-semibold text-gray-900">
+                Chi tiết sản phẩm
+              </h3>
+            </div>
+            <div
+              class="product-content p-5 pt-0 text-sm md:text-base sun-editor-editable text-justify"
+              th:utext="${product.content}"
+            ></div>
+          </div>
+        </div>
+
+        <aside class="lg:col-span-4">
+          <div class="sticky top-24 space-y-6">
+            <div
+              class="bg-white rounded-xl border border-gray-200/60 shadow-sm overflow-hidden"
+            >
+              <div
+                class="px-6 py-5 bg-gray-50 border-b border-gray-100 flex items-center gap-3"
+              >
+                <svg class="text-blue-600 text-xl font-semibold" data-icon="list-ul" aria-hidden="true" focusable="false" viewBox="0 0 24 24" width="1em" height="1em" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" ><path d="M8 6h13M8 12h13M8 18h13"/><path d="M3 6h.01M3 12h.01M3 18h.01"/></svg>
+                <h3 class="text-base md:text-xl font-semibold text-gray-900">Thông số kỹ thuật</h3>
+              </div>
+              <div
+                class="spec-table p-2 text-sm md:text-base sun-editor-editable"
+                th:utext="${product.specification}"
+              ></div>
+            </div>
+          </div>
+        </aside>
+      </div>
+
+      <section class="mt-12 bg-white rounded-xl shadow-sm border border-gray-200/60 overflow-hidden mb-12">
+        <div class="px-8 py-6 border-b border-gray-100 flex items-center justify-between">
+          <div class="flex items-center gap-3">
+            <div class="w-2 h-8 bg-blue-600 rounded-full"></div>
+            <h3 class="text-base md:text-xl font-semibold text-gray-900">Đánh giá khách hàng</h3>
+          </div>
+        </div>
+
+        <div class="p-4 mx-auto grid gap-10 lg:grid-cols-2">
+          <div class="space-y-6">
+            <div id="reviewList" class="space-y-3">
+              <div th:if="${#lists.isEmpty(reviews)}"
+                   class="text-center py-10 text-gray-500 italic">
+                Chưa có đánh giá nào cho sản phẩm này.
+              </div>
+              <div th:each="rev, iterStat : ${reviews}"
+                   class="review-card p-4 bg-white rounded-xl border border-gray-100 shadow-sm review-item"
+                   th:data-index="${iterStat.index}">
+                <div class="flex items-start gap-3 mb-2">
+                  <div class="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-bold"
+                       th:text="${#strings.substring(rev.reviewName,0,1)}">U</div>
+
+                  <div class="flex-1">
+                    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1">
+                      <span class="font-semibold text-gray-900" th:text="${rev.reviewName}">Nguyễn Văn A</span>
+                      <span class="text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded-full flex items-center gap-1">
+                        <svg class="" data-icon="check-shield" aria-hidden="true" focusable="false" viewBox="0 0 24 24" width="1em" height="1em" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" ><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="m9 12 2 2 4-4"/></svg> Đã mua hàng
+                      </span>
+                    </div>
+                    <div class="flex text-yellow-400 text-sm mt-1">
+                      <th:block th:each="i : ${#numbers.sequence(1, 5)}">
+                        <svg th:if="${i <= rev.rating}" class="" data-icon="star" aria-hidden="true" focusable="false" viewBox="0 0 24 24" width="1em" height="1em" fill="currentColor"><path d="m12 2 3.1 6.3 6.9 1-5 4.9 1.2 6.8-6.2-3.3L5.8 21 7 14.2 2 9.3l6.9-1z"/></svg>
+                        <svg th:unless="${i <= rev.rating}" class="" data-icon="star" aria-hidden="true" focusable="false" viewBox="0 0 24 24" width="1em" height="1em" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m12 2 3.1 6.3 6.9 1-5 4.9 1.2 6.8-6.2-3.3L5.8 21 7 14.2 2 9.3l6.9-1z"/></svg>
+                      </th:block>
+                    </div>
+                    <p class="text-gray-700 text-sm leading-relaxed" th:text="${rev.content}"></p>
+                    <div class="mt-3 flex flex-wrap gap-2"
+                         th:if="${rev.images != null and !#lists.isEmpty(rev.images)}">
+                      <img th:each="img : ${rev.images}"
+                           th:src="@{${img.getImageUrl()} + '_mobile.webp'}"
+                           width="96"
+                           height="96"
+                           loading="lazy"
+                           decoding="async"
+                           class="w-20 h-20 sm:w-24 sm:h-24 object-cover rounded-lg border border-gray-200 cursor-pointer hover:scale-103 transition">
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="text-center" id="loadMoreContainer" style="display:none;">
+                <button id="loadMoreBtn"
+                        class="mt-4 px-6 py-2 bg-gray-100 hover:bg-gray-200 rounded-lg text-sm font-medium">
+                  Xem thêm
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <div id="reviewFormContainer" class="bg-gray-50 p-4 rounded-xl border border-gray-100 shadow-sm">
+            <h4 class="text-xl sm:text-2xl font-bold text-gray-900 mb-6">Gửi nhận xét của bạn</h4>
+
+            <form id="reviewForm" class="space-y-5">
+
+              <input type="hidden" id="productId" th:value="${product.id}">
+
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Đánh giá của bạn *</label>
+                <div class="flex">
+                  <div class="star-rating">
+                    <input type="radio" name="rating" value="1" id="star1">
+                    <label for="star1">★</label>
+                    <input type="radio" name="rating" value="2" id="star2">
+                    <label for="star2">★</label>
+                    <input type="radio" name="rating" value="3" id="star3">
+                    <label for="star3">★</label>
+                    <input type="radio" name="rating" value="4" id="star4">
+                    <label for="star4">★</label>
+                    <input type="radio" name="rating" value="5" id="star5">
+                    <label for="star5">★</label>
+                  </div>
+                </div>
+              </div>
+
+              <div>
+                <textarea id="content" rows="4" required
+                  class="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-blue-500 focus:ring-1 focus:ring-blue-200"
+                  placeholder="Mời bạn chia sẻ thêm cảm nhận..."></textarea>
+              </div>
+
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Hình ảnh đánh giá (tùy chọn)</label>
+                <div class="flex flex-wrap gap-3" id="reviewGalleryContainer">
+                  <label class="w-24 h-24 border-2 border-dashed border-gray-200 rounded-xl flex flex-col items-center justify-center cursor-pointer hover:border-blue-300 hover:bg-blue-50 transition-all">
+                    <input type="file" id="reviewGalleryFiles" accept="image/*" multiple class="hidden" onchange="handleReviewGalleryUpload(event)" />
+                    <svg class="text-3xl text-gray-300" data-icon="plus" aria-hidden="true" focusable="false" viewBox="0 0 24 24" width="1em" height="1em" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" ><path d="M12 5v14M5 12h14"/></svg>
+                  </label>
+                </div>
+              </div>
+
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <input type="text" id="reviewName" placeholder="Họ tên *" required
+                       class="px-4 py-3 rounded-xl border border-gray-200 focus:border-blue-500 focus:ring-1 focus:ring-blue-200">
+                <input type="email" id="reviewEmail" placeholder="Email *" required
+                       class="px-4 py-3 rounded-xl border border-gray-200 focus:border-blue-500 focus:ring-1 focus:ring-blue-200">
+              </div>
+
+              <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-xl font-semibold transition-all">
+                Gửi đánh giá
+              </button>
+            </form>
+          </div>
+
+        </div>
+      </section>
+      <section class="mt-12 mb-8">
+        <div class="flex items-end justify-between mb-8 border-b border-gray-100 pb-4">
+          <div class="flex items-center gap-3">
+            <div class="relative">
+              <div class="w-2 h-8 bg-blue-600 rounded-full"></div>
+              <div class="absolute inset-0 w-2 h-8 bg-blue-600 rounded-full blur-[2px] opacity-40"></div>
+            </div>
+            <div class="flex flex-col">
+              <h3 class="text-xl md:text-2xl font-semibold text-gray-900 tracking-tight">
+                Sản phẩm liên quan
+              </h3>
+            </div>
+          </div>
+
+          <a href="/san-pham"
+             class="group flex items-center gap-1 text-blue-600 hover:text-blue-700 font-semibold text-sm md:text-base transition-all duration-300">
+            <span>Xem tất cả</span>
+            <svg class="text-2xl transition-transform duration-300 group-hover:translate-x-1" data-icon="right-arrow-alt" aria-hidden="true" focusable="false" viewBox="0 0 24 24" width="1em" height="1em" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" ><path d="M5 12h14"/><path d="m13 6 6 6-6 6"/></svg>
+          </a>
+        </div>
+
+        <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
+          <th:block th:if="${not #lists.isEmpty(relatedProducts)}">
+            <th:block th:each="item : ${relatedProducts}">
+              <div
+                      th:replace="~{client/product/item_fragment :: product_item(${item})}"
+              ></div>
+            </th:block>
+          </th:block>
+        </div>
+      </section>
+    </main>
+    <div th:replace="~{common/client/footer :: footer}"></div>
+    <script>
+      let mainSwiperInstance = null;
+      let thumbSwiperInstance = null;
+      let productSwiperLoading = null;
+
+      function getProductGalleryRoot() {
+        const mainEl = document.querySelector(".mainSwiper");
+        return mainEl?.closest("[data-product-gallery]") || mainEl?.parentElement || document;
+      }
+
+      function loadProductSwiperOnce() {
+        if (mainSwiperInstance || productSwiperLoading) return productSwiperLoading;
+
+        const mainEl = document.querySelector(".mainSwiper");
+        if (!mainEl || mainEl.querySelectorAll(".swiper-slide").length <= 1) {
+          mainEl?.querySelector(".swiper-pagination")?.remove();
+          document.querySelector(".thumbSwiper")?.closest(".relative")?.remove();
+          return Promise.resolve();
+        }
+
+        productSwiperLoading = window
+          .loadScriptOnce("https://cdn.jsdelivr.net/npm/swiper@12.1.0/swiper-bundle.min.js")
+          .then(initProductSwiper)
+          .catch(function(error) {
+            productSwiperLoading = null;
+            throw error;
+          });
+
+        return productSwiperLoading;
+      }
+
+      window.addEventListener("load", function () {
+        const gallery = getProductGalleryRoot();
+        if (!gallery) return;
+        ["pointerenter", "pointerdown", "touchstart", "focusin"].forEach(function(eventName) {
+          gallery.addEventListener(eventName, loadProductSwiperOnce, { once: true, passive: true });
+        });
+      });
+
+      function initProductSwiper() {
+        const mainEl = document.querySelector(".mainSwiper");
+        const thumbEl = document.querySelector(".thumbSwiper");
+        const gallery = getProductGalleryRoot();
+
+        if (!mainEl || typeof Swiper === "undefined") return;
+
+        const mainSlides = mainEl.querySelectorAll(".swiper-slide");
+
+        if (mainSlides.length <= 1) {
+          mainEl.querySelector(".swiper-pagination")?.remove();
+          thumbEl?.closest(".relative")?.remove();
+          return;
+        }
+
+        if (thumbEl && thumbEl.querySelectorAll(".swiper-slide").length > 1) {
+          const nextButton = gallery.querySelector(".thumb-swiper-shell .swiper-button-next");
+          const prevButton = gallery.querySelector(".thumb-swiper-shell .swiper-button-prev");
+          const thumbSwiperConfig = {
+            slidesPerView: 4,
+            spaceBetween: 6,
+            freeMode: true,
+            watchSlidesProgress: true,
+            resizeObserver: true,
+            breakpoints: {
+              375: {
+                slidesPerView: 4,
+                spaceBetween: 8,
+              },
+              768: {
+                slidesPerView: 5,
+                spaceBetween: 10,
+              }
+            }
+          };
+
+          if (nextButton && prevButton) {
+            thumbSwiperConfig.navigation = {
+              nextEl: nextButton,
+              prevEl: prevButton,
+            };
+          }
+
+          thumbSwiperInstance = new Swiper(thumbEl, thumbSwiperConfig);
+        }
+
+        const mainSwiperConfig = {
+          spaceBetween: 10,
+          speed: 300,
+          resizeObserver: true,
+          pagination: {
+            el: mainEl.querySelector(".swiper-pagination"),
+            clickable: true,
+          }
+        };
+
+        if (thumbSwiperInstance) {
+          mainSwiperConfig.thumbs = {
+            swiper: thumbSwiperInstance
+          };
+        }
+
+        mainSwiperInstance = new Swiper(mainEl, mainSwiperConfig);
+      }
+
+      // Hàm thay đổi ảnh chính (Đã cập nhật cho Picture Tag)
+      function changeImage(element) {
+        const mainPicture = document.getElementById("mainPicture");
+        const expandImg = document.getElementById("expandedImg");
+        const baseUrl = element.getAttribute("data-base");
+
+        expandImg.style.opacity = "0";
+        setTimeout(() => {
+          // Cập nhật các source srcset trong picture
+          const sources = mainPicture.querySelectorAll("source");
+          sources.forEach((source) => {
+            if (source.media.includes("1024px")) {
+              source.srcset = `${baseUrl}_pc.webp`;
+            } else if (source.media.includes("768px")) {
+              source.srcset = `${baseUrl}_tablet.webp`;
+            }
+          });
+
+          // Cập nhật ảnh img fallback
+          expandImg.src = `${baseUrl}_mobile.webp`;
+          expandImg.style.opacity = "1";
+        }, 150);
+
+        document
+          .querySelectorAll(".thumbSwiper .swiper-slide div")
+          .forEach((div) => {
+            div.classList.replace("border-blue-500", "border-transparent");
+          });
+        element.parentElement.classList.replace(
+          "border-transparent",
+          "border-blue-500",
+        );
+      }
+      // Hàm xử lý tăng giảm số lượng trên UI
+      function changeQuantity(val) {
+        const qtyInput = document.getElementById("product-quantity");
+        let currentQty = parseInt(qtyInput.value);
+        const maxQty = parseInt(qtyInput.getAttribute("max")) || 99;
+
+        let newQty = currentQty + val;
+        if (newQty >= 1 && newQty <= maxQty) {
+          qtyInput.value = newQty;
+        }
+      }
+
+      const buyNowBtn = document.getElementById("btn-buy-now");
+      const addCartBtn = document.getElementById("btn-add-cart");
+
+      // Xử lý nút MUA NGAY
+      if (buyNowBtn) {
+        buyNowBtn.addEventListener("click", function () {
+          const qty =
+                  parseInt(document.getElementById("product-quantity")?.value) || 1;
+          const productData = {
+            productId: this.getAttribute("data-id"),
+            title: this.getAttribute("data-title"),
+            price: parseFloat(this.getAttribute("data-price")) || 0,
+            image: this.getAttribute("data-image"),
+            slug: this.getAttribute("data-slug"),
+            category: this.getAttribute("data-category"),
+            quantity: qty,
+          };
+          addToCart(productData, true);
+        });
+      }
+
+      function addToCart(product, redirect) {
+        let cart = JSON.parse(localStorage.getItem("cart")) || [];
+        const existingItemIndex = cart.findIndex(
+          (item) => item.productId === product.productId,
+        );
+
+        if (existingItemIndex > -1) {
+          cart[existingItemIndex].quantity += product.quantity;
+        } else {
+          cart.push(product);
+        }
+
+        localStorage.setItem("cart", JSON.stringify(cart));
+
+        if (redirect) {
+          window.location.href = "/gio-hang";
+        }
+      }
+
+      function submitReview(data, images = [], reload = true) {
+        if (!window.jQuery) return window.ensureJQuery().then(function() { submitReview(data, images, reload); });
+        const formData = new FormData();
+        formData.append("productId", data.productId);
+        formData.append("rating", data.rating);
+        formData.append("content", data.content);
+        formData.append("reviewName", data.reviewName);
+        formData.append("reviewEmail", data.reviewEmail);
+
+        images.forEach(file => formData.append("images", file));
+
+        formData.append("data", new Blob([JSON.stringify(data)], { type: "application/json" }));
+        $.ajax({
+          url: "/api/v1/review",
+          type: "POST",
+          data: formData,
+          processData: false,
+          contentType: false,
+          success: function (res) {
+            $("#reviewForm")[0].reset();
+            if (reload) window.location.reload();
+          },
+          error: function (xhr) {
+            console.error("Lỗi gửi đánh giá:", xhr);
+            alert("Có lỗi xảy ra!");
+          }
+        });
+      }
+
+      let reviewImages = [];
+
+      function handleReviewGalleryUpload(event) {
+        const files = Array.from(event.target.files);
+
+        reviewImages = reviewImages.concat(files);
+
+        const container = document.getElementById("reviewGalleryContainer");
+
+        files.forEach(file => {
+          const reader = new FileReader();
+          reader.onload = function(e) {
+            const div = document.createElement("div");
+            div.className = "relative w-24 h-24";
+            div.innerHTML = `
+                <img src="${e.target.result}" class="w-full h-full object-cover rounded-xl border border-gray-300">
+                <button type="button" class="absolute -top-2 -right-2 text-gray-200 rounded-full w-5 h-5 flex items-center justify-center shadow-md z-30"
+                    onclick="removeReviewImage(this, '${file.name}')">
+                    <svg class="text-xs" data-icon="x" aria-hidden="true" focusable="false" viewBox="0 0 24 24" width="1em" height="1em" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" ><path d="M18 6 6 18M6 6l12 12"/></svg>
+                </button>
+            `;
+            container.appendChild(div);
+          };
+          reader.readAsDataURL(file);
+        });
+      }
+
+      function removeReviewImage(button, fileName) {
+        reviewImages = reviewImages.filter(f => f.name !== fileName);
+        button.parentElement.remove();
+      }
+
+      const reviewForm = document.getElementById("reviewForm");
+
+      if (reviewForm) {
+        reviewForm.addEventListener("submit", function(e) {
+          e.preventDefault();
+
+          const selected = document.querySelector('.star-rating input:checked');
+          if (!selected) {
+            alert("Vui lòng chọn số sao");
+            return;
+          }
+
+          const rating = parseInt(selected.value);
+
+          const data = {
+            productId: document.getElementById("productId").value,
+            rating: rating,
+            content: document.getElementById("content").value,
+            reviewName: document.getElementById("reviewName").value,
+            reviewEmail: document.getElementById("reviewEmail").value
+          };
+
+          submitReview(data, reviewImages);
+        });
+      }
+
+      const reviews = document.querySelectorAll('.review-item');
+      const loadMoreBtn = document.getElementById('loadMoreBtn');
+      const loadMoreContainer = document.getElementById('loadMoreContainer');
+
+      let visibleCount = 3;
+      const step = 3;
+
+      function updateReviews() {
+        reviews.forEach((item, index) => {
+          if (index < visibleCount) {
+            item.style.display = 'block';
+          } else {
+            item.style.display = 'none';
+          }
+        });
+
+        if (visibleCount < reviews.length) {
+          loadMoreContainer.style.display = 'block';
+        } else {
+          loadMoreContainer.style.display = 'none';
+        }
+      }
+
+      loadMoreBtn.addEventListener('click', () => {
+        visibleCount += step;
+        updateReviews();
+        setTimeout(() => {
+          window.scrollTo({
+            behavior: 'smooth'
+          });
+        }, 100);
+      });
+
+      // init
+      updateReviews();
+      const reviewList = document.getElementById('reviewList');
+      const reviewItems = document.querySelectorAll('.review-item');
+
+      if (reviewItems.length > 5) {
+        reviewList.classList.add('scrollable');
+      }
+    </script>
+  </body>
+</html>

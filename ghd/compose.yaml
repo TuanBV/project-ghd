@@ -1,0 +1,110 @@
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    environment:
+      APP_ENV: ${APP_ENV:-docker}
+      # DB/Redis hosts are always the Compose service names, never localhost/.env overrides
+      DB_HOST: mysql
+      DB_PORT: 3306
+      DB_NAME: ${DB_NAME:-core}
+      DB_USERNAME: ${DB_USERNAME:?DB_USERNAME is required}
+      DB_PASSWORD: ${DB_PASSWORD:?DB_PASSWORD is required}
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      REDIS_PASSWORD: ${REDIS_PASSWORD:?REDIS_PASSWORD is required}
+      JWT_SECRET: ${JWT_SECRET:?JWT_SECRET is required}
+      AES_SECRET: ${AES_SECRET:?AES_SECRET is required}
+      COOKIE_DOMAIN: ${COOKIE_DOMAIN:-localhost}
+      SESSION_TIMEOUT: ${SESSION_TIMEOUT:-30m}
+      SESSION_COOKIE_NAME: ${SESSION_COOKIE_NAME:-GHDSESSION}
+      SESSION_COOKIE_SECURE: ${SESSION_COOKIE_SECURE:-false}
+      SESSION_COOKIE_SAME_SITE: ${SESSION_COOKIE_SAME_SITE:-lax}
+      MAIL_USERNAME: ${MAIL_USERNAME:-}
+      MAIL_PASSWORD: ${MAIL_PASSWORD:-}
+      TELEGRAM_BOT_TOKEN: ${TELEGRAM_BOT_TOKEN:-}
+      TELEGRAM_CHAT_ID: ${TELEGRAM_CHAT_ID:-}
+      UPLOAD_PATH: /app/uploads
+      SEO_STATIC_PATH: /app/seo
+      LOG_PATH: /app/logs
+    ports:
+      - "${APP_PORT:-8080}:8080"
+    volumes:
+      - uploads_data:/app/uploads
+      - seo_data:/app/seo
+      - logs_data:/app/logs
+    depends_on:
+      mysql:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://127.0.0.1:8080/actuator/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 45s
+    restart: unless-stopped
+    stop_grace_period: 30s
+    networks:
+      - ghd-net
+
+  mysql:
+    image: mysql:8.4.11
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:?MYSQL_ROOT_PASSWORD is required}
+      MYSQL_DATABASE: ${DB_NAME:-core}
+      MYSQL_USER: ${DB_USERNAME:?DB_USERNAME is required}
+      MYSQL_PASSWORD: ${DB_PASSWORD:?DB_PASSWORD is required}
+    command:
+      - --character-set-server=utf8mb4
+      - --collation-server=utf8mb4_unicode_ci
+    volumes:
+      - mysql_data:/var/lib/mysql
+    # Flyway (run by the app on startup) owns schema creation/migration against this
+    # empty database - see scripts/mysql-init.sql for why that script is NOT mounted here.
+    healthcheck:
+      # $$ keeps the password out of `docker compose config` output; the container's
+      # own shell resolves it from its environment at healthcheck-run time.
+      test: ["CMD-SHELL", "mysqladmin ping -h localhost -uroot -p\"$$MYSQL_ROOT_PASSWORD\" --silent"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+    restart: unless-stopped
+    networks:
+      - ghd-net
+
+  redis:
+    image: redis:7.4.10-alpine
+    environment:
+      REDIS_PASSWORD: ${REDIS_PASSWORD:?REDIS_PASSWORD is required}
+    # See docs/DOCKER.md "Redis password trade-off" - the official image has no
+    # `--requirepass-file`/env-only auth option, so the password still ends up as a
+    # process argument inside the container (visible to `docker top`/`ps` with host
+    # access). Using $$ + a shell entrypoint at least keeps it out of the compose
+    # file and `docker compose config` output.
+    entrypoint: ["sh", "-c", "redis-server --appendonly yes --requirepass \"$$REDIS_PASSWORD\""]
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD-SHELL", "redis-cli -a \"$$REDIS_PASSWORD\" --no-auth-warning ping | grep -q PONG"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 15s
+    restart: unless-stopped
+    networks:
+      - ghd-net
+
+volumes:
+  mysql_data:
+  redis_data:
+  uploads_data:
+  seo_data:
+  logs_data:
+
+networks:
+  ghd-net:
+    driver: bridge

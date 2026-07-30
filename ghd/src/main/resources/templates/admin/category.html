@@ -1,0 +1,550 @@
+<!doctype html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+  <head th:replace="~{common/admin/header :: header(~{::title}, ~{::link})}">
+    <title th:text="${titlePage}">Quản lý danh mục</title>
+  </head>
+  <body class="bg-gray-50">
+    <div th:replace="common/admin/sidebar :: sidebar"></div>
+
+    <section id="content">
+      <nav th:replace="common/admin/navbar :: navbar"></nav>
+
+      <main class="p-6">
+        <div class="max-w-full mx-auto">
+          <div class="flex items-center justify-between mb-6">
+            <h1
+              class="text-2xl font-semibold text-gray-700"
+              th:text="${titlePage}"
+            >
+              Quản lý danh mục
+            </h1>
+            <button
+              class="inline-flex items-center px-5 py-2.5 text-sm font-medium text-white bg-blue-600 rounded-xl shadow hover:bg-blue-700 transition-all active:scale-95"
+              onclick="openModal()"
+            >
+              <svg class="me-2 text-lg" data-icon="plus" aria-hidden="true" focusable="false" viewBox="0 0 24 24" width="1em" height="1em" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" ><path d="M12 5v14M5 12h14"/></svg>
+              Thêm danh mục
+            </button>
+          </div>
+
+          <div
+            class="flex flex-col md:flex-row items-center justify-between gap-4 mb-6"
+          >
+            <div class="flex items-center gap-4 w-full md:w-auto">
+              <form
+                id="searchForm"
+                class="relative flex items-center w-full md:w-[400px] h-10 rounded-xl bg-white border border-gray-200 focus-within:ring-2 focus-within:ring-blue-500 transition-all"
+              >
+                <input
+                  id="searchInput"
+                  type="search"
+                  placeholder="Tìm kiếm theo tên danh mục..."
+                  class="peer h-full w-full outline-none text-sm text-gray-700 bg-transparent ps-4"
+                />
+                <button
+                  type="submit"
+                  class="grid place-items-center h-full w-12 text-gray-600"
+                >
+                  <svg class="text-xl" data-icon="search" aria-hidden="true" focusable="false" viewBox="0 0 24 24" width="1em" height="1em" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" ><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
+                </button>
+              </form>
+            </div>
+            <div class="flex items-center gap-3 w-full md:w-auto">
+              <select
+                id="pageSize"
+                class="h-10 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-blue-500 outline-none px-3 bg-white cursor-pointer shadow-sm"
+              >
+                <option value="5" selected>5 bản ghi</option>
+                <option value="10">10 bản ghi</option>
+                <option value="25">25 bản ghi</option>
+              </select>
+              <div class="relative w-full md:w-56">
+                <select
+                  id="sortCategories"
+                  class="block w-full h-10 ps-4 pe-10 text-sm text-gray-700 bg-white border border-gray-200 rounded-xl appearance-none focus:ring-2 focus:ring-blue-500 outline-none cursor-pointer shadow-sm"
+                  onchange="fetchCategories(1)"
+                >
+                  <option value="priority,desc">Độ ưu tiên</option>
+                  <option value="title,asc">Tên (A-Z)</option>
+                  <option value="id,desc">Mới nhất</option>
+                  <option value="id,asc">Cũ nhất</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <div
+            class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden"
+          >
+            <div class="overflow-x-auto">
+              <table class="min-w-full">
+                <thead class="bg-gray-50 border-b border-gray-100">
+                  <tr>
+                    <th
+                      class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase"
+                    >
+                      STT
+                    </th>
+                    <th
+                      class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase"
+                    >
+                      Ảnh
+                    </th>
+                    <th
+                      class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase"
+                    >
+                      Tên danh mục
+                    </th>
+                    <th
+                      class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase"
+                    >
+                      Độ ưu tiên
+                    </th>
+                    <th
+                      class="px-6 py-3 text-right text-xs font-semibold text-gray-600 uppercase"
+                    >
+                      Hành động
+                    </th>
+                  </tr>
+                </thead>
+                <tbody id="categories" class="divide-y divide-gray-100"></tbody>
+              </table>
+            </div>
+            <div
+              id="pagination-container"
+              class="px-6 py-4 border-t border-gray-100 bg-gray-50 flex flex-col md:flex-row items-center justify-between gap-4 hidden"
+            >
+              <span
+                id="page-info"
+                class="text-sm text-gray-600 font-medium"
+              ></span>
+              <div
+                id="pagination-buttons"
+                class="flex items-center gap-1"
+              ></div>
+            </div>
+          </div>
+        </div>
+
+        <div
+          id="categoryModal"
+          class="hidden fixed inset-0 bg-gray-900/50 backdrop-blur-sm flex items-center justify-center z-50"
+        >
+          <div
+            class="bg-white p-6 rounded-xl w-full max-w-md shadow-2xl relative"
+          >
+            <button
+              type="button"
+              class="absolute top-4 right-4 text-gray-600 hover:text-gray-600 text-2xl"
+              onclick="closeModal()"
+            >
+              &times;
+            </button>
+            <h2
+              id="modalTitle"
+              class="text-xl font-semibold text-gray-700 mb-6"
+            >
+              Thông tin danh mục
+            </h2>
+            <form id="categoryForm" class="space-y-5">
+              <input type="hidden" id="categoryId" />
+              <div class="flex flex-col items-center mb-4">
+                <div
+                  id="imageWrapper"
+                  class="relative group w-24 h-24 bg-gray-50 rounded-xl border-2 border-dashed border-gray-200 flex items-center justify-center overflow-hidden"
+                >
+                  <img
+                    id="imagePreview"
+                    src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7"
+                    class="w-full h-full object-cover"
+                  />
+                  <label
+                    for="imageInput"
+                    class="absolute inset-0 flex items-center justify-center bg-black/20 opacity-0 group-hover:opacity-100 cursor-pointer transition-all"
+                  >
+                    <svg class="text-white text-2xl" data-icon="camera" aria-hidden="true" focusable="false" viewBox="0 0 24 24" width="1em" height="1em" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" ><path d="M14.5 4 13 6H8L6.5 4H4a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2z"/><circle cx="12" cy="13" r="4"/></svg>
+                  </label>
+                  <input
+                    type="file"
+                    id="imageInput"
+                    accept="image/*"
+                    class="hidden"
+                  />
+                </div>
+                <span
+                  id="error-logo"
+                  class="text-red-500 text-[11px] mt-1 hidden"
+                ></span>
+              </div>
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1"
+                  >Tên danh mục</label
+                >
+                <input
+                  type="text"
+                  id="title"
+                  placeholder="Nhập tên danh mục..."
+                  class="w-full px-4 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none"
+                />
+                <span
+                  id="error-title"
+                  class="text-red-500 text-xs mt-1 hidden"
+                ></span>
+              </div>
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1"
+                  >Độ ưu tiên</label
+                >
+                <input
+                  type="number"
+                  id="priority"
+                  name="priority"
+                  min="0"
+                  value="0"
+                  class="w-full px-4 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none"
+                />
+                <span
+                  id="error-priority"
+                  class="text-red-500 text-xs mt-1 hidden"
+                ></span>
+              </div>
+              <div class="flex gap-3 pt-2">
+                <button
+                  type="button"
+                  onclick="closeModal()"
+                  class="flex-1 px-4 py-2 bg-gray-100 text-gray-700 rounded-xl hover:bg-gray-200 transition-colors"
+                >
+                  Hủy
+                </button>
+                <button
+                  type="submit"
+                  id="btnSubmitCategory"
+                  class="flex-1 px-4 py-2 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-colors"
+                >
+                  Lưu
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </main>
+    </section>
+
+    <script th:src="@{/admin/js/main.js}"></script>
+    <script>
+      const API_BASE = "/api/v1/category";
+      const EMPTY_IMG =
+        "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7";
+      let currentPage = 1;
+
+      window.addEventListener('load', function() {
+        fetchCategories(1);
+
+        // Xóa lỗi khi người dùng nhập liệu
+        $("#title, #priority").on("input", function () {
+          $(this).removeClass("border-red-500");
+          $(`#error-${$(this).attr("id")}`).addClass("hidden");
+        });
+      });
+
+      // Handle image loading errors with retry logic
+      function handleImageError(img) {
+        let attempts = parseInt(img.getAttribute("data-retry") || "0");
+        if (attempts < 5) {
+          attempts++;
+          img.setAttribute("data-retry", attempts);
+          setTimeout(() => {
+            const originalSrc = img.src.split("?")[0];
+            img.src = `${originalSrc}?retry=${new Date().getTime()}`;
+          }, 1000);
+        } else {
+          img.onerror = null;
+          img.src = EMPTY_IMG;
+          img.classList.add("bg-gray-100");
+        }
+      }
+
+      // Fetch categories from API
+      function fetchCategories(page) {
+        currentPage = page;
+        const title = $("#searchInput").val();
+        const [field, dir] = $("#sortCategories").val().split(",");
+        const size = $("#pageSize").val();
+        $.get(
+          API_BASE,
+          {
+            title,
+            sortField: field,
+            sortDir: dir,
+            pageNumber: page,
+            pageSize: size,
+          },
+          function (response) {
+            const data = response.body || response;
+            renderTable(data.content || data, (page - 1) * size);
+            renderPagination(
+              data.totalPages || 0,
+              page,
+              data.totalElements || 0,
+            );
+          },
+        );
+      }
+
+      // Render table rows
+      function renderTable(categories, startIdx) {
+        const $tbody = $("#categories").empty();
+        const t = new Date().getTime();
+
+        categories.forEach((cat, index) => {
+          const imgPath =
+            cat.logo && !cat.logo.includes("placeholder") ? cat.logo : null;
+
+          let imageHtml = "";
+          if (!imgPath) {
+            imageHtml = `<div class="w-10 h-10 bg-gray-100 rounded border border-gray-200"></div>`;
+          } else {
+            imageHtml = `
+          <picture>
+            <source media="(min-width: 1024px)" srcset="${imgPath}_pc.webp?t=${t}">
+            <img src="${imgPath}_mobile.webp?t=${t}"
+                 onerror="handleImageError(this)"
+                 class="w-10 h-10 object-cover rounded border border-gray-200 shadow-sm" loading="lazy">
+          </picture>`;
+          }
+
+          $tbody.append(`
+        <tr class="hover:bg-blue-50/30 transition border-b border-gray-50">
+            <td class="px-6 py-4 text-sm text-gray-600">${startIdx + index + 1}</td>
+            <td class="px-6 py-4">${imageHtml}</td>
+            <td class="px-6 py-4 text-sm font-semibold text-gray-700">${cat.title}</td>
+            <td class="px-6 py-4 text-sm text-gray-600">
+                <span class="inline-flex items-center justify-center bg-blue-50 text-blue-700 px-2.5 py-0.5 rounded-full text-xs font-semibold border border-blue-100">
+                    ${cat.priority || 0}
+                </span>
+            </td>
+            <td class="px-6 py-4 text-right space-x-3">
+                <button type="button" onclick="editCategory('${cat.id}')" class="p-2 text-blue-600 hover:bg-blue-50 rounded-xl transition cursor-pointer" title="Sửa bản ghi"><svg class="text-xl" data-icon="edit-alt" aria-hidden="true" focusable="false" viewBox="0 0 24 24" width="1em" height="1em" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" ><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/></svg></button>
+                <button type="button" onclick="deleteCategory('${cat.id}','${cat.title}' )" class="p-2 text-rose-600 hover:bg-rose-50 rounded-xl transition cursor-pointer" title="Xóa bản ghi"><svg class="text-xl" data-icon="trash" aria-hidden="true" focusable="false" viewBox="0 0 24 24" width="1em" height="1em" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" ><path d="M3 6h18"/><path d="M8 6V4h8v2"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v5M14 11v5"/></svg></button>
+            </td>
+        </tr>`);
+        });
+      }
+
+      // --- HÀM VALIDATE PHÍA CLIENT ---
+      function validateClient() {
+        clearErrors();
+        let isValid = true;
+        const title = $("#title").val().trim();
+        const priority = $("#priority").val();
+        const imageFile = $("#imageInput")[0].files[0];
+
+        if (!title) {
+          $("#error-title")
+            .text("Tên danh mục không được để trống")
+            .removeClass("hidden");
+          $("#title").addClass("border-red-500");
+          isValid = false;
+        }
+
+        if (priority === "" || priority < 0) {
+          $("#error-priority")
+            .text("Độ ưu tiên phải là số dương")
+            .removeClass("hidden");
+          $("#priority").addClass("border-red-500");
+          isValid = false;
+        }
+
+        if (imageFile) {
+          const validExtensions = [
+            "image/jpeg",
+            "image/jpg",
+            "image/png",
+            "image/webp",
+          ];
+          if (!validExtensions.includes(imageFile.type)) {
+            $("#error-logo")
+              .text("Chỉ chấp nhận ảnh JPG, PNG, WEBP")
+              .removeClass("hidden");
+            isValid = false;
+          } else if (imageFile.size > 2 * 1024 * 1024) {
+            $("#error-logo")
+              .text("Dung lượng ảnh tối đa 2MB")
+              .removeClass("hidden");
+            isValid = false;
+          }
+        }
+
+        return isValid;
+      }
+
+      function clearErrors() {
+        $('[id^="error-"]').addClass("hidden").text("");
+        $("#title, #priority").removeClass("border-red-500");
+      }
+
+      // UI Modal Controls
+      function openModal() {
+        clearErrors();
+        $("#categoryModal").removeClass("hidden");
+        $("#modalTitle").text("Thêm danh mục mới");
+        $("#priority").val(0);
+      }
+
+      function closeModal() {
+        $("#categoryModal").addClass("hidden");
+        $("#categoryForm")[0].reset();
+        $("#categoryId").val("");
+        $("#imageWrapper picture").remove();
+        if ($("#imagePreview").length === 0) {
+          $("#imageWrapper").prepend(
+            `<img id="imagePreview" src="${EMPTY_IMG}" class="w-full h-full object-cover" />`,
+          );
+        } else {
+          $("#imagePreview").attr("src", EMPTY_IMG);
+        }
+        clearErrors();
+      }
+
+      // Load category data into modal for editing
+      function editCategory(id) {
+        $.get(`${API_BASE}/${id}`, function (response) {
+          const cat = response.body || response;
+          $("#modalTitle").text("Cập nhật danh mục");
+          $("#categoryId").val(cat.id);
+          $("#title").val(cat.title);
+          $("#priority").val(cat.priority || 0);
+
+          const imgPath =
+            cat.logo && !cat.logo.includes("placeholder") ? cat.logo : null;
+          const $wrapper = $("#imageWrapper");
+          const t = new Date().getTime();
+
+          $wrapper.find("picture, #imagePreview").remove();
+          if (imgPath) {
+            $wrapper.prepend(`
+          <picture>
+            <source media="(min-width: 1024px)" srcset="${imgPath}_pc.webp?t=${t}">
+            <img id="imagePreview" src="${imgPath}_mobile.webp?t=${t}" onerror="handleImageError(this)" class="w-full h-full object-cover">
+          </picture>`);
+          } else {
+            $wrapper.prepend(
+              `<img id="imagePreview" src="${EMPTY_IMG}" class="w-full h-full object-cover" />`,
+            );
+          }
+          $("#categoryModal").removeClass("hidden");
+        });
+      }
+
+      // Form submission handler
+      $("#categoryForm").on("submit", function (e) {
+        e.preventDefault();
+
+        if (!validateClient()) return;
+
+        const id = $("#categoryId").val();
+        const formData = new FormData();
+        formData.append("title", $("#title").val());
+        formData.append("priority", $("#priority").val());
+
+        if ($("#imageInput")[0].files[0])
+          formData.append("logo", $("#imageInput")[0].files[0]);
+
+        const $btn = $("#btnSubmitCategory");
+        $btn.prop("disabled", true).text("Đang lưu...");
+
+        $.ajax({
+          url: id ? `${API_BASE}/${id}` : API_BASE,
+          method: id ? "PUT" : "POST",
+          data: formData,
+          processData: false,
+          contentType: false,
+          success: function () {
+            closeModal();
+            Toast.fire({ icon: "success", title: "Thành công!" });
+            setTimeout(() => fetchCategories(currentPage), 400);
+          },
+          error: function (xhr) {
+            if (xhr.status === 400 && xhr.responseJSON.data) {
+              const errors = xhr.responseJSON.data;
+              Object.keys(errors).forEach((key) => {
+                $(`#error-${key}`).text(errors[key]).removeClass("hidden");
+                $(`#${key}`).addClass("border-red-500");
+              });
+            } else {
+              Toast.fire({ icon: "error", title: "Có lỗi xảy ra" });
+            }
+          },
+          complete: function () {
+            $btn.prop("disabled", false).text("Lưu");
+          },
+        });
+      });
+
+      // Auto-reload on page size change
+      $("#pageSize").on("change", () => fetchCategories(1));
+
+      // Preview selected image
+      $("#imageInput").on("change", function (e) {
+        const file = e.target.files[0];
+        if (file) {
+          $("#error-logo").addClass("hidden");
+          const reader = new FileReader();
+          reader.onload = (e) => {
+            $("#imageWrapper picture").remove();
+            if ($("#imagePreview").length === 0)
+              $("#imageWrapper").prepend(
+                '<img id="imagePreview" class="w-full h-full object-cover" />',
+              );
+            $("#imagePreview").attr("src", e.target.result);
+          };
+          reader.readAsDataURL(file);
+        }
+      });
+
+      // Render pagination controls
+      function renderPagination(totalPages, activePage, totalElements) {
+        const $buttons = $("#pagination-buttons").empty();
+        if (totalPages <= 1) {
+          $("#pagination-container").addClass("hidden");
+          return;
+        }
+        $("#pagination-container").removeClass("hidden");
+        $("#page-info").text(`Tổng ${totalElements} bản ghi`);
+        for (let i = 1; i <= totalPages; i++) {
+          const btn = $(
+            `<button class="w-9 h-9 rounded-xl ${i === activePage ? "bg-blue-600 text-white" : "bg-white border hover:bg-gray-50"}">${i}</button>`,
+          );
+          btn.on("click", () => fetchCategories(i));
+          $buttons.append(btn);
+        }
+      }
+
+      function deleteCategory(id, title) {
+        Swal.fire({
+          title: "Xóa danh mục",
+          text: "Bạn có muốn xóa danh mục " + title,
+          icon: "warning",
+          showCancelButton: true,
+          confirmButtonColor: "#ef4444",
+          confirmButtonText: "Có",
+          cancelButtonText: "Hủy",
+        }).then((result) => {
+          if (result.isConfirmed) {
+            $.ajax({
+              url: `${API_BASE}/${id}`,
+              method: "DELETE",
+              success: function () {
+                Toast.fire({ icon: "success", title: "Xóa thành công!" });
+                fetchCategories(currentPage);
+              },
+              error: function (xhr) {
+                Toast.fire({ icon: "error", title: "Xóa thất bại " });
+              },
+            });
+          }
+        });
+      }
+    </script>
+  </body>
+</html>

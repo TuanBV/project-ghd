@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{common/head :: common_head('Giới thiệu Green Home Shop - Thiết bị gia dụng thông minh chính hãng', ~{:: #header-style}, null, null)}">
+    <th:block id="header-style">
+        <meta name="description" content="Green Home Shop chuyên cung cấp Robot hút bụi, máy lọc không khí chính hãng. Sứ mệnh giải phóng sức lao động, kiến tạo hạnh phúc cho gia đình Việt.">
+        <meta name="keywords" content="Green Home Shop, robot hút bụi chính hãng, máy lọc không khí, gia dụng thông minh">
+        <link rel="canonical" href="https://greenhomeshop.vn/ve-chung-toi" />
+
+        <meta property="og:title" content="Giới thiệu Green Home Shop - Thiết bị gia dụng thông minh chính hãng">
+        <meta property="og:description" content="Giải pháp công nghệ thông minh cho gia đình Việt. Cam kết chính hãng.">
+        <meta property="og:image" content="https://greenhomeshop.vn/client/images/logo.png">
+        <meta property="og:url" content="https://greenhomeshop.vn/ve-chung-toi">
+
+        <script type="application/ld+json" th:inline="javascript">
+            [
+                {
+                    "@context": "https://schema.org",
+                    "@type": "BreadcrumbList",
+                    "itemListElement": [{
+                        "@type": "ListItem",
+                        "position": 1,
+                        "name": "Trang chủ",
+                        "item": "https://greenhomeshop.vn/"
+                    },{
+                        "@type": "ListItem",
+                        "position": 2,
+                        "name": "Về chúng tôi",
+                        "item": "https://greenhomeshop.vn/ve-chung-toi"
+                    }]
+                },
+                {
+                    "@context": "https://schema.org",
+                    "@type": "AboutPage",
+                    "mainEntity": {
+                        "@type": "LocalBusiness",
+                        "name": "Green Home Shop - Công ty TNHH Thương mại và Công nghệ GHD",
+                        "image": "https://greenhomeshop.vn/client/images/logo.png",
+                        "telephone": "0852262666",
+                        "email": "lienheghd@gmail.com",
+                        "address": {
+                            "@type": "PostalAddress",
+                            "streetAddress": "LK7-142, Khu tái định cư phục vụ giải phóng mặt bằng, Xã Tứ Hiệp, Huyện Thanh Trì, Thành phố Hà Nội, Việt Nam",
+                            "addressLocality": "Huyện Thanh Trì",
+                            "addressRegion": "Hà Nội",
+                            "addressCountry": "VN"
+                        },
+                        "url": "https://greenhomeshop.vn/ve-chung-toi",
+                        "taxID": "0110891976",
+                        "priceRange": "$$"
+                    }
+                }
+            ]
+        </script>
+        <style>
+            .scrollbar-hide::-webkit-scrollbar {
+                display: none;
+            }
+
+            .scrollbar-hide {
+                -ms-overflow-style: none;
+                scrollbar-width: none;
+            }
+
+            .section-title::after {
+                content: '';
+                display: block;
+                width: 60px;
+                height: 4px;
+                background: #1e3a8a;
+                margin-top: 10px;
+                border-radius: 2px;
+            }
+
+            .map-container {
+                position: relative;
+                padding-bottom: 50%;
+                height: 0;
+                overflow: hidden;
+                border-radius: 1.5rem;
+            }
+
+            .map-container iframe {
+                position: absolute;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                border: 0;
+            }
+        </style>
+    </th:block>
+</head>
+<body class="bg-[#f6f6f6] text-gray-700">
+<div th:replace="common/client/gtm :: gtm-body"></div>
+<div th:replace="common/client/header :: header"></div>
+
+<main class="container mx-auto px-4 pb-12">
+    <div th:replace="~{common/client/breadcrumb :: breadcrumb(${ {{name: 'Về chúng tôi', url: '/about'}}})}"></div>
+    <article class="bg-white p-6 md:p-16 rounded-[2rem] shadow-sm border border-gray-100">
+        <header class="text-center mb-16">
+            <h1 class="text-3xl md:text-5xl font-semibold text-blue-700 mb-6 leading-tight">
+                Green Home Shop - Giải Pháp Công Nghệ Cho Gia Đình Việt
+            </h1>
+            <p class="text-xl text-blue-600 font-semibold italic">"Chia Sẻ Gánh Nặng – Thăng Bằng Cuộc Sống – Kiến Tạo Hạnh Phúc"</p>
+            <p class="text-gray-600 max-w-3xl mx-auto leading-relaxed mt-6">
+                Green Home Shop là thương hiệu thuộc Công ty TNHH Thương mại và Công nghệ GHD,
+                chuyên phân phối thiết bị gia dụng thông minh chính hãng tại Việt Nam.
+                Chúng tôi cung cấp robot hút bụi, máy lọc không khí và các giải pháp công nghệ
+                nâng cao chất lượng cuộc sống cho gia đình Việt.
+            </p>
+        </header>
+        <div class="space-y-24">
+            <section id="story">
+                <div class="grid md:grid-cols-2 gap-12 items-center">
+                    <div class="space-y-6 text-gray-600 leading-relaxed text-lg text-justify">
+                        <h2 class="text-3xl font-semibold text-gray-700 section-title">1. Câu chuyện của chúng tôi</h2>
+                        <p>Trong thời đại công nghệ 4.0, <strong class="text-blue-700">Green Home Shop</strong> thấu hiểu rằng thời gian dành cho gia đình là vô giá. Chúng tôi không chỉ cung cấp thiết bị, mà còn mang lại sự thảnh thơi cho mọi tổ ấm.</p>
+                        <p>Sứ mệnh của Green Home Shop là cung cấp các dòng <strong>Robot hút bụi thông minh</strong> và <strong>máy lọc không khí</strong> từ các các thương hiệu được nhiều người dùng biết đến như Roborock, Ecovacs, Dreame...</p>
+                    </div>
+                    <figure class="rounded-3xl overflow-hidden shadow-2xl border-8 border-gray-50">
+                        <img th:src="@{/client/images/greenhomeshop.jpg}"
+                            alt="Thiết bị gia dụng thông minh chính hãng Green Home Shop giúp giải phóng sức lao động"
+                            class="w-full h-full object-cover transform hover:scale-103 transition duration-700"
+                            width="640"
+                            height="480"
+                            loading="eager"
+                            decoding="async">
+                    </figure>
+                </div>
+            </section>
+            <section id="services" class="py-10">
+                <h2 class="text-3xl font-semibold text-gray-700 mb-10 section-title">2. Hệ sinh thái sản phẩm có nguồn gốc rõ ràng</h2>
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 text-center">
+                    <div class="p-8 border border-gray-100 rounded-3xl hover:shadow-xl transition-all duration-300 bg-white group">
+                        <div class="text-4xl mb-4 group-hover:scale-110 transition">🤖</div>
+                        <h3 class="font-semibold text-blue-700 text-xl mb-2">Robot Hút Bụi</h3>
+                        <p class="text-sm text-gray-600">Công nghệ dẫn đường Laser, hút lau đồng thời.</p>
+                    </div>
+                    <div class="p-8 border border-gray-100 rounded-3xl hover:shadow-xl transition-all duration-300 bg-white group">
+                        <div class="text-4xl mb-4 group-hover:scale-110 transition">🍃</div>
+                        <h3 class="font-semibold text-blue-700 text-xl mb-2">Máy Lọc Không Khí</h3>
+                        <p class="text-sm text-gray-600">Hệ thống màng lọc HEPA, diệt khuẩn 99%.</p>
+                    </div>
+                    <div class="p-8 border border-gray-100 rounded-3xl hover:shadow-xl transition-all duration-300 bg-white group">
+                        <div class="text-4xl mb-4 group-hover:scale-110 transition">📺</div>
+                        <h3 class="font-semibold text-blue-700 text-xl mb-2">Thiết Bị Giải Trí</h3>
+                        <p class="text-sm text-gray-600">Tivi, loa thông minh nâng tầm không gian sống.</p>
+                    </div>
+                    <div class="p-8 border border-gray-100 rounded-3xl hover:shadow-xl transition-all duration-300 bg-white group">
+                        <div class="text-4xl mb-4 group-hover:scale-110 transition">🛠️</div>
+                        <h3 class="font-semibold text-blue-700 text-xl mb-2">Bảo hành theo chính sách hãng</h3>
+                        <p class="text-sm text-gray-600">Đội ngũ kỹ thuật hỗ trợ tận tâm.</p>
+                    </div>
+                </div>
+                <div class="mt-12 text-center">
+                    <a href="/san-pham" class="inline-block bg-blue-700 text-white px-12 py-5 rounded-full font-semibold text-xl hover:bg-blue-800 shadow-2xl hover:-translate-y-1 transition duration-300">
+                        Mua sắm sản phẩm ngay
+                    </a>
+                </div>
+            </section>
+            <section id="location">
+                <h2 class="text-3xl font-semibold text-gray-700 mb-8 section-title text-left">3. Ghé thăm Showroom Green Home Shop tại Hà Nội</h2>
+                <p class="text-gray-600 text-sm md:text-[18px]" th:text="${sysParams['store']}">
+                    LK7-142, Khu tái định cư phục vụ giải phóng mặt bằng, Xã Tứ Hiệp, Huyện Thanh Trì, Thành phố Hà Nội, Việt Nam
+                </p>
+                <div>
+                    <div class="rounded-2xl overflow-hidden border border-gray-200 shadow-sm">
+                        <iframe
+                                src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d7452.571635488802!2d105.84375719959951!3d20.94103408590247!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3135ad926a912381%3A0x58f4b3bf10788674!2zQ8OUTkcgVFkgVE5ISCBUSMavxqBORyBN4bqgSSBWw4AgQ8OUTkcgTkdI4buGIEdIRA!5e0!3m2!1svi!2s!4v1778579330893!5m2!1svi!2s"
+                                width="100%"
+                                height="260"
+                                style="border:0;"
+                                allowfullscreen=""
+                                loading="lazy"
+                                referrerpolicy="no-referrer-when-downgrade"
+                                title="Bản đồ vị trí cửa hàng GreenHomeShop"
+                        >
+                        </iframe>
+                    </div>
+                </div>
+            </section>
+
+            <section class="py-10">
+                <h2 class="text-3xl font-semibold text-gray-700 mb-10 section-title">
+                    4. Cam kết từ Green Home Shop
+                </h2>
+
+                <div class="grid md:grid-cols-2 gap-6">
+                    <div class="bg-gray-50 rounded-3xl p-6 border border-gray-100">
+                        <h3 class="font-semibold text-blue-700 mb-3">
+                            ✔ Sản phẩm có nguồn gốc rõ ràng
+                        </h3>
+
+                        <p class="text-gray-600 text-sm leading-relaxed">
+                            Tất cả sản phẩm được phân phối với nguồn gốc rõ ràng,
+                            hỗ trợ bảo hành và kỹ thuật theo chính sách của hãng.
+                        </p>
+                    </div>
+
+                    <div class="bg-gray-50 rounded-3xl p-6 border border-gray-100">
+                        <h3 class="font-semibold text-blue-700 mb-3">
+                            ✔ Hỗ trợ khách hàng tận tâm
+                        </h3>
+
+                        <p class="text-gray-600 text-sm leading-relaxed">
+                            Green Home Shop hỗ trợ tư vấn, hướng dẫn sử dụng và xử lý bảo hành
+                            qua hotline, email và showroom tại Hà Nội.
+                        </p>
+                    </div>
+                </div>
+            </section>
+            <section id="legal" class="border-t pt-16">
+                <div class="bg-gradient-to-br from-blue-700 to-indigo-700 text-white p-10 md:p-16 rounded-[2.5rem] shadow-2xl relative overflow-hidden">
+                    <div class="relative z-10">
+                        <h2 class="text-3xl font-semibold mb-10 flex items-center">
+                            Thông tin pháp lý chính thức
+                        </h2>
+                        <div class="grid md:grid-cols-2 gap-12">
+                            <div class="space-y-5">
+                                <p class="text-2xl font-semibold text-blue-300">CÔNG TY TNHH THƯƠNG MẠI VÀ CÔNG NGHỆ GHD</p>
+                                <ul class="space-y-3">
+                                    <li><strong>MST:</strong> 0110891976</li>
+                                    <li><strong>Địa chỉ:</strong> LK7-142, Khu tái định cư phục vụ giải phóng mặt bằng, Xã Tứ Hiệp, Huyện Thanh Trì, Thành phố Hà Nội, Việt Nam.</li>
+                                    <li><strong>Đại diện:</strong> CÔNG TY TNHH THƯƠNG MẠI VÀ CÔNG NGHỆ GHD </li>
+                                    <li><strong>Giờ làm việc:</strong> 08:00 - 18:00 (Thứ 2 - Chủ nhật)</li>
+                                </ul>
+                            </div>
+                            <div class="space-y-5 md:border-l md:pl-12 border-blue-700/50">
+                                <div class="flex items-center space-x-4">
+                                    <div class="bg-blue-800 p-3 rounded-xl">📞</div>
+                                    <div>
+                                        <p class="text-sm opacity-70">Hotline tư vấn</p>
+                                        <p class="text-xl font-semibold" th:text="${sysParams['consulting_hotline']}">0852 262 666</p>
+                                    </div>
+                                </div>
+                                <div class="flex items-center space-x-4">
+                                    <div class="bg-blue-800 p-3 rounded-xl">✉️</div>
+                                    <div>
+                                        <p class="text-sm opacity-70">Email liên hệ</p>
+                                        <p class="text-lg font-semibold" th:text="${sysParams['email_contact']}">lienheghd@gmail.com</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </article>
+</main>
+<div th:replace="common/client/footer :: footer"></div>
+</body>
+</html>

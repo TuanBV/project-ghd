@@ -1,0 +1,886 @@
+<!doctype html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+  <head
+    th:replace="~{common/head :: common_head('Thanh toán đơn hàng', ~{:: #header-style}, null, null)}"
+  >
+    <th:block id="header-style">
+      <style>
+        .form-input:focus {
+          border-color: #2563eb;
+          box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.1);
+          outline: none;
+        }
+
+        .payment-card {
+          transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        input[type="radio"]:checked + .payment-card {
+          border-color: #2563eb;
+          background-color: #f0f7ff;
+          transform: translateY(-2px);
+          box-shadow: 0 10px 15px -3px rgba(37, 99, 235, 0.1);
+        }
+
+        input[type="radio"]:checked + .payment-card .check-icon {
+          display: block;
+        }
+
+        #bank-info-container {
+          display: none;
+          animation: slideDown 0.4s ease-out;
+        }
+
+        @keyframes slideDown {
+          from {
+            opacity: 0;
+            transform: translateY(-10px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+
+        .scrollbar-hide::-webkit-scrollbar {
+          display: none;
+        }
+
+        input,
+        textarea,
+        select {
+          font-size: 14px !important;
+        }
+
+        .error-message {
+          color: #ef4444;
+          font-size: 12px;
+          margin-top: 4px;
+          margin-left: 4px;
+          display: none;
+        }
+
+        .border-red-500 {
+          border-color: #ef4444 !important;
+        }
+      </style>
+
+      <script type="application/ld+json" th:inline="javascript">
+        {
+          "@context": "https://schema.org",
+          "@type": "BreadcrumbList",
+          "itemListElement": [
+            {
+              "@type": "ListItem",
+              "position": 1,
+              "name": "Trang chủ",
+              "item": {
+                "@id": "https://greenhomeshop.vn/",
+                "name": "Trang chủ"
+              }
+            },
+            {
+              "@type": "ListItem",
+              "position": 2,
+              "name": "Giỏ hàng",
+              "item": {
+                "@id": "https://greenhomeshop.vn/gio-hang",
+                "name": "Giỏ hàng"
+              }
+            }
+          ]
+        }
+      </script>
+    </th:block>
+  </head>
+  <body
+    class="bg-[#f8fafc] text-gray-700 text-[14px] md:text-base leading-relaxed"
+  >
+    <div th:replace="common/client/gtm :: gtm-body"></div>
+    <div th:replace="common/client/header :: header"></div>
+    <main class="container mx-auto px-4 py-8">
+      <h1
+        class="text-3xl font-semibold text-gray-700 my-2.5 text-center tracking-tight"
+      >
+        Thủ tục thanh toán
+      </h1>
+
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        <div class="lg:col-span-7">
+          <div
+            class="bg-white p-6 md:p-8 rounded-xl shadow-sm border border-gray-100"
+          >
+            <div class="mb-5">
+              <h2
+                class="text-lg font-semibold mb-3 flex items-center gap-2 text-gray-700"
+              >
+                <span
+                  class="w-8 h-8 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center text-sm"
+                  >1</span
+                >
+                Thông tin nhận hàng
+              </h2>
+
+              <form id="checkoutForm" class="space-y-3">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-2">
+                  <div class="space-y-1.5">
+                    <label
+                      class="text-sm font-semibold ml-1 text-gray-600 uppercase"
+                      >Họ và tên *</label
+                    >
+                    <input
+                      type="text"
+                      id="custName"
+                      class="form-input w-full px-4 py-3 rounded-xl border border-gray-200"
+                      placeholder="Nguyễn Văn A"
+                    />
+                    <div id="error-custName" class="error-message"></div>
+                  </div>
+                  <div class="space-y-1.5">
+                    <label
+                      class="text-sm font-semibold ml-1 text-gray-600 uppercase"
+                      >Số điện thoại *</label
+                    >
+                    <input
+                      type="tel"
+                      id="custPhone"
+                      class="form-input w-full px-4 py-3 rounded-xl border border-gray-200"
+                      placeholder="09xx xxx xxx"
+                    />
+                    <div id="error-custPhone" class="error-message"></div>
+                  </div>
+                </div>
+                <div class="space-y-1.5">
+                  <label
+                    class="text-sm font-semibold ml-1 text-gray-600 uppercase"
+                    >Email</label
+                  >
+                  <input
+                    type="email"
+                    id="custEmail"
+                    class="form-input w-full px-4 py-3 rounded-xl border border-gray-200"
+                    placeholder="example@gmail.com"
+                  />
+                  <div id="error-custEmail" class="error-message"></div>
+                </div>
+                <div class="space-y-1.5">
+                  <label
+                    for="custAddress"
+                    class="text-sm font-semibold ml-1 text-gray-600 uppercase"
+                    >Địa chỉ nhận hàng *</label
+                  >
+                  <textarea
+                    id="custAddress"
+                    rows="2"
+                    class="form-input w-full px-4 py-3 rounded-xl border border-gray-200 resize-none"
+                    placeholder="Số nhà, tên đường, xã/phường..."
+                  ></textarea>
+                  <div id="error-custAddress" class="error-message"></div>
+                </div>
+                <div class="space-y-1.5">
+                  <label
+                    for="orderNote"
+                    class="text-sm font-semibold ml-1 text-gray-600 uppercase"
+                    >Ghi chú</label
+                  >
+                  <textarea
+                    id="orderNote"
+                    rows="1"
+                    class="form-input w-full px-4 py-3 rounded-xl border border-gray-200 resize-none"
+                    placeholder="Lưu ý cho người giao hàng..."
+                  ></textarea>
+                </div>
+              </form>
+            </div>
+
+            <div class="pt-8 border-t border-gray-100">
+              <h2
+                class="text-lg font-semibold mb-2 flex items-center gap-2 text-gray-700"
+              >
+                <span
+                  class="w-8 h-8 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center text-sm"
+                  >2</span
+                >
+                Phương thức thanh toán
+              </h2>
+
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-3">
+                <label class="relative cursor-pointer">
+                  <input
+                    type="radio"
+                    name="paymentMethod"
+                    value="COD"
+                    class="peer sr-only"
+                    checked
+                    onchange="toggleBankInfo()"
+                  />
+                  <div
+                    class="payment-card h-full p-4 rounded-xl border-2 border-gray-100 bg-white flex flex-col gap-2 relative overflow-hidden"
+                  >
+                    <div
+                      class="w-10 h-10 rounded-xl bg-orange-100 text-orange-600 flex items-center justify-center text-xl"
+                    >
+                      <svg class="" data-icon="package" aria-hidden="true" focusable="false" viewBox="0 0 24 24" width="1em" height="1em" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" ><path d="m21 8-9-5-9 5 9 5 9-5z"/><path d="M3 8v8l9 5 9-5V8"/><path d="M12 13v8"/></svg>
+                    </div>
+                    <div>
+                      <p class="font-semibold text-gray-700 text-[14px]">
+                        Thanh toán khi nhận hàng
+                      </p>
+                      <p class="text-sm text-gray-600 mt-1">
+                        Trả tiền mặt khi shipper giao hàng.
+                      </p>
+                    </div>
+                    <div
+                      class="check-icon hidden absolute top-3 right-3 text-blue-600 text-xl"
+                    >
+                      <svg class="" data-icon="check-circle" aria-hidden="true" focusable="false" viewBox="0 0 24 24" width="1em" height="1em" fill="currentColor" ><path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20zm-1.3 14.3-4-4 1.4-1.4 2.6 2.6 5.2-5.2 1.4 1.4-6.6 6.6z"/></svg>
+                    </div>
+                  </div>
+                </label>
+
+                <label class="relative cursor-pointer">
+                  <input
+                    type="radio"
+                    name="paymentMethod"
+                    value="BANK_TRANSFER"
+                    class="peer sr-only"
+                    onchange="toggleBankInfo()"
+                  />
+                  <div
+                    class="payment-card h-full p-4 rounded-xl border-2 border-gray-100 bg-white flex flex-col gap-2 relative overflow-hidden"
+                  >
+                    <div
+                      class="w-10 h-10 rounded-xl bg-blue-100 text-blue-600 flex items-center justify-center text-xl"
+                    >
+                      <svg class="" data-icon="transfer-alt" aria-hidden="true" focusable="false" viewBox="0 0 24 24" width="1em" height="1em" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" ><path d="M7 7h13"/><path d="m17 4 3 3-3 3"/><path d="M17 17H4"/><path d="m7 14-3 3 3 3"/></svg>
+                    </div>
+                    <div>
+                      <p class="font-semibold text-gray-700 text-[14px]">
+                        Chuyển khoản ngân hàng
+                      </p>
+                      <p class="text-sm text-gray-600 mt-1">
+                        Quét mã QR hoặc chuyển khoản App.
+                      </p>
+                    </div>
+                    <div
+                      class="check-icon hidden absolute top-3 right-3 text-blue-600 text-xl"
+                    >
+                      <svg class="" data-icon="check-circle" aria-hidden="true" focusable="false" viewBox="0 0 24 24" width="1em" height="1em" fill="currentColor" ><path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20zm-1.3 14.3-4-4 1.4-1.4 2.6 2.6 5.2-5.2 1.4 1.4-6.6 6.6z"/></svg>
+                    </div>
+                  </div>
+                </label>
+              </div>
+
+              <div
+                id="bank-info-container"
+                class="bg-gray-50 p-5 rounded-xl border border-dashed border-gray-300"
+                style="display: none"
+              >
+                <div class="flex flex-col md:flex-row gap-5 items-center">
+                  <div
+                    class="bg-white p-2 rounded-xl shadow-sm border border-gray-100"
+                  >
+                    <img
+                      id="qrCodeImg"
+                      src=""
+                      alt="QR"
+                      class="w-36 h-36 object-contain"
+                      width="144"
+                      height="144"
+                      decoding="async"
+                    />
+                  </div>
+                  <div class="flex-1 space-y-2 text-[14px]">
+                    <div
+                      class="flex justify-between border-b border-gray-200 pb-1"
+                    >
+                      <span class="text-gray-600">Ngân hàng:</span>
+                      <span class="font-semibold text-gray-700"
+                        >NGÂN HÀNG TMCP QUÂN ĐỘI (MB Bank)</span
+                      >
+                    </div>
+                    <div
+                      class="flex justify-between border-b border-gray-200 pb-1"
+                    >
+                      <span class="text-gray-600">Số tài khoản:</span>
+                      <span class="font-semibold text-blue-700">097678888</span>
+                    </div>
+                    <div
+                      class="flex justify-between border-b border-gray-200 pb-1"
+                    >
+                      <span class="text-gray-600">Chủ TK:</span>
+                      <span class="font-semibold text-gray-700 uppercase"
+                        >CTY TNHH THƯƠNG MẠI VÀ CÔNG NGHỆ GHD</span
+                      >
+                    </div>
+                    <div class="flex justify-between">
+                      <span class="text-gray-600">Nội dung:</span>
+                      <span
+                        class="font-semibold text-red-600"
+                        id="transferContent"
+                        >THANHTOAN</span
+                      >
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="lg:col-span-5">
+          <div
+            class="bg-white p-6 md:p-8 rounded-xl shadow-sm border border-gray-100 sticky top-28"
+          >
+            <h2
+              class="text-lg font-semibold mb-3 flex items-center justify-between text-gray-700"
+            >
+              Đơn hàng
+              <span
+                id="item-count"
+                class="text-sm font-normal text-gray-600 tracking-tight"
+              ></span>
+            </h2>
+
+            <div
+              id="checkout-items"
+              class="pr-2 space-y-4 mb-3 scrollbar-hide"
+            ></div>
+
+            <div class="border-t border-dashed border-gray-200 pt-5 space-y-3">
+              <div class="flex justify-between text-sm text-gray-600">
+                <span>Tạm tính</span>
+                <span id="subtotal" class="font-semibold text-gray-700"
+                  >0 VND</span
+                >
+              </div>
+<!--              <div-->
+<!--                id="discount-row"-->
+<!--                class="flex justify-between text-sm text-red-600 hidden"-->
+<!--              >-->
+<!--                <span>Giảm giá (Mua cùng danh mục khác)</span>-->
+<!--                <span id="discount-amount">-0 VND</span>-->
+<!--              </div>-->
+              <div class="flex justify-between text-sm text-gray-600">
+                <span>Phí vận chuyển</span>
+                <span class="text-green-600 font-medium">Miễn phí</span>
+              </div>
+              <div
+                class="flex justify-between items-center pt-4 border-t border-gray-100"
+              >
+                <span class="text-[15px] font-semibold text-gray-700"
+                  >Tổng cộng</span
+                >
+                <span
+                  id="total-amount"
+                  class="text-2xl font-semibold text-red-600"
+                  >0 VND</span
+                >
+              </div>
+            </div>
+
+            <button
+              id="btnSubmitOrder"
+              type="button"
+              onclick="handleOrder()"
+              class="w-full bg-blue-600 text-white py-4 rounded-2xl font-semibold text-[16px] mt-6 hover:bg-blue-700 transition-all active:scale-[0.98] flex items-center justify-center gap-2 shadow-lg shadow-blue-100"
+            >
+              XÁC NHẬN ĐẶT HÀNG
+              <svg class="text-xl" data-icon="right-arrow-alt" aria-hidden="true" focusable="false" viewBox="0 0 24 24" width="1em" height="1em" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" ><path d="M5 12h14"/><path d="m13 6 6 6-6 6"/></svg>
+            </button>
+            <div
+              class="bg-orange-50 rounded-xl p-6 border border-orange-100 mt-4"
+            >
+              <h5
+                class="text-orange-800 font-semibold mb-3 flex items-center gap-2"
+              >
+                <svg class="" data-icon="info-circle" aria-hidden="true" focusable="false" viewBox="0 0 24 24" width="1em" height="1em" fill="currentColor" ><path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/></svg> Lưu ý mua hàng
+              </h5>
+              <p class="text-sm text-orange-700 leading-relaxed">
+                Vui lòng kiểm tra kỹ sản phẩm trước khi thanh toán. Sản phẩm
+                được bảo hành tại trung tâm ủy quyền toàn quốc.
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="bg-white my-6 rounded-xl shadow-sm border border-gray-100">
+        <div class="p-5">
+          <h3 class="font-semibold text-gray-800 mb-4 flex items-center gap-2">
+            <svg class="text-blue-600 text-xl" data-icon="shield-quarter" aria-hidden="true" focusable="false" viewBox="0 0 24 24" width="1em" height="1em" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" ><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="M12 2v20"/></svg>
+            Chính sách mua hàng
+          </h3>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
+            <a
+                    href="/chinh-sach/van-chuyen"
+                    target="_blank"
+                    class="flex items-start gap-3 p-3 bg-white rounded-xl border border-blue-100 hover:border-blue-300 hover:shadow-sm transition-all"
+            >
+        <span class="w-9 h-9 rounded-lg bg-blue-100 text-blue-600 flex items-center justify-center shrink-0">
+          <svg class="" data-icon="package" aria-hidden="true" focusable="false" viewBox="0 0 24 24" width="1em" height="1em" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" ><path d="m21 8-9-5-9 5 9 5 9-5z"/><path d="M3 8v8l9 5 9-5V8"/><path d="M12 13v8"/></svg>
+        </span>
+              <span>
+          <span class="block font-semibold text-gray-700">
+            Chính sách vận chuyển
+          </span>
+          <span class="block text-xs text-gray-500 mt-0.5">
+            Miễn phí giao hàng, thời gian giao dự kiến và mã vận đơn.
+          </span>
+        </span>
+            </a>
+
+            <a
+                    href="/chinh-sach/thanh-toan"
+                    target="_blank"
+                    class="flex items-start gap-3 p-3 bg-white rounded-xl border border-blue-100 hover:border-blue-300 hover:shadow-sm transition-all"
+            >
+        <span class="w-9 h-9 rounded-lg bg-green-100 text-green-600 flex items-center justify-center shrink-0">
+          <svg class="" data-icon="credit-card" aria-hidden="true" focusable="false" viewBox="0 0 24 24" width="1em" height="1em" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" ><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20"/></svg>
+        </span>
+              <span>
+          <span class="block font-semibold text-gray-700">
+            Chính sách thanh toán
+          </span>
+          <span class="block text-xs text-gray-500 mt-0.5">
+            Hỗ trợ COD và chuyển khoản ngân hàng an toàn.
+          </span>
+        </span>
+            </a>
+
+            <a
+                    href="/chinh-sach/bao-hanh"
+                    target="_blank"
+                    class="flex items-start gap-3 p-3 bg-white rounded-xl border border-blue-100 hover:border-blue-300 hover:shadow-sm transition-all"
+            >
+        <span class="w-9 h-9 rounded-lg bg-orange-100 text-orange-600 flex items-center justify-center shrink-0">
+          <svg class="" data-icon="wrench" aria-hidden="true" focusable="false" viewBox="0 0 24 24" width="1em" height="1em" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" ><path d="M14.7 6.3a4 4 0 0 0-5.4 5.4L3 18l3 3 6.3-6.3a4 4 0 0 0 5.4-5.4l-2.4 2.4-2.8-2.8z"/></svg>
+        </span>
+              <span>
+          <span class="block font-semibold text-gray-700">
+            Chính sách bảo hành
+          </span>
+          <span class="block text-xs text-gray-500 mt-0.5">
+            Bảo hành chính hãng, hỗ trợ tại trung tâm ủy quyền.
+          </span>
+        </span>
+            </a>
+
+            <a
+                    href="/chinh-sach/doi-tra"
+                    target="_blank"
+                    class="flex items-start gap-3 p-3 bg-white rounded-xl border border-blue-100 hover:border-blue-300 hover:shadow-sm transition-all"
+            >
+        <span class="w-9 h-9 rounded-lg bg-purple-100 text-purple-600 flex items-center justify-center shrink-0">
+          <svg class="" data-icon="refresh" aria-hidden="true" focusable="false" viewBox="0 0 24 24" width="1em" height="1em" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" ><path d="M21 12a9 9 0 0 1-15.3 6.4L3 16"/><path d="M3 21v-5h5"/><path d="M3 12A9 9 0 0 1 18.3 5.6L21 8"/><path d="M21 3v5h-5"/></svg>
+        </span>
+              <span>
+          <span class="block font-semibold text-gray-700">
+            Chính sách đổi trả
+          </span>
+          <span class="block text-xs text-gray-500 mt-0.5">
+            Hỗ trợ đổi trả theo điều kiện sản phẩm và thời gian quy định.
+          </span>
+        </span>
+            </a>
+          </div>
+
+          <p class="text-xs text-gray-500 mt-4 leading-relaxed">
+            Bằng việc xác nhận đặt hàng, quý khách đồng ý với các điều khoản mua hàng,
+            chính sách vận chuyển, thanh toán, bảo hành và đổi trả của Green Home Shop.
+          </p>
+        </div>
+      </div>
+    </main>
+
+    <div th:replace="common/client/footer :: footer"></div>
+
+    <script>
+      document.addEventListener("DOMContentLoaded", function () {
+        window.ensureJQuery().then(function() {
+          window.ensureSwal().then(syncCartWithServer);
+        });
+      });
+
+      function toggleBankInfo() {
+        const method = document.querySelector(
+          'input[name="paymentMethod"]:checked',
+        ).value;
+        const container = document.getElementById("bank-info-container");
+        if (method === "BANK_TRANSFER") {
+          container.style.display = "block";
+          updateQRCode();
+        } else {
+          container.style.display = "none";
+        }
+      }
+
+      function updateQRCode() {
+        const cart = JSON.parse(localStorage.getItem("cart")) || [];
+        const total = cart.reduce(
+          (sum, i) => sum + (i.salePrice || i.price) * i.quantity,
+          0,
+        );
+        const qrImg = document.getElementById("qrCodeImg");
+        document.getElementById("transferContent").innerText =
+          "[Số điện thoại] + [Tên khách hàng]";
+        qrImg.src = `https://img.vietqr.io/image/MB-097678888-compact2.png?amount=${total}`;
+      }
+
+      function updateQty(index, change) {
+        let cart = JSON.parse(localStorage.getItem("cart")) || [];
+        if (cart[index]) {
+          cart[index].quantity += change;
+          if (cart[index].quantity <= 0) return removeItem(index);
+
+          localStorage.setItem("cart", JSON.stringify(cart));
+
+          window.dispatchEvent(new Event("cartUpdated"));
+
+          renderCheckout();
+          if (
+            document.getElementById("bank-info-container").style.display ===
+            "block"
+          )
+            updateQRCode();
+        }
+      }
+
+      function removeItem(index) {
+        if (!window.Swal) return window.ensureSwal().then(function() { removeItem(index); });
+        Swal.fire({
+          title: "Xóa sản phẩm?",
+          icon: "warning",
+          showCancelButton: true,
+          confirmButtonColor: "#ef4444",
+          confirmButtonText: "Xóa",
+          cancelButtonText: "Hủy",
+        }).then((result) => {
+          if (result.isConfirmed) {
+            let cart = JSON.parse(localStorage.getItem("cart")) || [];
+            cart.splice(index, 1);
+            localStorage.setItem("cart", JSON.stringify(cart));
+            window.dispatchEvent(new Event("cartUpdated"));
+            if (cart.length === 0) {
+              window.location.href = "/";
+            } else {
+              renderCheckout();
+              if (
+                document.getElementById("bank-info-container").style.display ===
+                "block"
+              )
+                updateQRCode();
+            }
+          }
+        });
+      }
+
+      function renderCheckout() {
+        const cart = JSON.parse(localStorage.getItem("cart")) || [];
+        const container = document.getElementById("checkout-items");
+        const itemCount = document.getElementById("item-count");
+        const subtotalEl = document.getElementById("subtotal");
+        const totalEl = document.getElementById("total-amount");
+        const discountRow = document.getElementById("discount-row");
+        // const discountAmountEl = document.getElementById("discount-amount");
+
+        if (cart.length === 0) {
+          container.innerHTML = `<div class="text-center py-10 text-gray-600 italic text-sm">Giỏ hàng trống</div>`;
+          itemCount.innerText = "(0 sản phẩm)";
+          subtotalEl.innerText = "0 VND";
+          totalEl.innerText = "0 VND";
+          discountRow.classList.add("hidden");
+          return;
+        }
+
+        let html = "";
+        let subtotal = 0;
+        let categories = new Set(); // Sử dụng Set để lưu danh mục duy nhất
+
+        cart.forEach((item, index) => {
+          const actualPrice = item.salePrice || item.price;
+          const itemTotal = actualPrice * item.quantity;
+          subtotal += itemTotal;
+
+          if (item.categoryName) {
+            categories.add(item.categoryName);
+          }
+
+          html += `
+      <div class="product-item-row flex items-start gap-4 py-4 border-b border-gray-50 last:border-0 group">
+          <div class="w-20 h-20 rounded-xl border border-gray-100 flex-shrink-0 overflow-hidden bg-white shadow-sm relative">
+              <div class="img-container w-full h-full p-1">
+                  ${
+                    item.image && !item.image.includes(".")
+                      ? `
+                      <picture class="w-full h-full">
+                        <source media="(min-width: 1024px)" 
+                                srcset="https://images.weserv.nl/?url=https://greenhomeshop.vn${item.image}_pc.webp&w=1200&output=webp">
+                        <source media="(min-width: 640px)" 
+                                srcset="https://images.weserv.nl/?url=https://greenhomeshop.vn${item.image}_tablet.webp&w=800&output=webp">
+                        <img src="https://images.weserv.nl/?url=https://greenhomeshop.vn${item.image}_mobile.webp&w=450&output=webp"
+                            alt="${item.title}"
+                            class="w-full h-full object-contain"
+                            width="80"
+                            height="80"
+                            loading="lazy"
+                            decoding="async">
+                      </picture>
+                      `
+                      : `<img src="${item.image || "data:image/gif/base64..."}" class="w-full h-full object-contain" width="80" height="80" loading="lazy" decoding="async">`
+                  }
+              </div>
+          </div>
+          <div class="flex-1 min-w-0">
+              <div class="flex justify-between items-start">
+                  <h3 class="text-sm font-semibold text-gray-700 line-clamp-2 leading-tight">${item.title}</h3>
+                  <button onclick="removeItem(${index})" class="text-gray-400 hover:text-red-500"><svg class="" data-icon="trash" aria-hidden="true" focusable="false" viewBox="0 0 24 24" width="1em" height="1em" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" ><path d="M3 6h18"/><path d="M8 6V4h8v2"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v5M14 11v5"/></svg></button>
+              </div>
+              <div class="flex justify-between items-end mt-2">
+                  <div class="flex items-center border border-gray-200 rounded-lg overflow-hidden">
+                      <button onclick="updateQty(${index}, -1)" class="px-2 py-1">-</button>
+                      <span class="px-3 py-1 text-xs font-semibold">${item.quantity}</span>
+                      <button onclick="updateQty(${index}, 1)" class="px-2 py-1">+</button>
+                  </div>
+                  <div class="text-right">
+                    <div class="text-sm font-semibold text-blue-600">${itemTotal.toLocaleString("vi-VN")}VND</div>
+                  </div>
+              </div>
+          </div>
+      </div>`;
+        });
+
+        // TÍNH TOÁN GIẢM GIÁ: Cứ thêm 1 danh mục khác là giảm 200k
+        let discount = 0;
+        // if (categories.size > 1) {
+        //   discount = (categories.size - 1) * 200000;
+        //   discountRow.classList.remove("hidden");
+        //   discountAmountEl.innerText =
+        //     "-" + discount.toLocaleString("vi-VN") + "VND";
+        // } else {
+        //   discountRow.classList.add("hidden");
+        // }
+
+        const finalTotal = Math.max(0, subtotal - discount);
+
+        container.innerHTML = html;
+        itemCount.innerText = `(${cart.length} sản phẩm)`;
+        subtotalEl.innerText = subtotal.toLocaleString("vi-VN") + "VND";
+        totalEl.innerText = finalTotal.toLocaleString("vi-VN") + "VND";
+      }
+
+      function syncCartWithServer() {
+        const CART_KEY = "cart";
+        let cart = JSON.parse(localStorage.getItem(CART_KEY)) || [];
+
+        if (cart.length === 0) {
+          renderCheckout();
+          return;
+        }
+
+        const ids = cart.map((item) => item.productId).join(",");
+
+        $.ajax({
+          url: "/api/v1/product/sync",
+          type: "GET",
+          data: { listProductId: ids },
+          dataType: "json",
+          success: function (result) {
+            const serverItems = result.body;
+
+            if (!serverItems || !Array.isArray(serverItems)) return;
+
+            const initialLength = cart.length;
+
+            const updatedCart = cart.reduce((acc, localItem) => {
+              const serverMatch = serverItems.find(
+                (s) => s.productId == localItem.productId,
+              );
+
+              if (serverMatch) {
+                acc.push({
+                  ...localItem,
+                  title: serverMatch.title,
+                  price: serverMatch.price,
+                  salePrice: serverMatch.salePrice || serverMatch.price,
+                  image: serverMatch.image,
+                  slug: serverMatch.slug,
+                  // QUAN TRỌNG: Cập nhật categoryName từ server hoặc giữ lại từ local
+                  categoryName:
+                    serverMatch.categoryName || localItem.categoryName,
+                });
+              }
+              return acc;
+            }, []);
+
+            localStorage.setItem(CART_KEY, JSON.stringify(updatedCart));
+
+            // Nếu có sản phẩm bị xóa khỏi server (hết hàng/ngừng bán)
+            if (updatedCart.length < initialLength) {
+              Swal.fire({
+                icon: "warning",
+                title: "Thông báo",
+                text: "Một số sản phẩm không còn khả dụng đã được xóa khỏi giỏ hàng.",
+              });
+            }
+          },
+          error: function (xhr) {
+            console.error("Lỗi đồng bộ giỏ hàng");
+          },
+          complete: function () {
+            // Sau khi đồng bộ xong mới render ra giao diện
+            renderCheckout();
+            const $paymentMethod = $('input[name="paymentMethod"]:checked');
+            if ($paymentMethod.val() === "BANK_TRANSFER") {
+              updateQRCode();
+            }
+          },
+        });
+      }
+
+      // HÀM HIỂN THỊ LỖI
+      function setFieldError(fieldId, message) {
+        $(`#${fieldId}`).addClass("border-red-500");
+        $(`#error-${fieldId}`).text(message).fadeIn();
+      }
+
+      // HÀM RESET LỖI
+      function clearErrors() {
+        $(".form-input").removeClass("border-red-500");
+        $(".error-message").hide().text("");
+      }
+
+      function handleOrder() {
+        if (!window.jQuery) return window.ensureJQuery().then(handleOrder);
+        if (!window.Swal) return window.ensureSwal().then(handleOrder);
+        // 0. Reset validation
+        clearErrors();
+
+        // 1. Thu thập dữ liệu
+        const cart = JSON.parse(localStorage.getItem("cart")) || [];
+        const paymentMethod = $('input[name="paymentMethod"]:checked').val();
+
+        const custName = $("#custName").val().trim();
+        const custPhone = $("#custPhone").val().trim();
+        const custEmail = $("#custEmail").val().trim();
+        const custAddress = $("#custAddress").val().trim();
+        const orderNote = $("#orderNote").val().trim();
+
+        // 2. Validate phía Client
+        let isValid = true;
+
+        if (cart.length === 0) {
+          Swal.fire({ icon: "error", title: "Giỏ hàng trống!" });
+          return;
+        }
+
+        if (!custName) {
+          setFieldError("custName", "Tên khách hàng không được để trống");
+          isValid = false;
+        }
+
+        if (!custPhone) {
+          setFieldError("custPhone", "Số điện thoại không được để trống");
+          isValid = false;
+        } else {
+          const phoneRegex = /^(0|84)[0-9]{9,10}$/;
+          if (!phoneRegex.test(custPhone)) {
+            setFieldError("custPhone", "Số điện thoại không đúng định dạng");
+            isValid = false;
+          }
+        }
+
+        if (custEmail) {
+          const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+          if (!emailRegex.test(custEmail)) {
+            setFieldError("custEmail", "Email không hợp lệ");
+            isValid = false;
+          }
+        }
+
+        if (!custAddress) {
+          setFieldError("custAddress", "Địa chỉ nhận hàng không được để trống");
+          isValid = false;
+        }
+
+        if (!isValid) {
+          // Cuộn lên lỗi đầu tiên nếu có
+          const firstError = $(".border-red-500").first();
+          if (firstError.length) {
+            window.requestAnimationFrame(function () {
+              firstError[0].scrollIntoView({
+                behavior: "smooth",
+                block: "center",
+              });
+            });
+          }
+          return;
+        }
+
+        const formData = {
+          custName: custName,
+          custPhone: custPhone,
+          custEmail: custEmail,
+          custAddress: custAddress,
+          orderNote: orderNote,
+          paymentMethod: paymentMethod,
+          transferContent:
+            paymentMethod === "BANK_TRANSFER"
+              ? $("#transferContent").text()
+              : "",
+          items: cart.map((item) => ({
+            productId: item.productId,
+            quantity: item.quantity,
+            price: item.salePrice || item.price,
+          })),
+          totalAmount: cart.reduce(
+            (sum, i) => sum + (i.salePrice || i.price) * i.quantity,
+            0,
+          ),
+        };
+
+        // 3. Xử lý UI Loading
+        const $btn = $("#btnSubmitOrder");
+        const originalContent = $btn.html();
+
+        $btn
+          .prop("disabled", true)
+          .addClass("opacity-70 cursor-not-allowed")
+          .html('<svg class="mr-2 animate-spin" data-icon="loader-alt" aria-hidden="true" focusable="false" viewBox="0 0 24 24" width="1em" height="1em" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-6.2-8.6"/></svg> ĐANG XỬ LÝ...');
+
+        // 4. Gọi AJAX
+        $.ajax({
+          url: "/api/v1/order",
+          type: "POST",
+          contentType: "application/json",
+          data: JSON.stringify(formData),
+          success: function (response) {
+            localStorage.removeItem("cart");
+            Swal.fire({
+              icon: "success",
+              title: "Đặt hàng thành công!",
+              text: "Cảm ơn bạn đã tin tưởng lựa chọn sản phẩm của chúng tôi.",
+              confirmButtonColor: "#2563eb",
+            }).then(() => {
+              window.location.href = "/";
+            });
+          },
+          error: function (xhr) {
+            let errorMsg = "Vui lòng thử lại sau.";
+            if (xhr.responseJSON && xhr.responseJSON.message) {
+              errorMsg = xhr.responseJSON.message;
+            }
+            Swal.fire({ icon: "error", title: "Lỗi đặt hàng", text: errorMsg });
+          },
+          complete: function () {
+            $btn
+              .prop("disabled", false)
+              .removeClass("opacity-70 cursor-not-allowed")
+              .html(originalContent);
+          },
+        });
+      }
+    </script>
+  </body>
+</html>

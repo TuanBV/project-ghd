@@ -1,0 +1,99 @@
+<!doctype html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title
+      th:text="${titlePage != null ? titlePage : 'Lỗi hệ thống (500)'}"
+    ></title>
+    <link
+      rel="preload"
+      th:href="@{/client/css/app.css}"
+      as="style"
+      th:attr="onload=|this.onload=null;this.rel='stylesheet'|"
+    />
+    <noscript><link rel="stylesheet" th:href="@{/client/css/app.css}" /></noscript>
+    <style>
+      .emoji-500 {
+        position: relative;
+        animation: shake 0.5s infinite;
+      }
+      /* Hiệu ứng rung nhẹ cho lỗi 500 (cảm giác hệ thống đang gặp sự cố) */
+      @keyframes shake {
+        0% {
+          transform: translate(1px, 1px) rotate(0deg);
+        }
+        20% {
+          transform: translate(-1px, -2px) rotate(-1deg);
+        }
+        40% {
+          transform: translate(-3px, 0px) rotate(1deg);
+        }
+        60% {
+          transform: translate(3px, 2px) rotate(0deg);
+        }
+        80% {
+          transform: translate(1px, -1px) rotate(1deg);
+        }
+        100% {
+          transform: translate(-1px, 2px) rotate(-1deg);
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="bg-red-50 h-screen justify-center flex">
+      <div class="m-auto flex flex-col items-center text-center px-4">
+        <svg
+          class="emoji-500"
+          height="226"
+          width="226"
+          viewBox="0 0 226 226"
+          xmlns="http://www.w3.org/2000/svg"
+        >
+          <circle
+            cx="113"
+            cy="113"
+            r="109"
+            fill="#FFD54F"
+            stroke="#455A64"
+            stroke-width="8"
+          />
+          <g stroke="#455A64" stroke-width="8" stroke-linecap="round">
+            <line x1="60" y1="80" x2="85" y2="105" />
+            <line x1="85" y1="80" x2="60" y2="105" />
+            <line x1="140" y1="80" x2="165" y2="105" />
+            <line x1="165" y1="80" x2="140" y2="105" />
+          </g>
+          <path
+            d="M70 160 Q113 130 156 160"
+            fill="none"
+            stroke="#455A64"
+            stroke-width="8"
+            stroke-linecap="round"
+          />
+        </svg>
+
+        <div class="tracking-widest mt-8">
+          <span class="text-red-600 text-7xl font-semibold block">5 0 0</span>
+          <span class="text-gray-700 text-2xl font-semibold mt-4 block"
+            >Úp! Có lỗi xảy ra với hệ thống.</span
+          >
+          <p class="text-gray-500 text-lg mt-2 max-w-md">
+            Máy chủ đang gặp sự cố tạm thời. Vui lòng thử lại sau hoặc liên hệ
+            quản trị viên.
+          </p>
+        </div>
+
+        <div class="mt-10 flex gap-4">
+          <a
+            href="/"
+            class="text-white font-sans text-lg bg-red-600 px-6 py-3 rounded-full hover:bg-red-700 transition-all shadow-lg hover:shadow-red-200"
+          >
+            Quay về trang chủ
+          </a>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>

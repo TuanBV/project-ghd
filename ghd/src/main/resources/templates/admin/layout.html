@@ -1,0 +1,14 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+  <head th:replace="~{common/admin/header :: header(~{::title}, ~{::link})}">
+    <title th:text="${titlePage}"></title>
+  </head>
+  <body>
+    <div th:replace="common/admin/sidebar :: sidebar"></div>
+    <section id="content">
+      <nav th:replace="common/admin/navbar :: navbar"></nav>
+      <main>Layout</main>
+    </section>
+    <script th:src="@{/admin/js/main.js}"></script>
+  </body>
+</html>

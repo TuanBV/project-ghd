@@ -1,0 +1,16 @@
+# Optional override to publish MySQL/Redis ports to the host for local debugging
+# (e.g. connecting a DB client or redis-cli from outside Docker).
+#
+# Usage:
+#   docker compose -f compose.yaml -f compose.debug.yaml up -d
+#
+# Do NOT use this in any shared/production environment - it exposes the database
+# and cache directly on the host network interface.
+services:
+  mysql:
+    ports:
+      - "${DB_DEBUG_PORT:-3306}:3306"
+
+  redis:
+    ports:
+      - "${REDIS_DEBUG_PORT:-6379}:6379"
