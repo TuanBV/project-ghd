@@ -1,1 +1,4 @@
 ghd/uploads/
+ghd/target/
+ghd/out/
+ghd/node_modules/
