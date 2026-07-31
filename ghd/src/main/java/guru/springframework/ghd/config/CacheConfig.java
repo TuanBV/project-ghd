@@ -6,6 +6,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.redis.cache.RedisCacheConfiguration;
 import org.springframework.data.redis.cache.RedisCacheManager;
+import org.springframework.data.redis.cache.RedisCacheWriter;
 import org.springframework.data.redis.connection.RedisConnectionFactory;
 import org.springframework.data.redis.serializer.GenericJacksonJsonRedisSerializer;
 import org.springframework.data.redis.serializer.RedisSerializationContext;
@@ -88,10 +89,18 @@ public class CacheConfig {
     @Bean
     public RedisCacheManager cacheManager(RedisConnectionFactory connectionFactory,
                                           RedisCacheConfiguration redisCacheConfiguration) {
+        // Spring Data Redis 4.0 defaults RedisCacheWriter to asynchronous, deferred
+        // writes/evictions (for throughput) when the connection factory also supports
+        // reactive access, as Lettuce's does here. That is wrong for this app: every
+        // @CacheEvict is relied on to make the next read immediately consistent (e.g.
+        // right after a product update), so writes/evictions must be immediate/blocking.
+        RedisCacheWriter cacheWriter = RedisCacheWriter.create(connectionFactory,
+                RedisCacheWriter.RedisCacheWriterConfigurer::immediateWrites);
+
         Map<String, RedisCacheConfiguration> perCacheConfigurations = new LinkedHashMap<>();
         CACHE_TTLS.forEach((name, ttl) -> perCacheConfigurations.put(name, redisCacheConfiguration.entryTtl(ttl)));
 
-        return RedisCacheManager.builder(connectionFactory)
+        return RedisCacheManager.builder(cacheWriter)
                 .cacheDefaults(redisCacheConfiguration)
                 .withInitialCacheConfigurations(perCacheConfigurations)
                 .build();

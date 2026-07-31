@@ -112,7 +112,7 @@ public class BannerServiceImpl implements BannerService {
     }
 
     @Override
-    @Cacheable(cacheNames = BANNERS, key = "'position:' + #position")
+    @Cacheable(cacheNames = BANNERS, key = "'position:' + #position", unless = "#result == null")
     public BannerResponse getBannerByPosition(String position) {
         return bannerRepository.findByPositionAndIsActiveAndDelFlag(position, 1, DelFlag.ACTIVE.get())
                 .map(bannerMapper::bannerToBannerResponse)

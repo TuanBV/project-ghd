@@ -72,8 +72,11 @@ public class GlobalCommon {
 
     @ModelAttribute("hotline")
     public String getHotline() {
-        Optional<SysParamResponse> res = sysParamService.getByKey("hotline");
-        return res.get().getParamValue();
+        // Optional#get() without a presence check threw NoSuchElementException for
+        // every single request (this @ModelAttribute runs on every controller,
+        // including non-view/API/actuator requests) whenever no "hotline" sys_param
+        // row exists yet - e.g. a freshly migrated, not-yet-configured database.
+        return sysParamService.getByKey("hotline").map(SysParamResponse::getParamValue).orElse(null);
     }
 
     @ModelAttribute("sysParams")

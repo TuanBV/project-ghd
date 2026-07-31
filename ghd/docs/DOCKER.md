@@ -186,6 +186,21 @@ cp .env.example .env
 docker compose -f compose.external-db.yaml up -d --build
 ```
 
+### Auto-fallback to containerized MySQL
+
+`scripts/deploy.sh` picks the right file for you: it reads `DB_HOST`/`DB_PORT` from
+`.env` and probes that host/port. If it's reachable, it runs
+`compose.external-db.yaml`; if `DB_HOST` is unset/left at the default `mysql`, or the
+probe fails (e.g. no MySQL installed on the VPS yet), it falls back to `compose.yaml`
+so the app still comes up with a containerized MySQL instead of failing to start.
+
+```bash
+cp .env.example .env
+# fill in DB_USERNAME/DB_PASSWORD/etc as usual; set DB_HOST only if you have an
+# external MySQL to try first
+./scripts/deploy.sh
+```
+
 Requirements on the host MySQL:
 
 - Listen on an interface reachable from containers, not only `127.0.0.1`

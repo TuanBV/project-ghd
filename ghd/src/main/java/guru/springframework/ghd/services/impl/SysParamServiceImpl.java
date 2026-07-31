@@ -25,6 +25,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -46,11 +47,15 @@ public class SysParamServiceImpl implements SysParamService {
     @Override
     @Cacheable(cacheNames = SYS_PARAMS, key = "'all'")
     public List<SysParamResponse> getAll() {
+        // Collectors.toList() (not Stream.toList()) so the cached value is a plain
+        // ArrayList: Stream.toList()'s immutable JDK-internal list class is `final`,
+        // which Spring's Redis Jackson serializer deliberately never wraps with type
+        // info, so a non-empty result fails to deserialize back out of the cache.
         return sysParamRepository.findAll()
                 .stream()
                 .filter(item -> Objects.equals(item.getDelFlag(), DelFlag.ACTIVE.get()))
                 .map(sysParamMapper::sysParamToSysParamResponse)
-                .toList();
+                .collect(Collectors.toList());
     }
 
     @Override
@@ -59,7 +64,10 @@ public class SysParamServiceImpl implements SysParamService {
     }
 
     @Override
-    @Cacheable(cacheNames = SYS_PARAMS, key = "'key:' + #key")
+    // Spring unwraps Optional<T> return values before evaluating "unless" (and before
+    // caching), so #result here is the unwrapped SysParamResponse (or null) - not the
+    // Optional itself.
+    @Cacheable(cacheNames = SYS_PARAMS, key = "'key:' + #key", unless = "#result == null")
     public Optional<SysParamResponse> getByKey(String key) {
         return sysParamRepository.findByParamKey(key).map(this::mapToResponse);
     }

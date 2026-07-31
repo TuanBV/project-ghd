@@ -589,8 +589,12 @@ public class ProductServiceImpl implements ProductService {
                 .toList();
     }
 
+    // NOT cached: Spring Data's PageImpl has no Jackson 3 creator, so it cannot round-trip
+    // through GenericJacksonJsonRedisSerializer (confirmed via testing - fails with
+    // "Cannot construct instance of PageImpl (no Creators...)"). Caching would require
+    // unwrapping to a plain List + total-count DTO instead of Page; not worth the extra
+    // surface for what's already a bounded, cheap query.
     @Override
-    @Cacheable(cacheNames = PRODUCTS_LATEST, key = "'limit:' + #limit")
     public Page<ProductDetailClientResponse> getLatestProducts(int limit) {
         Pageable pageable = PageRequest.of(0, limit);
 
@@ -601,8 +605,8 @@ public class ProductServiceImpl implements ProductService {
         });
     }
 
+    // NOT cached - see getLatestProducts() above (Page<> cannot be Redis-cached here).
     @Override
-    @Cacheable(cacheNames = PRODUCTS_LATEST, key = "'cat:' + #categoryId + ':limit:' + #limit")
     public Page<ProductDetailClientResponse> getLatestProductsByCategory(String categoryId, int limit) {
         Pageable pageable = PageRequest.of(0, limit);
 

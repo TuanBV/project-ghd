@@ -148,7 +148,7 @@ public class NewsServiceImpl implements NewsService {
     }
 
     @Override
-    @Cacheable(cacheNames = NEWS, key = "'slug:' + #slug")
+    @Cacheable(cacheNames = NEWS, key = "'slug:' + #slug", unless = "#result == null")
     public NewsResponse getBySlug(String slug) {
         return newsRepository.findBySlug(slug).map(newsMapper::newsToNewsResponse).orElse(null);
     }
@@ -172,7 +172,7 @@ public class NewsServiceImpl implements NewsService {
     }
 
     @Override
-    @Cacheable(cacheNames = NEWS, key = "'related:' + #categoryTitle + ':' + #brandTitle")
+    @Cacheable(cacheNames = NEWS, key = "'related:' + #categoryTitle + ':' + #brandTitle", unless = "#result == null")
     public NewsResponse getRelatedNews(String categoryTitle, String brandTitle) {
         NewsProjection result;
 

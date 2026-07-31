@@ -80,9 +80,13 @@
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-cache</artifactId>
 		</dependency>
+		<!-- Boot 4 split Session autoconfiguration into its own per-store starter (like
+		     data-redis/cache/webmvc); the raw org.springframework.session:spring-session-data-redis
+		     artifact alone has no Spring Boot autoconfiguration and never registers a
+		     SessionRepository bean. -->
 		<dependency>
-			<groupId>org.springframework.session</groupId>
-			<artifactId>spring-session-data-redis</artifactId>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-session-data-redis</artifactId>
 		</dependency>
 		<!-- Actuator (health/info only, see application.properties + SecurityConfig) -->
 		<dependency>

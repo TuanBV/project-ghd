@@ -31,7 +31,7 @@ class SpringSessionRedisTest extends AbstractIntegrationTest {
     @Autowired
     private StringRedisTemplate stringRedisTemplate;
 
-    @Value("${spring.session.redis.namespace}")
+    @Value("${spring.session.data.redis.namespace}")
     private String sessionNamespace;
 
     @Test
