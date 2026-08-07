@@ -20,6 +20,9 @@ class AvailabilityNormalizerTest {
             "http://schema.org/InStock, IN_STOCK",
             "https://schema.org/OutOfStock, OUT_OF_STOCK",
             "InStock, IN_STOCK",
+            "Hết hàng, OUT_OF_STOCK",
+            "Còn hàng, IN_STOCK",
+            "Đặt trước, PREORDER",
     })
     void normalize_handlesRealFeedVariantsCaseAndWhitespaceInsensitively(String raw, String expected) {
         assertThat(AvailabilityNormalizer.normalize(raw).name()).isEqualTo(expected);

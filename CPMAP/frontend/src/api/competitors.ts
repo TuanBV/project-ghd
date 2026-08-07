@@ -30,13 +30,13 @@ export async function deleteCompetitor(id: number): Promise<void> {
   await apiClient.delete(`/competitors/${id}`)
 }
 
-export async function testCrawl(id: number, url: string) {
-  const { data } = await apiClient.post(`/competitors/${id}/test-crawl`, { url })
+export async function triggerDiscovery(id: number): Promise<{ jobRunId: number }> {
+  const { data } = await apiClient.post<{ jobRunId: number }>(`/competitors/${id}/discovery-jobs`)
   return data
 }
 
-export async function triggerDiscovery(id: number): Promise<{ jobRunId: number }> {
-  const { data } = await apiClient.post<{ jobRunId: number }>(`/competitors/${id}/discover`)
+export async function triggerPriceSync(id: number): Promise<{ jobRunId: number }> {
+  const { data } = await apiClient.post<{ jobRunId: number }>(`/competitors/${id}/price-sync-jobs`)
   return data
 }
 
@@ -44,9 +44,18 @@ export async function getCompetitorListings(
   id: number,
   page = 0,
   size = 20,
+  sku?: string,
 ): Promise<PageResponse<CompetitorListingDto>> {
   const { data } = await apiClient.get<PageResponse<CompetitorListingDto>>(`/competitors/${id}/listings`, {
-    params: { page, size },
+    params: { page, size, sku: sku || undefined },
   })
+  return data
+}
+
+export async function addCompetitorListing(
+  competitorId: number,
+  payload: { productId: number; url: string },
+): Promise<CompetitorListingDto> {
+  const { data } = await apiClient.post<CompetitorListingDto>(`/competitors/${competitorId}/listings`, payload)
   return data
 }

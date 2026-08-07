@@ -5,7 +5,6 @@ import LoginPage from './pages/LoginPage'
 import DashboardPage from './pages/DashboardPage'
 import ProductsPage from './pages/ProductsPage'
 import ProductDetailPage from './pages/ProductDetailPage'
-import RecommendationsPage from './pages/RecommendationsPage'
 import CompetitorsPage from './pages/CompetitorsPage'
 import ImportsPage from './pages/ImportsPage'
 import JobsPage from './pages/JobsPage'
@@ -27,7 +26,6 @@ export default function App() {
           <Route index element={<DashboardPage />} />
           <Route path="products" element={<ProductsPage />} />
           <Route path="products/:id" element={<ProductDetailPage />} />
-          <Route path="recommendations" element={<RecommendationsPage />} />
           <Route path="competitors" element={<CompetitorsPage />} />
           <Route path="imports" element={<ImportsPage />} />
           <Route path="jobs" element={<JobsPage />} />

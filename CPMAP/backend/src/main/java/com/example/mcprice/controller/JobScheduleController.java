@@ -1,7 +1,9 @@
 package com.example.mcprice.controller;
 
+import com.example.mcprice.dto.CronDto;
+import com.example.mcprice.dto.UpdateCronRequest;
 import com.example.mcprice.service.JobScheduleService;
-import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.quartz.SchedulerException;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -18,12 +20,6 @@ public class JobScheduleController {
 
     private final JobScheduleService jobScheduleService;
 
-    public record CronDto(String cron, String timezone) {
-    }
-
-    public record UpdateCronRequest(@NotBlank String cron, @NotBlank String timezone) {
-    }
-
     @GetMapping
     public CronDto get() throws SchedulerException {
         return new CronDto(jobScheduleService.getCurrentCron(), "Asia/Ho_Chi_Minh");
@@ -31,7 +27,7 @@ public class JobScheduleController {
 
     @PutMapping
     @PreAuthorize("hasRole('ADMIN')")
-    public CronDto update(@RequestBody UpdateCronRequest request) throws SchedulerException {
+    public CronDto update(@Valid @RequestBody UpdateCronRequest request) throws SchedulerException {
         jobScheduleService.updateCron(request.cron(), request.timezone());
         return new CronDto(request.cron(), request.timezone());
     }

@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react'
-import { Layout, Menu, Avatar, Dropdown, Typography, Space } from 'antd'
+import { Layout, Menu, Avatar, Dropdown, Typography, Space, FloatButton } from 'antd'
 import type { MenuProps } from 'antd'
 import {
   DashboardOutlined,
@@ -8,7 +8,6 @@ import {
   ImportOutlined,
   ScheduleOutlined,
   SettingOutlined,
-  CheckSquareOutlined,
   LogoutOutlined,
   UserOutlined,
 } from '@ant-design/icons'
@@ -30,7 +29,6 @@ export default function AppLayout() {
     () => [
       { key: '/', icon: <DashboardOutlined />, label: <Link to="/">{t('nav.dashboard')}</Link> },
       { key: '/products', icon: <ShoppingOutlined />, label: <Link to="/products">{t('nav.products')}</Link> },
-      { key: '/recommendations', icon: <CheckSquareOutlined />, label: <Link to="/recommendations">{t('nav.recommendations')}</Link> },
       { key: '/competitors', icon: <TeamOutlined />, label: <Link to="/competitors">{t('nav.competitors')}</Link> },
       { key: '/imports', icon: <ImportOutlined />, label: <Link to="/imports">{t('nav.imports')}</Link> },
       { key: '/jobs', icon: <ScheduleOutlined />, label: <Link to="/jobs">{t('nav.jobs')}</Link> },
@@ -45,16 +43,42 @@ export default function AppLayout() {
     { key: 'logout', icon: <LogoutOutlined />, label: t('nav.logout') },
   ]
 
+  const siderWidth = collapsed ? 80 : 200
+
   return (
     <Layout style={{ minHeight: '100vh' }}>
-      <Sider collapsible collapsed={collapsed} onCollapse={setCollapsed}>
+      <Sider
+        collapsible
+        collapsed={collapsed}
+        onCollapse={setCollapsed}
+        style={{
+          overflow: 'auto',
+          height: '100vh',
+          position: 'fixed',
+          insetInlineStart: 0,
+          top: 0,
+          bottom: 0,
+        }}
+      >
         <div style={{ color: '#fff', textAlign: 'center', padding: 16, fontWeight: 600 }}>
           {collapsed ? 'MC' : t('app.title')}
         </div>
         <Menu theme="dark" mode="inline" selectedKeys={[selectedKey === '/' ? '/' : selectedKey]} items={menuItems} />
       </Sider>
-      <Layout>
-        <Header style={{ background: '#fff', display: 'flex', justifyContent: 'flex-end', alignItems: 'center', paddingInline: 24 }}>
+      <Layout style={{ marginInlineStart: siderWidth, transition: 'margin-inline-start 0.2s' }}>
+        <Header
+          style={{
+            position: 'sticky',
+            top: 0,
+            zIndex: 10,
+            width: '100%',
+            background: '#fff',
+            display: 'flex',
+            justifyContent: 'flex-end',
+            alignItems: 'center',
+            paddingInline: 24,
+          }}
+        >
           <Space size="middle">
             <LanguageSwitcher />
             <Dropdown
@@ -79,6 +103,7 @@ export default function AppLayout() {
           <Outlet />
         </Content>
       </Layout>
+      <FloatButton.BackTop />
     </Layout>
   )
 }

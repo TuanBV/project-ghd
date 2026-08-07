@@ -18,6 +18,7 @@ import java.util.Map;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -36,11 +37,14 @@ public class ProductService {
     private final AuditService auditService;
 
     @Transactional(readOnly = true)
-    public Page<ProductSummaryDto> search(String keyword, String category, String availability, Pageable pageable) {
+    public Page<ProductSummaryDto> search(String keyword, String category, String availability, Long competitorId, Pageable pageable) {
+        Specification<Product> competitorSpec = competitorId == null ? null
+                : ProductSpecifications.idIn(competitorListingRepository.findDistinctProductIdsByCompetitorId(competitorId));
         var spec = ProductSpecifications.allOf(
                 ProductSpecifications.search(keyword),
                 ProductSpecifications.category(category),
-                ProductSpecifications.availability(availability));
+                ProductSpecifications.availability(availability),
+                competitorSpec);
         Page<Product> page = productRepository.findAll(spec, pageable);
         List<Long> productIds = page.getContent().stream().map(Product::getId).toList();
 
@@ -106,6 +110,9 @@ public class ProductService {
         product.setProductType(request.productType());
         if (request.currentWebsitePrice() != null) {
             product.setCurrentWebsitePrice(request.currentWebsitePrice());
+        }
+        if (request.availability() != null && !request.availability().isBlank()) {
+            product.setAvailability(request.availability());
         }
         product.setActive(request.active());
         productRepository.save(product);

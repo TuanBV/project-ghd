@@ -119,8 +119,10 @@ public class CompetitorService {
     }
 
     private CompetitorDto toDto(Competitor c) {
-        var lastRun = jobRunRepository.findFirstByJobKeyOrderByCreatedAtDesc(
+        var lastDiscovery = jobRunRepository.findFirstByJobKeyOrderByCreatedAtDesc(
                 CompetitorDiscoveryTriggerService.jobKeyFor(c.getId()));
+        var lastCrawl = jobRunRepository.findFirstByJobKeyOrderByCreatedAtDesc(
+                CompetitorCrawlTriggerService.jobKeyFor(c.getId()));
         long matchedCount = competitorListingRepository.countByCompetitorId(c.getId());
         // discoveredUrlCount = TONG so URL san pham lay duoc tu sitemap (da loc file khong phai
         // san pham theo ten file), KHONG can doi chieu SKU — nhanh, chi doc sitemap.
@@ -128,9 +130,12 @@ public class CompetitorService {
         return new CompetitorDto(c.getId(), c.getName(), c.getBaseUrl(), c.isEnabled(), c.getCrawlMode().name(),
                 c.getRequestsPerMinute(), c.getTimeoutSeconds(), c.getExtractorConfig(),
                 c.getLastSuccessAt(), c.getLastErrorAt(), c.getLastErrorMessage(),
-                lastRun.map(r -> r.getId()).orElse(null),
-                lastRun.map(r -> r.getStatus().name()).orElse(null),
-                lastRun.map(r -> r.getProgressPercent()).orElse(null),
-                c.getLastSitemapUrlCount(), matchedCount);
+                lastDiscovery.map(r -> r.getId()).orElse(null),
+                lastDiscovery.map(r -> r.getStatus().name()).orElse(null),
+                lastDiscovery.map(r -> r.getProgressPercent()).orElse(null),
+                c.getLastSitemapUrlCount(), matchedCount,
+                lastCrawl.map(r -> r.getId()).orElse(null),
+                lastCrawl.map(r -> r.getStatus().name()).orElse(null),
+                lastCrawl.map(r -> r.getProgressPercent()).orElse(null));
     }
 }

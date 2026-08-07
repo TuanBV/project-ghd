@@ -56,6 +56,9 @@ export interface CompetitorListingDto {
   matchReason: string | null
   matchStatus: string
   active: boolean
+  lastPrice: number | null
+  lastPriceStatus: string | null
+  lastPriceCapturedAt: string | null
 }
 
 export interface PriceRecommendationSource {
@@ -131,6 +134,9 @@ export interface CompetitorDto {
   discoveredUrlCount: number
   /** Trong so discoveredUrlCount, so luong khop duoc voi 1 san pham cu the trong DB cua ban. */
   matchedProductCount: number
+  lastCrawlJobRunId: number | null
+  lastCrawlStatus: string | null
+  lastCrawlProgressPercent: number | null
 }
 
 export interface ImportRunDto {

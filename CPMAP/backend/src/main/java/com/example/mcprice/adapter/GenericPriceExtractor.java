@@ -76,18 +76,45 @@ public class GenericPriceExtractor {
                 if (offers == null) {
                     continue;
                 }
-                JsonNode priceNode = offers.get("price");
-                if (priceNode == null || priceNode.asText("").isBlank()) {
+                String priceText = extractPriceFromOffer(offers);
+                if (priceText == null || priceText.isBlank()) {
                     continue;
                 }
                 JsonNode availabilityNode = offers.get("availability");
-                return Optional.of(new Extracted(priceNode.asText(),
+                return Optional.of(new Extracted(priceText,
                         availabilityNode == null ? null : availabilityNode.asText(null)));
             } catch (Exception ignored) {
                 // JSON-LD khong hop le hoac khong lien quan den Product, bo qua block nay
             }
         }
         return Optional.empty();
+    }
+
+    /**
+     * Ho tro nhieu bien the cua Offer theo schema.org: gia truc tiep o "price", hoac long trong
+     * "priceSpecification.price" (thuong gap o WordPress/WooCommerce qua plugin Yoast SEO), hoac
+     * "lowPrice" (AggregateOffer khi san pham co nhieu bien the/nguon ban).
+     */
+    private String extractPriceFromOffer(JsonNode offers) {
+        JsonNode priceNode = offers.get("price");
+        if (priceNode != null && !priceNode.asText("").isBlank()) {
+            return priceNode.asText();
+        }
+        JsonNode priceSpec = offers.get("priceSpecification");
+        if (priceSpec != null) {
+            if (priceSpec.isArray() && !priceSpec.isEmpty()) {
+                priceSpec = priceSpec.get(0);
+            }
+            JsonNode specPrice = priceSpec.get("price");
+            if (specPrice != null && !specPrice.asText("").isBlank()) {
+                return specPrice.asText();
+            }
+        }
+        JsonNode lowPrice = offers.get("lowPrice");
+        if (lowPrice != null && !lowPrice.asText("").isBlank()) {
+            return lowPrice.asText();
+        }
+        return null;
     }
 
     private JsonNode findProductNode(JsonNode node) {

@@ -9,25 +9,29 @@ import {
   Progress,
   Select,
   Space,
+  Switch,
   Table,
   Tag,
   Typography,
   message,
 } from 'antd'
 import { useTranslation } from 'react-i18next'
+import { useNavigate } from 'react-router-dom'
 import {
   listCompetitors,
   createCompetitor,
   updateCompetitor,
   deleteCompetitor,
-  testCrawl,
   triggerDiscovery,
+  triggerPriceSync,
   getCompetitorListings,
   type CompetitorUpsertPayload,
 } from '../api/competitors'
 import { getJobRun } from '../api/jobs'
 import type { CompetitorDto } from '../api/types'
 import { extractErrorMessage } from '../api/client'
+import { statusLabel } from '../utils/statusLabel'
+import { formatDateTime } from '../utils/formatDateTime'
 
 const CRAWL_MODES = ['STATIC_HTML', 'BROWSER', 'MANUAL_ONLY']
 const TERMINAL_STATUSES = ['SUCCESS', 'PARTIAL_SUCCESS', 'FAILED', 'CANCELLED']
@@ -108,15 +112,90 @@ function DiscoveryProgress({ competitor }: { competitor: CompetitorDto }) {
   )
 }
 
+function CrawlProgress({ competitor }: { competitor: CompetitorDto }) {
+  const { t } = useTranslation()
+  const queryClient = useQueryClient()
+  // Cung logic voi DiscoveryProgress: chi bao toast khi CHINH component nay chung kien tien
+  // trinh chuyen tu dang chay sang xong, khong bao lai cho job da xong tu truoc.
+  const previousStatusRef = useRef<string | null>(null)
+  const jobRunId = competitor.lastCrawlJobRunId
+
+  const runQuery = useQuery({
+    queryKey: ['competitor-crawl-run', jobRunId],
+    queryFn: () => getJobRun(jobRunId as number),
+    enabled: jobRunId != null,
+    initialData: jobRunId != null
+      ? {
+          id: jobRunId,
+          jobKey: '',
+          triggerType: 'MANUAL',
+          status: competitor.lastCrawlStatus ?? 'QUEUED',
+          totalItems: 0,
+          successItems: 0,
+          failedItems: 0,
+          progressPercent: competitor.lastCrawlProgressPercent ?? 0,
+          startedAt: null,
+          finishedAt: null,
+          errorDetail: null,
+          correlationId: null,
+        }
+      : undefined,
+    refetchInterval: (query) => {
+      const status = query.state.data?.status
+      return status && TERMINAL_STATUSES.includes(status) ? false : 2000
+    },
+  })
+
+  const run = runQuery.data
+  useEffect(() => {
+    if (!run) {
+      return
+    }
+    const previousStatus = previousStatusRef.current
+    previousStatusRef.current = run.status
+    const wasRunning = previousStatus != null && !TERMINAL_STATUSES.includes(previousStatus)
+    if (!wasRunning || !TERMINAL_STATUSES.includes(run.status)) {
+      return
+    }
+    if (run.status === 'FAILED') {
+      message.error(t('competitors.crawlToastFailed', { name: competitor.name }))
+    } else {
+      message.success(t('competitors.crawlToastSuccess', { name: competitor.name }))
+    }
+    queryClient.invalidateQueries({ queryKey: ['competitors'] })
+  }, [run, competitor.name, t, queryClient])
+
+  if (!jobRunId || !run) {
+    return <Typography.Text type="secondary">{t('competitors.crawlNone')}</Typography.Text>
+  }
+
+  const statusLabelKey: Record<string, string> = {
+    QUEUED: 'competitors.discoveryQueued',
+    RUNNING: 'competitors.discoveryRunning',
+    SUCCESS: 'competitors.discoverySuccess',
+    PARTIAL_SUCCESS: 'competitors.discoveryPartial',
+    FAILED: 'competitors.discoveryFailed',
+  }
+  const progressStatus = run.status === 'FAILED' ? 'exception' : run.status === 'RUNNING' || run.status === 'QUEUED' ? 'active' : 'success'
+
+  return (
+    <Space direction="vertical" size={0} style={{ minWidth: 140 }}>
+      <Progress percent={run.progressPercent} size="small" status={progressStatus} />
+      <Typography.Text type="secondary" style={{ fontSize: 12 }}>
+        {t(statusLabelKey[run.status] ?? run.status)}
+      </Typography.Text>
+    </Space>
+  )
+}
+
 export default function CompetitorsPage() {
   const { t } = useTranslation()
   const [editing, setEditing] = useState<CompetitorDto | null>(null)
   const [modalOpen, setModalOpen] = useState(false)
-  const [testUrlFor, setTestUrlFor] = useState<CompetitorDto | null>(null)
-  const [testResult, setTestResult] = useState<string | null>(null)
   const [listingsFor, setListingsFor] = useState<CompetitorDto | null>(null)
   const [listingsPage, setListingsPage] = useState(0)
   const queryClient = useQueryClient()
+  const navigate = useNavigate()
 
   const query = useQuery({ queryKey: ['competitors'], queryFn: listCompetitors, refetchInterval: 4000 })
   const invalidate = () => queryClient.invalidateQueries({ queryKey: ['competitors'] })
@@ -147,14 +226,29 @@ export default function CompetitorsPage() {
     onError: (e) => message.error(extractErrorMessage(e)),
   })
 
-  const testMutation = useMutation({
-    mutationFn: (payload: { id: number; url: string }) => testCrawl(payload.id, payload.url),
-    onSuccess: (data) => setTestResult(JSON.stringify(data, null, 2)),
+  const toggleEnabledMutation = useMutation({
+    mutationFn: (competitor: CompetitorDto) =>
+      updateCompetitor(competitor.id, {
+        name: competitor.name,
+        baseUrl: competitor.baseUrl,
+        enabled: !competitor.enabled,
+        crawlMode: competitor.crawlMode,
+        requestsPerMinute: competitor.requestsPerMinute,
+        timeoutSeconds: competitor.timeoutSeconds,
+        extractorConfig: competitor.extractorConfig,
+      }),
+    onSuccess: () => invalidate(),
     onError: (e) => message.error(extractErrorMessage(e)),
   })
 
   const discoverMutation = useMutation({
     mutationFn: (id: number) => triggerDiscovery(id),
+    onSuccess: () => invalidate(),
+    onError: (e) => message.error(extractErrorMessage(e)),
+  })
+
+  const priceSyncMutation = useMutation({
+    mutationFn: (id: number) => triggerPriceSync(id),
     onSuccess: () => invalidate(),
     onError: (e) => message.error(extractErrorMessage(e)),
   })
@@ -181,8 +275,18 @@ export default function CompetitorsPage() {
         columns={[
           { title: t('competitors.colName'), dataIndex: 'name' },
           { title: t('competitors.colBaseUrl'), dataIndex: 'baseUrl' },
-          { title: t('competitors.colCrawlMode'), dataIndex: 'crawlMode', render: (v: string) => <Tag>{v}</Tag> },
-          { title: t('competitors.colEnabled'), dataIndex: 'enabled', render: (v: boolean) => (v ? <Tag color="green">ON</Tag> : <Tag>OFF</Tag>) },
+          { title: t('competitors.colCrawlMode'), dataIndex: 'crawlMode', render: (v: string) => <Tag>{statusLabel(t, 'crawlMode', v)}</Tag> },
+          {
+            title: t('competitors.colEnabled'),
+            key: 'enabled',
+            render: (_: unknown, record: CompetitorDto) => (
+              <Switch
+                checked={record.enabled}
+                loading={toggleEnabledMutation.isPending && toggleEnabledMutation.variables?.id === record.id}
+                onChange={() => toggleEnabledMutation.mutate(record)}
+              />
+            ),
+          },
           {
             title: t('competitors.colUrlCount'),
             key: 'urlCount',
@@ -200,7 +304,16 @@ export default function CompetitorsPage() {
             key: 'discovery',
             render: (_: unknown, record: CompetitorDto) => <DiscoveryProgress competitor={record} />,
           },
-          { title: t('competitors.colLastSuccess'), dataIndex: 'lastSuccessAt' },
+          {
+            title: t('competitors.colCrawl'),
+            key: 'crawl',
+            render: (_: unknown, record: CompetitorDto) => <CrawlProgress competitor={record} />,
+          },
+          {
+            title: t('competitors.colLastSuccess'),
+            dataIndex: 'lastSuccessAt',
+            render: (v: string | null) => formatDateTime(v),
+          },
           {
             title: t('common.actions'),
             key: 'actions',
@@ -215,7 +328,6 @@ export default function CompetitorsPage() {
                 >
                   {t('common.edit')}
                 </Button>
-                <Button size="small" onClick={() => setTestUrlFor(record)}>{t('competitors.testCrawl')}</Button>
                 <Button
                   size="small"
                   loading={discoverMutation.isPending && discoverMutation.variables === record.id}
@@ -225,12 +337,29 @@ export default function CompetitorsPage() {
                 </Button>
                 <Button
                   size="small"
+                  type="primary"
+                  ghost
+                  loading={priceSyncMutation.isPending && priceSyncMutation.variables === record.id}
+                  onClick={() => priceSyncMutation.mutate(record.id)}
+                >
+                  {t('competitors.priceSync')}
+                </Button>
+                <Button
+                  size="small"
                   onClick={() => {
                     setListingsPage(0)
                     setListingsFor(record)
                   }}
                 >
                   {t('competitors.viewUrls')}
+                </Button>
+                <Button
+                  size="small"
+                  onClick={() =>
+                    navigate(`/products?competitorId=${record.id}&competitorName=${encodeURIComponent(record.name)}`)
+                  }
+                >
+                  {t('competitors.viewMatchedProducts')}
                 </Button>
                 <Button size="small" danger onClick={() => deleteMutation.mutate(record.id)}>{t('common.delete')}</Button>
               </Space>
@@ -257,13 +386,18 @@ export default function CompetitorsPage() {
             <Input />
           </Form.Item>
           <Form.Item name="crawlMode" label={t('competitors.crawlModeLabel')} rules={[{ required: true }]}>
-            <Select options={CRAWL_MODES.map((m) => ({ label: m, value: m }))} />
+            <Select options={CRAWL_MODES.map((m) => ({ label: statusLabel(t, 'crawlMode', m), value: m }))} />
           </Form.Item>
           <Form.Item name="requestsPerMinute" label={t('competitors.requestsPerMinuteLabel')} rules={[{ required: true }]}>
             <InputNumber min={1} style={{ width: '100%' }} />
           </Form.Item>
           <Form.Item name="timeoutSeconds" label={t('competitors.timeoutLabel')} rules={[{ required: true }]}>
             <InputNumber min={1} style={{ width: '100%' }} />
+          </Form.Item>
+          {/* enabled duoc bat/tat qua Switch rieng ngoai bang, khong hien thi o day — nhung van
+              phai giu field nay trong Form de tranh Jackson tu dong doi ve false khi thieu key. */}
+          <Form.Item name="enabled" hidden>
+            <Input type="hidden" />
           </Form.Item>
           <Typography.Paragraph type="secondary" style={{ marginTop: -8 }}>
             {t('competitors.autoDiscoveryHint')}
@@ -272,26 +406,6 @@ export default function CompetitorsPage() {
             {t('common.save')}
           </Button>
         </Form>
-      </Modal>
-
-      <Modal
-        title={t('competitors.testCrawlModalTitle', { name: testUrlFor?.name ?? '' })}
-        open={!!testUrlFor}
-        onCancel={() => {
-          setTestUrlFor(null)
-          setTestResult(null)
-        }}
-        footer={null}
-      >
-        <Form layout="vertical" onFinish={(values) => testMutation.mutate({ id: testUrlFor!.id, url: values.url })}>
-          <Form.Item name="url" label={t('competitors.testUrlLabel')} rules={[{ required: true }]}>
-            <Input />
-          </Form.Item>
-          <Button type="primary" htmlType="submit" loading={testMutation.isPending}>
-            {t('competitors.runTest')}
-          </Button>
-        </Form>
-        {testResult && <pre style={{ marginTop: 16, background: '#f5f5f5', padding: 12 }}>{testResult}</pre>}
       </Modal>
 
       <Modal
@@ -337,7 +451,12 @@ export default function CompetitorsPage() {
             {
               title: t('competitors.listingColStatus'),
               dataIndex: 'matchStatus',
-              render: (status: string) => <Tag>{status}</Tag>,
+              render: (status: string) => <Tag>{statusLabel(t, 'match', status)}</Tag>,
+            },
+            {
+              title: t('competitors.listingColPrice'),
+              dataIndex: 'lastPrice',
+              render: (v: number | null) => (v == null ? '-' : v.toLocaleString('vi-VN')),
             },
           ]}
         />

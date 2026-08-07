@@ -33,8 +33,8 @@ describe('JobsPage', () => {
 
     renderWithProviders(<JobsPage />)
 
-    expect(await screen.findByText('CompetitorCrawlJob')).toBeInTheDocument()
-    await waitFor(() => expect(screen.getByText('100%')).toBeInTheDocument())
-    expect(screen.getAllByText('PARTIAL_SUCCESS').length).toBeGreaterThan(0)
+    expect(await screen.findByText('Thu thập giá đối thủ')).toBeInTheDocument()
+    await waitFor(() => expect(screen.getByText('Thành công: 7 · Lỗi: 3')).toBeInTheDocument())
+    expect(screen.getAllByText('Thành công một phần').length).toBeGreaterThan(0)
   })
 })

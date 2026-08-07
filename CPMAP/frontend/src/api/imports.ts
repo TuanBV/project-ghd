@@ -19,6 +19,15 @@ export async function importComparisonFile(file: File): Promise<ImportRunDto> {
   return data
 }
 
+export async function importCsvProductsFile(file: File): Promise<ImportRunDto> {
+  const form = new FormData()
+  form.append('file', file)
+  const { data } = await apiClient.post<ImportRunDto>('/imports/csv-products', form, {
+    headers: { 'Content-Type': 'multipart/form-data' },
+  })
+  return data
+}
+
 export async function getImportRun(id: number): Promise<ImportRunDto> {
   const { data } = await apiClient.get<ImportRunDto>(`/imports/${id}`)
   return data

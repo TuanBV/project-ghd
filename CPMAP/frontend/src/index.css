@@ -35,3 +35,11 @@ body {
   grid-template-columns: repeat(auto-fit, minmax(380px, 1fr));
   gap: 16px;
 }
+
+.mc-clickable-row {
+  cursor: pointer;
+}
+
+.mc-clickable-row:hover > td {
+  background: rgba(22, 119, 255, 0.06);
+}

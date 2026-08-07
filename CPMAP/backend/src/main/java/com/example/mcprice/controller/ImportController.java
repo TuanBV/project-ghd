@@ -9,6 +9,7 @@ import com.example.mcprice.repository.ImportIssueRepository;
 import com.example.mcprice.repository.ImportRunRepository;
 import com.example.mcprice.service.ComparisonImportService;
 import com.example.mcprice.service.ComparisonReportExportService;
+import com.example.mcprice.service.CsvProductImportService;
 import com.example.mcprice.service.McImportService;
 import java.io.IOException;
 import java.io.UncheckedIOException;
@@ -35,6 +36,7 @@ public class ImportController {
     private final McImportService mcImportService;
     private final ComparisonImportService comparisonImportService;
     private final ComparisonReportExportService comparisonReportExportService;
+    private final CsvProductImportService csvProductImportService;
     private final ImportRunRepository importRunRepository;
     private final ImportIssueRepository importIssueRepository;
 
@@ -53,6 +55,16 @@ public class ImportController {
     public ImportRunDto importComparison(@RequestParam("file") MultipartFile file) {
         try {
             return comparisonImportService.importFile(file.getOriginalFilename(), file.getInputStream(), currentActor());
+        } catch (IOException e) {
+            throw new UncheckedIOException(e);
+        }
+    }
+
+    @PostMapping("/csv-products")
+    @PreAuthorize("hasAnyRole('ADMIN', 'ANALYST')")
+    public ImportRunDto importCsvProducts(@RequestParam("file") MultipartFile file) {
+        try {
+            return csvProductImportService.importFile(file.getOriginalFilename(), file.getInputStream(), currentActor());
         } catch (IOException e) {
             throw new UncheckedIOException(e);
         }

@@ -17,7 +17,12 @@ public final class SkuNormalizer {
     private static final Pattern SEPARATORS = Pattern.compile("[\\s\\-_]+");
     private static final Pattern PARENTHESES = Pattern.compile("\\(([^)]+)\\)");
     private static final Pattern VERSION_SUFFIX = Pattern.compile("^(?<base>[A-Z0-9]{3,}[A-Z0-9.\\-]*[A-Z0-9])\\.(?<suffix>\\d{1,2})$");
-    private static final Pattern SKU_TOKEN = Pattern.compile("[A-Z][A-Z0-9\\-]{2,}[0-9][A-Z0-9\\-]*");
+    // Chi doi hoi mot day lien tuc chu/so/gach ngang; VIEC co phai SKU hay khong (phai co CA
+    // chu lan so, du dai toi thieu) duoc kiem tra rieng o looksLikeSkuToken — KHONG bat buoc
+    // ky tu dau tien phai la chu, vi rat nhieu SKU do dien tu bat dau bang so (vd kich thuoc
+    // man hinh: "50W660G", "43X8500F") va se bi bo sot neu chi nhan dien token bat dau bang chu.
+    private static final Pattern WORD_TOKEN = Pattern.compile("[A-Z0-9][A-Z0-9\\-]*");
+    private static final int MIN_SKU_TOKEN_LENGTH = 4;
 
     private SkuNormalizer() {
     }
@@ -74,10 +79,32 @@ public final class SkuNormalizer {
             return tokens;
         }
         String upper = VietnameseTextUtil.stripDiacritics(title).toUpperCase();
-        Matcher matcher = SKU_TOKEN.matcher(upper);
+        Matcher matcher = WORD_TOKEN.matcher(upper);
         while (matcher.find()) {
-            tokens.add(matcher.group());
+            String word = matcher.group();
+            if (looksLikeSkuToken(word)) {
+                tokens.add(word);
+            }
         }
         return tokens;
+    }
+
+    /** Mot token duoc coi la "giong SKU" khi co CA chu lan so (khong phai thuan so nhu "50",
+     * cung khong phai thuan chu nhu "TIVI") va du dai toi thieu de tranh trung ngau nhien. */
+    private static boolean looksLikeSkuToken(String word) {
+        if (word.length() < MIN_SKU_TOKEN_LENGTH) {
+            return false;
+        }
+        boolean hasDigit = false;
+        boolean hasLetter = false;
+        for (int i = 0; i < word.length(); i++) {
+            char c = word.charAt(i);
+            if (Character.isDigit(c)) {
+                hasDigit = true;
+            } else if (Character.isLetter(c)) {
+                hasLetter = true;
+            }
+        }
+        return hasDigit && hasLetter;
     }
 }

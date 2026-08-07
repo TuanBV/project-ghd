@@ -1,11 +1,15 @@
 package com.example.mcprice.controller;
 
 import com.example.mcprice.dto.CompetitorListingDto;
+import com.example.mcprice.dto.UpdateMatchStatusRequest;
+import com.example.mcprice.exception.BusinessRuleException;
+import com.example.mcprice.service.MatchConfirmPriceService;
 import com.example.mcprice.service.MatchingService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -16,20 +20,22 @@ import org.springframework.web.bind.annotation.RestController;
 public class MatchingController {
 
     private final MatchingService matchingService;
+    private final MatchConfirmPriceService matchConfirmPriceService;
 
-    public record RejectRequest(String reason) {
-    }
-
-    @PostMapping("/confirm")
+    /**
+     * Cap nhat trang thai khop (thay cho /confirm, /reject cu — cung la sua field "status").
+     * Khi xac nhan khop (MANUALLY_CONFIRMED): crawl gia THAT ngay cho listing nay + tinh lai
+     * gia trung binh cho san pham, goi SAU KHI matchingService.confirm() da commit (tranh
+     * CrawlItemExecutor doc DB truoc khi matchStatus moi duoc luu, cung nguyen tac autoDiscoverOnCreate).
+     */
+    @PatchMapping
     @PreAuthorize("hasAnyRole('ADMIN', 'ANALYST')")
-    public CompetitorListingDto confirm(@PathVariable Long productId, @PathVariable Long matchId) {
-        return matchingService.confirm(productId, matchId);
-    }
-
-    @PostMapping("/reject")
-    @PreAuthorize("hasAnyRole('ADMIN', 'ANALYST')")
-    public CompetitorListingDto reject(@PathVariable Long productId, @PathVariable Long matchId,
-                                        @RequestBody(required = false) RejectRequest request) {
-        return matchingService.reject(productId, matchId, request == null ? null : request.reason());
+    public CompetitorListingDto updateStatus(@PathVariable Long productId, @PathVariable Long matchId,
+                                              @Valid @RequestBody UpdateMatchStatusRequest request) {
+        return switch (request.status()) {
+            case "MANUALLY_CONFIRMED" -> matchConfirmPriceService.crawlPriceAndRecalculate(matchingService.confirm(productId, matchId));
+            case "REJECTED" -> matchingService.reject(productId, matchId, request.reason());
+            default -> throw new BusinessRuleException("status khong hop le: " + request.status());
+        };
     }
 }

@@ -1,6 +1,7 @@
 package com.example.mcprice.dto;
 
 import java.math.BigDecimal;
+import java.time.OffsetDateTime;
 
 public record CompetitorListingDto(
         Long id,
@@ -15,6 +16,9 @@ public record CompetitorListingDto(
         BigDecimal matchScore,
         String matchReason,
         String matchStatus,
-        boolean active
+        boolean active,
+        BigDecimal lastPrice,
+        String lastPriceStatus,
+        OffsetDateTime lastPriceCapturedAt
 ) {
 }

@@ -19,6 +19,9 @@ public record CompetitorDto(
         String lastDiscoveryStatus,
         Integer lastDiscoveryProgressPercent,
         long discoveredUrlCount,
-        long matchedProductCount
+        long matchedProductCount,
+        Long lastCrawlJobRunId,
+        String lastCrawlStatus,
+        Integer lastCrawlProgressPercent
 ) {
 }

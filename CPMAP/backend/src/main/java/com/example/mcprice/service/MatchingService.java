@@ -6,13 +6,19 @@ import com.example.mcprice.domain.Competitor;
 import com.example.mcprice.domain.CompetitorListing;
 import com.example.mcprice.domain.MatchMethod;
 import com.example.mcprice.domain.MatchStatus;
+import com.example.mcprice.domain.PriceObservation;
 import com.example.mcprice.dto.CompetitorListingDto;
 import com.example.mcprice.repository.CompetitorListingRepository;
+import com.example.mcprice.repository.CompetitorRepository;
+import com.example.mcprice.repository.PriceObservationRepository;
+import com.example.mcprice.repository.ProductRepository;
 import com.example.mcprice.domain.Product;
 import java.math.BigDecimal;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -22,7 +28,15 @@ import org.springframework.transaction.annotation.Transactional;
 @Transactional
 public class MatchingService {
 
+    /** Cac trang thai coi la "dang thuc su gan" cho 1 san pham — REJECTED khong nam trong day,
+     * de listing bi "Xoa" van co the duoc tim thay lai qua chuc nang "Tim theo SKU". */
+    private static final List<MatchStatus> ACTIVELY_ASSIGNED_STATUSES =
+            List.of(MatchStatus.REVIEW_REQUIRED, MatchStatus.AUTO_CONFIRMED, MatchStatus.MANUALLY_CONFIRMED);
+
     private final CompetitorListingRepository competitorListingRepository;
+    private final PriceObservationRepository priceObservationRepository;
+    private final ProductRepository productRepository;
+    private final CompetitorRepository competitorRepository;
     private final AuditService auditService;
 
     public record UpsertOutcome(CompetitorListing listing, boolean conflict, String conflictMessage) {
@@ -56,6 +70,73 @@ public class MatchingService {
         return new UpsertOutcome(saved, false, null);
     }
 
+    /**
+     * Them thu cong 1 URL vao danh sach cua doi thu, dung khi nguoi dung tu tim thay URL dung
+     * (vd qua chuc nang "Tim theo SKU") ma pipeline tu dong khong khop duoc hoac khop sai. Coi
+     * nhu da xac nhan (MANUALLY_CONFIRMED) ngay vi nguoi dung da tu kiem tra URL truoc khi them.
+     * Tu choi (conflict) neu URL nay DA CO trong danh sach cua doi thu — du la gan cho san pham
+     * nao — de tranh tao ban ghi trung lap ma nguoi dung khong biet.
+     */
+    public CompetitorListingDto addManualListing(Long competitorId, Long productId, String url) {
+        String trimmedUrl = url.trim();
+        if (competitorListingRepository.findByCompetitorIdAndUrl(competitorId, trimmedUrl).isPresent()) {
+            throw new ConflictException("URL '" + trimmedUrl + "' da co trong danh sach cua doi thu nay");
+        }
+        Product product = productRepository.findById(productId)
+                .orElseThrow(() -> NotFoundException.of("Product", productId));
+        Competitor competitor = competitorRepository.findById(competitorId)
+                .orElseThrow(() -> NotFoundException.of("Competitor", competitorId));
+        CompetitorListing listing = CompetitorListing.builder()
+                .product(product)
+                .competitor(competitor)
+                .url(trimmedUrl)
+                .active(true)
+                .matchMethod(MatchMethod.MANUAL)
+                .matchScore(BigDecimal.ONE)
+                .matchReason("Nguoi dung tu tim va them thu cong")
+                .matchStatus(MatchStatus.MANUALLY_CONFIRMED)
+                .build();
+        CompetitorListing saved = competitorListingRepository.save(listing);
+        auditService.record("MATCH_MANUAL_ADD", "COMPETITOR_LISTING", String.valueOf(saved.getId()),
+                Map.of("productId", productId, "competitorId", competitorId, "url", trimmedUrl));
+        return toDto(saved);
+    }
+
+    /**
+     * Tim URL ung cu vien tren TOAN HE THONG theo SKU, dung cho chuc nang "Tim theo SKU" o trang
+     * chi tiet san pham — loai tru nhung listing DA thuoc ve chinh san pham nay (khong can goi y
+     * lai). Gioi han 20 ket qua de tranh tra ve qua nhieu neu SKU qua chung chung.
+     */
+    @Transactional(readOnly = true)
+    public List<CompetitorListingDto> searchCandidatesBySku(Long productId, String sku) {
+        return competitorListingRepository
+                .findCandidatesBySkuExcludingProduct(productId, sku, ACTIVELY_ASSIGNED_STATUSES, PageRequest.of(0, 20))
+                .stream().map(this::toDto).toList();
+    }
+
+    /**
+     * Chuyen (gan lai) mot listing DANG THUOC san pham khac ve san pham hien tai — dung khi
+     * nguoi dung tim thay qua "Tim theo SKU" nhung listing do dang bi gan nham cho san pham khac.
+     * Coi nhu da xac nhan khop ngay (MANUALLY_CONFIRMED) vi nguoi dung da tu kiem tra truoc khi bam.
+     */
+    public CompetitorListingDto reassignListing(Long listingId, Long newProductId) {
+        CompetitorListing listing = competitorListingRepository.findById(listingId)
+                .orElseThrow(() -> NotFoundException.of("CompetitorListing", listingId));
+        Product newProduct = productRepository.findById(newProductId)
+                .orElseThrow(() -> NotFoundException.of("Product", newProductId));
+        Long oldProductId = listing.getProduct().getId();
+        listing.setProduct(newProduct);
+        listing.setMatchMethod(MatchMethod.MANUAL);
+        listing.setMatchScore(BigDecimal.ONE);
+        listing.setMatchReason("Nguoi dung chuyen tu san pham #" + oldProductId + " qua tim kiem SKU");
+        listing.setMatchStatus(MatchStatus.MANUALLY_CONFIRMED);
+        listing.setActive(true);
+        CompetitorListing saved = competitorListingRepository.save(listing);
+        auditService.record("MATCH_REASSIGN", "COMPETITOR_LISTING", String.valueOf(listingId),
+                Map.of("fromProductId", oldProductId, "toProductId", newProductId));
+        return toDto(saved);
+    }
+
     public CompetitorListingDto confirm(Long productId, Long listingId) {
         CompetitorListing listing = getOwnedByProduct(productId, listingId);
         listing.setMatchStatus(MatchStatus.MANUALLY_CONFIRMED);
@@ -85,10 +166,24 @@ public class MatchingService {
         return listing;
     }
 
+    /** Doc listing + map sang DTO trong CUNG mot transaction/session — tranh LazyInitializationException
+     * khi entity duoc doc o mot method rieng (session da dong) roi moi truyen sang toDto() o day. */
+    @Transactional(readOnly = true)
+    public CompetitorListingDto getDto(Long listingId) {
+        CompetitorListing listing = competitorListingRepository.findById(listingId)
+                .orElseThrow(() -> NotFoundException.of("CompetitorListing", listingId));
+        return toDto(listing);
+    }
+
     public CompetitorListingDto toDto(CompetitorListing l) {
+        PriceObservation latest = priceObservationRepository
+                .findFirstByCompetitorListingIdOrderByCapturedAtDesc(l.getId()).orElse(null);
         return new CompetitorListingDto(l.getId(), l.getProduct().getId(), l.getProduct().getTitle(),
                 l.getProduct().getSkuOriginal(), l.getCompetitor().getId(),
                 l.getCompetitor().getName(), l.getUrl(), l.getExternalSku(), l.getMatchMethod().name(),
-                l.getMatchScore(), l.getMatchReason(), l.getMatchStatus().name(), l.isActive());
+                l.getMatchScore(), l.getMatchReason(), l.getMatchStatus().name(), l.isActive(),
+                latest == null ? null : latest.getPrice(),
+                latest == null ? null : latest.getObservationStatus().name(),
+                latest == null ? null : latest.getCapturedAt());
     }
 }

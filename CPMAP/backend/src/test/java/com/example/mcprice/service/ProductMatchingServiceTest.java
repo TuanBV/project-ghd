@@ -118,6 +118,49 @@ class ProductMatchingServiceTest {
     }
 
     @Test
+    void match_skuFoundInUrlSlug_isReviewRequired() {
+        // Day la duong duy nhat pipeline tu dong thuc su chay (skuRaw/titleRaw luon null khi
+        // discovery chi doc duoc URL tu sitemap, khong co du lieu SKU/title rieng).
+        when(productRepository.findAllBySkuNormalized("NOSKU")).thenReturn(List.of());
+        when(productAliasRepository.findFirstByAliasNormalizedAndConfirmedTrue("NOSKU")).thenReturn(Optional.empty());
+        when(productRepository.findAllBySkuNormalized("AQT32K85FX")).thenReturn(List.of(productWithId(8L)));
+
+        MatchResult result = service.match(
+                new MatchCandidate("NOSKU", null, "https://shop.vn/products/google-tivi-aqua-32-inch-aqt32k85fx"));
+
+        assertThat(result.method()).isEqualTo(MatchMethod.SKU_IN_URL_SLUG);
+        assertThat(result.status()).isEqualTo(MatchStatus.REVIEW_REQUIRED);
+        assertThat(result.matchedProductId()).isEqualTo(8L);
+    }
+
+    @Test
+    void match_skuInUrlSlugStartsWithADigit_isStillFound() {
+        // Regression cho bug that: SKU do dien tu bat dau bang so (kich thuoc man hinh, vd
+        // "50W660G") tung bi bo sot hoan toan vi extractSkuLikeTokens yeu cau ky tu dau la chu.
+        when(productRepository.findAllBySkuNormalized("NOSKU")).thenReturn(List.of());
+        when(productAliasRepository.findFirstByAliasNormalizedAndConfirmedTrue("NOSKU")).thenReturn(Optional.empty());
+        when(productRepository.findAllBySkuNormalized("50W660G")).thenReturn(List.of(productWithId(9L)));
+
+        MatchResult result = service.match(new MatchCandidate("NOSKU", null,
+                "https://sgt.com.vn/products/smart-tivi-sony-50-inch-kdl-50w660g"));
+
+        assertThat(result.method()).isEqualTo(MatchMethod.SKU_IN_URL_SLUG);
+        assertThat(result.matchedProductId()).isEqualTo(9L);
+    }
+
+    @Test
+    void match_noSkuLikeTokenInUrlSlug_returnsReviewRequiredNoMatch() {
+        when(productRepository.findAllBySkuNormalized("NOSKU")).thenReturn(List.of());
+        when(productAliasRepository.findFirstByAliasNormalizedAndConfirmedTrue("NOSKU")).thenReturn(Optional.empty());
+
+        MatchResult result = service.match(
+                new MatchCandidate("NOSKU", null, "https://shop.vn/products/tu-lanh-mini-gia-re"));
+
+        assertThat(result.status()).isEqualTo(MatchStatus.REVIEW_REQUIRED);
+        assertThat(result.matchedProductId()).isNull();
+    }
+
+    @Test
     void suggestFuzzyMatches_scoresByTitleTokenOverlapAndExcludesSelf() {
         Product target = productWithId(10L);
         target.setTitle("Quat dung Asia F16008 mau xanh");

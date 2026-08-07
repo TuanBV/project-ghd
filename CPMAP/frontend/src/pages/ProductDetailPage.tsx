@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useParams } from 'react-router-dom'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import {
@@ -11,6 +11,7 @@ import {
   InputNumber,
   message,
   Modal,
+  Select,
   Space,
   Spin,
   Table,
@@ -18,10 +19,21 @@ import {
   Typography,
 } from 'antd'
 import { useTranslation } from 'react-i18next'
-import { getProductDetail, confirmMatch, rejectMatch, submitManualPrice } from '../api/products'
+import {
+  getProductDetail,
+  confirmMatch,
+  rejectMatch,
+  submitManualPrice,
+  getListingCandidates,
+  claimListingCandidate,
+  updateProduct,
+} from '../api/products'
 import { approveRecommendation, rejectRecommendation, overrideRecommendation, recalculateProduct } from '../api/pricing'
 import { extractErrorMessage } from '../api/client'
 import type { CompetitorListingDto } from '../api/types'
+import { statusLabel } from '../utils/statusLabel'
+
+const AVAILABILITY_OPTIONS = ['IN_STOCK', 'OUT_OF_STOCK', 'PREORDER', 'UNKNOWN']
 
 export default function ProductDetailPage() {
   const { t } = useTranslation()
@@ -30,24 +42,95 @@ export default function ProductDetailPage() {
   const queryClient = useQueryClient()
   const [manualPriceListing, setManualPriceListing] = useState<CompetitorListingDto | null>(null)
   const [overrideOpen, setOverrideOpen] = useState(false)
+  const [candidateSku, setCandidateSku] = useState('')
+  const [debouncedSku, setDebouncedSku] = useState('')
 
   const query = useQuery({ queryKey: ['product', productId], queryFn: () => getProductDetail(productId) })
 
   const invalidate = () => queryClient.invalidateQueries({ queryKey: ['product', productId] })
 
+  // Tim tu dong khi go, khong can bam nut rieng — debounce nhe de tranh goi API moi ky tu.
+  useEffect(() => {
+    const handle = setTimeout(() => setDebouncedSku(candidateSku.trim()), 400)
+    return () => clearTimeout(handle)
+  }, [candidateSku])
+
+  const candidatesQuery = useQuery({
+    queryKey: ['listing-candidates', productId, debouncedSku],
+    queryFn: () => getListingCandidates(productId, debouncedSku),
+    enabled: debouncedSku.length >= 2,
+  })
+
   const confirmMutation = useMutation({
     mutationFn: (matchId: number) => confirmMatch(productId, matchId),
-    onSuccess: () => {
-      message.success(t('productDetail.matchConfirmed'))
+    onSuccess: (result) => {
+      if (result.lastPrice != null) {
+        message.success(t('productDetail.matchConfirmedWithPrice', { price: result.lastPrice.toLocaleString('vi-VN') }))
+      } else {
+        message.warning(t('productDetail.matchConfirmedNoPrice'))
+      }
       invalidate()
     },
     onError: (e) => message.error(extractErrorMessage(e)),
   })
 
   const rejectMutation = useMutation({
-    mutationFn: (matchId: number) => rejectMatch(productId, matchId, 'Rejected from UI'),
+    mutationFn: (matchId: number) => rejectMatch(productId, matchId, 'Deleted from UI'),
     onSuccess: () => {
-      message.success(t('productDetail.matchRejected'))
+      message.success(t('productDetail.matchDeleted'))
+      queryClient.invalidateQueries({ queryKey: ['listing-candidates', productId] })
+      invalidate()
+    },
+    onError: (e) => message.error(extractErrorMessage(e)),
+  })
+
+  const claimMutation = useMutation({
+    mutationFn: (listingId: number) => claimListingCandidate(productId, listingId),
+    onSuccess: (result) => {
+      message.success(
+        result.lastPrice != null
+          ? t('productDetail.claimSuccessWithPrice', { price: result.lastPrice.toLocaleString('vi-VN') })
+          : t('productDetail.claimSuccessNoPrice'),
+      )
+      queryClient.invalidateQueries({ queryKey: ['listing-candidates', productId] })
+      invalidate()
+    },
+    onError: (e) => message.error(extractErrorMessage(e)),
+  })
+
+  const handleClaim = (candidate: CompetitorListingDto) => {
+    // Neu URL nay von da thuoc CHINH san pham dang xem (vua bi "Xoa" — tuc REJECTED — truoc do),
+    // day chi la them lai, khong phai chuyen tu san pham khac sang nen khong can hoi xac nhan.
+    if (candidate.productId === productId) {
+      claimMutation.mutate(candidate.id)
+      return
+    }
+    Modal.confirm({
+      title: t('productDetail.claimConfirmTitle'),
+      content: t('productDetail.claimConfirmContent', {
+        product: `${candidate.productTitle ?? ''} (${candidate.productSku ?? ''})`,
+      }),
+      okText: t('common.confirm'),
+      cancelText: t('common.cancel'),
+      onOk: () => claimMutation.mutate(candidate.id),
+    })
+  }
+
+  const updateAvailabilityMutation = useMutation({
+    mutationFn: (availability: string) =>
+      // Gui du toan bo field hien tai (khong chi availability) vi PUT /products/{id} thay the toan bo
+      // ban ghi — thieu field nao se bi Jackson gan mac dinh (vd active: boolean -> false) hoac bi ghi de thanh null.
+      updateProduct(productId, {
+        title: product.title,
+        brand: product.brand,
+        googleCategory: product.googleCategory,
+        productType: product.productType,
+        currentWebsitePrice: product.currentWebsitePrice,
+        active: product.active,
+        availability,
+      }),
+    onSuccess: () => {
+      message.success(t('productDetail.availabilityUpdated'))
       invalidate()
     },
     onError: (e) => message.error(extractErrorMessage(e)),
@@ -114,19 +197,42 @@ export default function ProductDetailPage() {
   const listingColumns = [
     { title: t('productDetail.colCompetitor'), dataIndex: 'competitorName', key: 'competitorName' },
     { title: 'URL', dataIndex: 'url', key: 'url', render: (v: string) => <a href={v} target="_blank" rel="noreferrer">{v}</a> },
-    { title: t('productDetail.colMethod'), dataIndex: 'matchMethod', key: 'matchMethod' },
-    { title: t('common.status'), dataIndex: 'matchStatus', key: 'matchStatus', render: (v: string) => <Tag>{v}</Tag> },
+    {
+      title: t('productDetail.colMethod'),
+      dataIndex: 'matchMethod',
+      key: 'matchMethod',
+      render: (v: string) => statusLabel(t, 'matchMethod', v),
+    },
+    { title: t('common.status'), dataIndex: 'matchStatus', key: 'matchStatus', render: (v: string) => <Tag>{statusLabel(t, 'match', v)}</Tag> },
+    {
+      title: t('productDetail.colCompetitorPrice'),
+      dataIndex: 'lastPrice',
+      key: 'lastPrice',
+      render: (v: number | null) =>
+        v == null ? (
+          <Typography.Text type="secondary">{t('productDetail.noPriceYet')}</Typography.Text>
+        ) : (
+          <Typography.Text strong style={{ color: '#389e0d' }}>
+            {v.toLocaleString('vi-VN')}
+          </Typography.Text>
+        ),
+    },
     {
       title: t('common.actions'),
       key: 'actions',
       render: (_: unknown, record: CompetitorListingDto) => (
         <Space>
           {record.matchStatus === 'REVIEW_REQUIRED' && (
-            <>
-              <Button size="small" onClick={() => confirmMutation.mutate(record.id)}>{t('common.confirm')}</Button>
-              <Button size="small" danger onClick={() => rejectMutation.mutate(record.id)}>{t('common.reject')}</Button>
-            </>
+            <Button size="small" onClick={() => confirmMutation.mutate(record.id)}>{t('common.confirm')}</Button>
           )}
+          <Button
+            size="small"
+            danger
+            loading={rejectMutation.isPending && rejectMutation.variables === record.id}
+            onClick={() => rejectMutation.mutate(record.id)}
+          >
+            {t('common.delete')}
+          </Button>
           <Button size="small" onClick={() => setManualPriceListing(record)}>{t('productDetail.manualPriceBtn')}</Button>
         </Space>
       ),
@@ -145,7 +251,16 @@ export default function ProductDetailPage() {
           <Descriptions.Item label={t('productDetail.category')}>{product.googleCategory}</Descriptions.Item>
           <Descriptions.Item label={t('productDetail.currentWebsitePrice')}>{product.currentWebsitePrice?.toLocaleString('vi-VN')}</Descriptions.Item>
           <Descriptions.Item label={t('productDetail.currentMcPrice')}>{product.currentMcPrice?.toLocaleString('vi-VN')}</Descriptions.Item>
-          <Descriptions.Item label={t('productDetail.availability')}>{product.availability}</Descriptions.Item>
+          <Descriptions.Item label={t('productDetail.availability')}>
+            <Select
+              size="small"
+              style={{ minWidth: 140 }}
+              value={product.availability}
+              loading={updateAvailabilityMutation.isPending}
+              onChange={(value) => updateAvailabilityMutation.mutate(value)}
+              options={AVAILABILITY_OPTIONS.map((a) => ({ label: statusLabel(t, 'availability', a), value: a }))}
+            />
+          </Descriptions.Item>
           <Descriptions.Item label={t('productDetail.url')}>
             {product.productUrl && <a href={product.productUrl} target="_blank" rel="noreferrer">{product.productUrl}</a>}
           </Descriptions.Item>
@@ -153,7 +268,71 @@ export default function ProductDetailPage() {
       </Card>
 
       <Card title={t('productDetail.listingsTitle')} style={{ marginBottom: 16 }}>
-        <Table rowKey="id" columns={listingColumns} dataSource={product.competitorListings} pagination={false} />
+        <Input
+          placeholder={t('productDetail.candidateSearchPlaceholder')}
+          value={candidateSku}
+          onChange={(e) => setCandidateSku(e.target.value)}
+          allowClear
+          style={{ marginBottom: 12, maxWidth: 320 }}
+        />
+        {debouncedSku.length >= 2 && (
+          <Table
+            rowKey="id"
+            size="small"
+            style={{ marginBottom: 16 }}
+            loading={candidatesQuery.isLoading}
+            dataSource={candidatesQuery.data ?? []}
+            locale={{ emptyText: t('productDetail.candidateEmpty') }}
+            pagination={false}
+            columns={[
+              {
+                title: 'URL',
+                dataIndex: 'url',
+                ellipsis: true,
+                render: (url: string) => (
+                  <a href={url} target="_blank" rel="noreferrer">
+                    {url}
+                  </a>
+                ),
+              },
+              { title: t('productDetail.colCompetitor'), dataIndex: 'competitorName' },
+              {
+                title: t('productDetail.candidateColCurrentProduct'),
+                key: 'currentProduct',
+                render: (_: unknown, record: CompetitorListingDto) =>
+                  record.productId === productId ? (
+                    <Typography.Text type="secondary" italic>
+                      {t('productDetail.candidatePreviouslyDeleted')}
+                    </Typography.Text>
+                  ) : (
+                    <Typography.Text type="secondary">
+                      {record.productTitle} ({record.productSku})
+                    </Typography.Text>
+                  ),
+              },
+              {
+                title: t('common.actions'),
+                key: 'actions',
+                render: (_: unknown, record: CompetitorListingDto) => (
+                  <Button
+                    size="small"
+                    type="primary"
+                    loading={claimMutation.isPending && claimMutation.variables === record.id}
+                    onClick={() => handleClaim(record)}
+                  >
+                    {t('productDetail.candidateAddButton')}
+                  </Button>
+                ),
+              },
+            ]}
+          />
+        )}
+        <Table
+          rowKey="id"
+          columns={listingColumns}
+          dataSource={product.competitorListings.filter((l) => l.matchStatus !== 'REJECTED')}
+          pagination={false}
+        />
       </Card>
 
       <Card
@@ -165,7 +344,7 @@ export default function ProductDetailPage() {
         {rec && (
           <>
             <Descriptions column={2} bordered size="small" style={{ marginBottom: 16 }}>
-              <Descriptions.Item label={t('common.status')}><Tag>{rec.status}</Tag></Descriptions.Item>
+              <Descriptions.Item label={t('common.status')}><Tag>{statusLabel(t, 'recommendation', rec.status)}</Tag></Descriptions.Item>
               <Descriptions.Item label={t('productDetail.sourceCount')}>{rec.includedSourceCount}</Descriptions.Item>
               <Descriptions.Item label={t('productDetail.currentWebsitePrice')}>{rec.currentPrice?.toLocaleString('vi-VN')}</Descriptions.Item>
               <Descriptions.Item label={t('productDetail.rawAverage')}>{rec.rawAveragePrice?.toLocaleString('vi-VN')}</Descriptions.Item>

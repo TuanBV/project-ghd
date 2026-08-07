@@ -17,15 +17,19 @@ public final class AvailabilityNormalizer {
         // schema.org JSON-LD/microdata tra ve dang "http://schema.org/InStock" (camelCase, khong
         // dau cach) — chuan hoa ve chung mot dang voi text tieng Anh/Viet truoc khi so khop tu khoa.
         String withoutSchemaPrefix = raw.replaceAll("(?i)^https?://schema\\.org/", "");
-        String collapsed = withoutSchemaPrefix.trim().toLowerCase().replaceAll("\\s+", " ");
-        if (collapsed.contains("out of stock") || collapsed.equals("out") || collapsed.contains("outofstock")) {
+        // Bo dau tieng Viet TRUOC khi so khop, vi hau het website doi thu ghi thang tieng Viet co
+        // dau ("Hết hàng", "Còn hàng", "Đặt trước") thay vi dung schema.org tieng Anh.
+        String collapsed = VietnameseTextUtil.stripDiacritics(withoutSchemaPrefix).trim().toLowerCase().replaceAll("\\s+", " ");
+        if (collapsed.contains("out of stock") || collapsed.equals("out") || collapsed.contains("outofstock")
+                || collapsed.contains("het hang") || collapsed.contains("ngung kinh doanh") || collapsed.contains("tam het hang")) {
             return Availability.OUT_OF_STOCK;
         }
-        if (collapsed.contains("preorder") || collapsed.contains("pre order") || collapsed.contains("dat truoc")) {
+        if (collapsed.contains("preorder") || collapsed.contains("pre order") || collapsed.contains("dat truoc")
+                || collapsed.contains("dat hang truoc")) {
             return Availability.PREORDER;
         }
         if (collapsed.contains("in stock") || collapsed.equals("in") || collapsed.contains("con hang")
-                || collapsed.contains("instock")) {
+                || collapsed.contains("instock") || collapsed.contains("san co")) {
             return Availability.IN_STOCK;
         }
         return Availability.UNKNOWN;

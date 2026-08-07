@@ -4,9 +4,10 @@ import { Alert, Button, Card, Descriptions, Select, Space, Table, Tag, Typograph
 import { UploadOutlined } from '@ant-design/icons'
 import type { UploadProps } from 'antd'
 import { useTranslation } from 'react-i18next'
-import { importMcFile, importComparisonFile, getImportIssues } from '../api/imports'
+import { importMcFile, importComparisonFile, importCsvProductsFile, getImportIssues } from '../api/imports'
 import { extractErrorMessage } from '../api/client'
 import type { ImportRunDto } from '../api/types'
+import { statusLabel } from '../utils/statusLabel'
 
 export default function ImportsPage() {
   const { t } = useTranslation()
@@ -26,6 +27,15 @@ export default function ImportsPage() {
     mutationFn: importComparisonFile,
     onSuccess: (data) => {
       message.success(t('imports.comparisonImportSuccess', { count: data.totalRows }))
+      setLastRun(data)
+    },
+    onError: (e) => message.error(extractErrorMessage(e)),
+  })
+
+  const csvProductsMutation = useMutation({
+    mutationFn: importCsvProductsFile,
+    onSuccess: (data) => {
+      message.success(t('imports.csvProductsImportSuccess', { count: data.totalRows }))
       setLastRun(data)
     },
     onError: (e) => message.error(extractErrorMessage(e)),
@@ -53,6 +63,15 @@ export default function ImportsPage() {
     showUploadList: false,
   }
 
+  const csvProductsUploadProps: UploadProps = {
+    accept: '.csv',
+    beforeUpload: (file) => {
+      csvProductsMutation.mutate(file)
+      return false
+    },
+    showUploadList: false,
+  }
+
   const filteredIssues = (issuesQuery.data?.content ?? []).filter(
     (issue) => !severityFilter || issue.severity === severityFilter,
   )
@@ -75,6 +94,13 @@ export default function ImportsPage() {
             </Button>
           </Upload>
         </Card>
+        <Card title={t('imports.csvProductsCardTitle')}>
+          <Upload {...csvProductsUploadProps}>
+            <Button icon={<UploadOutlined />} loading={csvProductsMutation.isPending}>
+              {t('imports.chooseCsvProductsFile')}
+            </Button>
+          </Upload>
+        </Card>
       </Space>
 
       {lastRun && (
@@ -82,7 +108,7 @@ export default function ImportsPage() {
           <Descriptions column={3} bordered size="small">
             <Descriptions.Item label={t('imports.colType')}>{lastRun.importType}</Descriptions.Item>
             <Descriptions.Item label={t('imports.colFile')}>{lastRun.fileName}</Descriptions.Item>
-            <Descriptions.Item label={t('common.status')}><Tag>{lastRun.status}</Tag></Descriptions.Item>
+            <Descriptions.Item label={t('common.status')}><Tag>{statusLabel(t, 'run', lastRun.status)}</Tag></Descriptions.Item>
             <Descriptions.Item label={t('imports.colTotalRows')}>{lastRun.totalRows}</Descriptions.Item>
             <Descriptions.Item label={t('imports.colSuccessRows')}>{lastRun.successRows}</Descriptions.Item>
             <Descriptions.Item label={t('imports.colIssueRows')}>{lastRun.issueRows}</Descriptions.Item>
@@ -98,7 +124,7 @@ export default function ImportsPage() {
               allowClear
               placeholder={t('imports.filterSeverity')}
               style={{ width: 160 }}
-              options={['INFO', 'WARNING', 'ERROR'].map((s) => ({ label: s, value: s }))}
+              options={['INFO', 'WARNING', 'ERROR'].map((s) => ({ label: statusLabel(t, 'severity', s), value: s }))}
               onChange={setSeverityFilter}
             />
           }
@@ -114,7 +140,9 @@ export default function ImportsPage() {
               {
                 title: t('imports.colSeverity'),
                 dataIndex: 'severity',
-                render: (v: string) => <Tag color={v === 'ERROR' ? 'red' : v === 'WARNING' ? 'orange' : 'blue'}>{v}</Tag>,
+                render: (v: string) => (
+                  <Tag color={v === 'ERROR' ? 'red' : v === 'WARNING' ? 'orange' : 'blue'}>{statusLabel(t, 'severity', v)}</Tag>
+                ),
               },
               { title: t('imports.colMessage'), dataIndex: 'message' },
             ]}

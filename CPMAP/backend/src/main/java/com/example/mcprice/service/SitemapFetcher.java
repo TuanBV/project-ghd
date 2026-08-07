@@ -41,8 +41,8 @@ public class SitemapFetcher {
      * co the trung ngau nhien voi slug bai viet/trang thuong hieu, tao ra ghep sai hang loat.
      */
     private static final List<String> NON_PRODUCT_SITEMAP_HINTS = List.of(
-            "post", "blog", "tin-tuc", "news", "page-sitemap", "sitemap_page", "category", "product_cat",
-            "product-cat", "pa_", "attribute", "author", "article", "brand");
+            "post", "blog", "tin-tuc", "news", "page-sitemap", "sitemap_page", "category", "collection",
+            "product_cat", "product-cat", "pa_", "attribute", "author", "article", "brand");
 
     /** Lay toan bo URL <loc> tim thay trong CAC sitemap con duoc nhan dien la sitemap san pham. */
     public List<String> fetchAllUrls(String rootSitemapUrl, Long competitorId, int requestsPerMinute, String userAgent) {

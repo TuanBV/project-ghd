@@ -57,4 +57,30 @@ class SkuNormalizerTest {
         assertThat(tokens).isNotEmpty();
         assertThat(tokens.stream().anyMatch(t -> SkuNormalizer.normalize(t).equals("FR132CI"))).isTrue();
     }
+
+    @Test
+    void extractSkuLikeTokens_findsModelCodesThatStartWithADigit() {
+        // Rat pho bien o do dien tu: SKU bat dau bang kich thuoc man hinh (vd TV Sony 50W660G,
+        // 43X8500F) — tung la bug that: regex cu bat buoc ky tu dau la chu nen bo sot toan bo
+        // nhom SKU nay khi tach tu URL slug (vd ".../kdl-50w660g" sau khi doi "-" thanh khoang
+        // trang thi "50w660g" dung mot minh, khong con dinh lien voi "kdl" nua).
+        List<String> tokens = SkuNormalizer.extractSkuLikeTokens("smart tivi sony 50 inch kdl 50w660g");
+
+        assertThat(tokens.stream().anyMatch(t -> SkuNormalizer.normalize(t).equals("50W660G"))).isTrue();
+    }
+
+    @Test
+    void extractSkuLikeTokens_ignoresPureNumbersAndPureWords() {
+        List<String> tokens = SkuNormalizer.extractSkuLikeTokens("smart tivi sony 50 inch");
+
+        assertThat(tokens).isEmpty();
+    }
+
+    @Test
+    void extractSkuLikeTokens_ignoresTokensShorterThanMinimumLength() {
+        // "A8F" (do dai 3) qua ngan de coi la SKU dang tin cay — tranh trung ngau nhien.
+        List<String> tokens = SkuNormalizer.extractSkuLikeTokens("tivi a8f");
+
+        assertThat(tokens).isEmpty();
+    }
 }

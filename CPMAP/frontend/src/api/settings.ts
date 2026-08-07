@@ -16,6 +16,6 @@ export async function updateJobSchedule(cron: string, timezone: string): Promise
 }
 
 export async function runCrawl(competitorIds?: number[]) {
-  const { data } = await apiClient.post('/crawls/run', { competitorIds })
+  const { data } = await apiClient.post('/crawls', { competitorIds })
   return data
 }

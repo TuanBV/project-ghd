@@ -1,14 +1,11 @@
 package com.example.mcprice.adapter;
 
-import com.example.mcprice.util.AvailabilityNormalizer;
-import com.example.mcprice.util.PriceParser;
 import com.example.mcprice.util.SafeUrlValidator;
 import com.example.mcprice.domain.Competitor;
 import com.example.mcprice.domain.CrawlMode;
 import com.example.mcprice.config.AppProperties;
 import com.example.mcprice.dto.CrawlResult;
 import com.example.mcprice.domain.CompetitorListing;
-import com.example.mcprice.domain.ObservationStatus;
 import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import io.github.resilience4j.retry.annotation.Retry;
 import java.util.Map;
@@ -89,24 +86,7 @@ public class StaticHtmlCrawler implements CompetitorPriceCrawler {
             }
         }
 
-        if (priceText == null) {
-            return new CrawlResult(true, ObservationStatus.NO_PRICE, null, null, stockText, httpStatus, finalUrl,
-                    "Khong tim thay gia theo selector da cau hinh hoac chuan pho bien (JSON-LD/meta/microdata)");
-        }
-        if (PriceParser.isContactOnly(priceText)) {
-            return new CrawlResult(true, ObservationStatus.CONTACT_ONLY, null, priceText, stockText, httpStatus, finalUrl, null);
-        }
-        var parsed = PriceParser.parse(priceText);
-        if (parsed.isEmpty()) {
-            return new CrawlResult(true, ObservationStatus.PARSE_ERROR, null, priceText, stockText, httpStatus, finalUrl,
-                    "Khong parse duoc gia tu chuoi: " + priceText);
-        }
-        var availability = AvailabilityNormalizer.normalize(stockText);
-        if (availability == AvailabilityNormalizer.Availability.OUT_OF_STOCK) {
-            return new CrawlResult(true, ObservationStatus.OUT_OF_STOCK, parsed.get().amount(), priceText, stockText,
-                    httpStatus, finalUrl, null);
-        }
-        return new CrawlResult(true, ObservationStatus.VALID, parsed.get().amount(), priceText, stockText, httpStatus, finalUrl, null);
+        return CrawlResultClassifier.classify(priceText, stockText, httpStatus, finalUrl);
     }
 
     private String firstNonBlankText(Document document, String... selectors) {
