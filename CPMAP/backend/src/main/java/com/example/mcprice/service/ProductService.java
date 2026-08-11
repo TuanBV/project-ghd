@@ -44,7 +44,8 @@ public class ProductService {
                 ProductSpecifications.search(keyword),
                 ProductSpecifications.category(category),
                 ProductSpecifications.availability(availability),
-                competitorSpec);
+                competitorSpec,
+                ProductSpecifications.orderByReviewNeededThenInStock());
         Page<Product> page = productRepository.findAll(spec, pageable);
         List<Long> productIds = page.getContent().stream().map(Product::getId).toList();
 

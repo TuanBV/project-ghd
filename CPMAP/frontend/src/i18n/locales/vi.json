@@ -122,12 +122,8 @@
     "colSku": "SKU",
     "colTitle": "Tên sản phẩm",
     "colCurrentPrice": "Giá hiện tại",
-    "colMatchStatus": "Đối chiếu SKU",
-    "matchedTag": "Đã khớp ({{count}} nguồn)",
-    "notMatchedTag": "Chưa khớp",
     "colAvgCompetitorPrice": "Giá TB đối thủ",
     "colSuggestedPrice": "Giá đề xuất",
-    "colSourceCount": "Số nguồn",
     "filteredByCompetitor": "Đang lọc theo đối thủ \"{{name}}\" — {{count}} sản phẩm đã đối chiếu SKU",
     "clearCompetitorFilter": "Bỏ lọc",
     "matchConflict": "Xung đột khớp"

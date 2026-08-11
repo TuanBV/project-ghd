@@ -122,12 +122,8 @@
     "colSku": "SKU",
     "colTitle": "Title",
     "colCurrentPrice": "Current price",
-    "colMatchStatus": "SKU match",
-    "matchedTag": "Matched ({{count}} sources)",
-    "notMatchedTag": "Not matched",
     "colAvgCompetitorPrice": "Avg. competitor price",
     "colSuggestedPrice": "Suggested price",
-    "colSourceCount": "Sources",
     "filteredByCompetitor": "Filtered by competitor \"{{name}}\" — {{count}} SKU-matched products",
     "clearCompetitorFilter": "Clear filter",
     "matchConflict": "Match conflict"

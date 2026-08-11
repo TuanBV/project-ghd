@@ -1,7 +1,6 @@
 import { useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { Alert, Button, Input, Select, Table, Tag, Typography, Space } from 'antd'
-import { CheckCircleOutlined } from '@ant-design/icons'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { searchProducts } from '../api/products'
@@ -13,8 +12,9 @@ const AVAILABILITY_OPTIONS = ['IN_STOCK', 'OUT_OF_STOCK', 'PREORDER', 'UNKNOWN']
 export default function ProductsPage() {
   const { t } = useTranslation()
   const [keyword, setKeyword] = useState('')
-  const [availability, setAvailability] = useState<string | undefined>()
+  const [availability, setAvailability] = useState<string | undefined>('IN_STOCK')
   const [page, setPage] = useState(0)
+  const [pageSize, setPageSize] = useState(20)
   const navigate = useNavigate()
   const [searchParams, setSearchParams] = useSearchParams()
   const competitorIdParam = searchParams.get('competitorId')
@@ -22,8 +22,8 @@ export default function ProductsPage() {
   const competitorName = searchParams.get('competitorName') ?? undefined
 
   const query = useQuery({
-    queryKey: ['products', keyword, availability, competitorId, page],
-    queryFn: () => searchProducts({ keyword, availability, competitorId, page, size: 20 }),
+    queryKey: ['products', keyword, availability, competitorId, page, pageSize],
+    queryFn: () => searchProducts({ keyword, availability, competitorId, page, size: pageSize }),
   })
 
   const columns = [
@@ -34,18 +34,6 @@ export default function ProductsPage() {
       dataIndex: 'currentWebsitePrice',
       key: 'currentWebsitePrice',
       render: (v: number | null) => (v == null ? '-' : v.toLocaleString('vi-VN')),
-    },
-    {
-      title: t('products.colMatchStatus'),
-      key: 'matchStatus',
-      render: (_: unknown, record: ProductSummary) =>
-        record.validCompetitorSourceCount > 0 ? (
-          <Tag icon={<CheckCircleOutlined />} color="success">
-            {t('products.matchedTag', { count: record.validCompetitorSourceCount })}
-          </Tag>
-        ) : (
-          <Tag>{t('products.notMatchedTag')}</Tag>
-        ),
     },
     {
       title: t('products.colAvgCompetitorPrice'),
@@ -66,7 +54,6 @@ export default function ProductsPage() {
       key: 'suggestedPrice',
       render: (v: number | null) => (v == null ? '-' : v.toLocaleString('vi-VN')),
     },
-    { title: t('products.colSourceCount'), dataIndex: 'validCompetitorSourceCount', key: 'validCompetitorSourceCount' },
     {
       title: t('common.status'),
       dataIndex: 'recommendationStatus',
@@ -112,6 +99,7 @@ export default function ProductsPage() {
         <Select
           placeholder={t('products.availabilityPlaceholder')}
           allowClear
+          value={availability}
           style={{ width: 180 }}
           options={AVAILABILITY_OPTIONS.map((a) => ({ label: statusLabel(t, 'availability', a), value: a }))}
           onChange={(v) => {
@@ -129,9 +117,15 @@ export default function ProductsPage() {
         rowClassName={() => 'mc-clickable-row'}
         pagination={{
           current: page + 1,
-          pageSize: 20,
+          pageSize,
           total: query.data?.totalElements ?? 0,
-          onChange: (p) => setPage(p - 1),
+          showSizeChanger: true,
+          pageSizeOptions: ['10', '20', '50', '100'],
+          onChange: (p, size) => {
+            // Doi so ban ghi/trang thi ve lai trang 1, tranh sai lech offset voi pageSize moi.
+            setPage(size !== pageSize ? 0 : p - 1)
+            setPageSize(size)
+          },
         }}
       />
     </div>

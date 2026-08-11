@@ -194,6 +194,7 @@ export default function CompetitorsPage() {
   const [modalOpen, setModalOpen] = useState(false)
   const [listingsFor, setListingsFor] = useState<CompetitorDto | null>(null)
   const [listingsPage, setListingsPage] = useState(0)
+  const [listingsPageSize, setListingsPageSize] = useState(20)
   const queryClient = useQueryClient()
   const navigate = useNavigate()
 
@@ -201,8 +202,8 @@ export default function CompetitorsPage() {
   const invalidate = () => queryClient.invalidateQueries({ queryKey: ['competitors'] })
 
   const listingsQuery = useQuery({
-    queryKey: ['competitor-listings', listingsFor?.id, listingsPage],
-    queryFn: () => getCompetitorListings(listingsFor!.id, listingsPage, 20),
+    queryKey: ['competitor-listings', listingsFor?.id, listingsPage, listingsPageSize],
+    queryFn: () => getCompetitorListings(listingsFor!.id, listingsPage, listingsPageSize),
     enabled: !!listingsFor,
   })
 
@@ -432,9 +433,14 @@ export default function CompetitorsPage() {
           locale={{ emptyText: t('competitors.listingEmpty') }}
           pagination={{
             current: listingsPage + 1,
-            pageSize: 20,
+            pageSize: listingsPageSize,
             total: listingsQuery.data?.totalElements ?? 0,
-            onChange: (page) => setListingsPage(page - 1),
+            showSizeChanger: true,
+            pageSizeOptions: ['10', '20', '50', '100'],
+            onChange: (page, size) => {
+              setListingsPage(size !== listingsPageSize ? 0 : page - 1)
+              setListingsPageSize(size)
+            },
           }}
           columns={[
             { title: t('competitors.listingColSku'), dataIndex: 'productSku' },
