@@ -13,6 +13,7 @@ public record ProductUpdateRequest(
         @Positive(message = "currentWebsitePrice phai > 0") BigDecimal currentWebsitePrice,
         boolean active,
         @Pattern(regexp = "^(IN_STOCK|OUT_OF_STOCK|PREORDER|UNKNOWN)$", message = "availability khong hop le")
-        String availability
+        String availability,
+        @Size(max = 1000, message = "productUrl toi da 1000 ky tu") String productUrl
 ) {
 }

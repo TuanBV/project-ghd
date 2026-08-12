@@ -1,12 +1,35 @@
 import { useQuery } from '@tanstack/react-query'
-import { Card, Col, Row, Statistic, Typography, Spin, Alert } from 'antd'
+import { Card, Col, Row, Statistic, Typography, Spin, Alert, Tag, Table } from 'antd'
 import ReactECharts from 'echarts-for-react'
 import { useTranslation } from 'react-i18next'
-import { getDashboardSummary, getPriceTrends, getCompetitorHealth } from '../api/dashboard'
+import { useNavigate } from 'react-router-dom'
+import { getDashboardSummary, getPriceTrends, getCompetitorHealth, type TopMover } from '../api/dashboard'
 import { extractErrorMessage } from '../api/client'
+import { statusLabel } from '../utils/statusLabel'
+import { formatDateTime } from '../utils/formatDateTime'
+
+function runStatusColor(status: string): string {
+  switch (status) {
+    case 'SUCCESS':
+      return 'green'
+    case 'PARTIAL_SUCCESS':
+      return 'orange'
+    case 'FAILED':
+      return 'red'
+    case 'RUNNING':
+      return 'blue'
+    default:
+      return 'default'
+  }
+}
+
+function percent(part: number, total: number): string {
+  return total > 0 ? `${Math.round((part / total) * 100)}%` : '-'
+}
 
 export default function DashboardPage() {
   const { t } = useTranslation()
+  const navigate = useNavigate()
   const summaryQuery = useQuery({ queryKey: ['dashboard', 'summary'], queryFn: getDashboardSummary })
   const trendsQuery = useQuery({ queryKey: ['dashboard', 'price-trends'], queryFn: getPriceTrends })
   const healthQuery = useQuery({ queryKey: ['dashboard', 'competitor-health'], queryFn: getCompetitorHealth })
@@ -26,7 +49,10 @@ export default function DashboardPage() {
       {
         type: 'pie',
         radius: ['35%', '65%'],
-        data: Object.entries(summary.recommendationsByStatus).map(([name, value]) => ({ name, value })),
+        data: Object.entries(summary.recommendationsByStatus).map(([name, value]) => ({
+          name: statusLabel(t, 'recommendation', name),
+          value,
+        })),
       },
     ],
   }
@@ -63,40 +89,177 @@ export default function DashboardPage() {
       }
     : null
 
+  const moverColumns = [
+    {
+      title: t('dashboard.colProduct'),
+      dataIndex: 'title',
+      ellipsis: true,
+    },
+    {
+      title: t('dashboard.colCurrentPrice'),
+      dataIndex: 'currentPrice',
+      render: (v: number | null) => (v == null ? '-' : v.toLocaleString('vi-VN')),
+    },
+    {
+      title: t('dashboard.colSuggestedPrice'),
+      dataIndex: 'suggestedPrice',
+      render: (v: number | null) => (v == null ? '-' : v.toLocaleString('vi-VN')),
+    },
+    {
+      title: t('dashboard.colChange'),
+      dataIndex: 'percentChange',
+      render: (v: number) => (
+        <Typography.Text strong style={{ color: v > 0 ? '#cf1322' : v < 0 ? '#3f8600' : undefined }}>
+          {v > 0 ? '+' : ''}
+          {v.toFixed(1)}%
+        </Typography.Text>
+      ),
+    },
+  ]
+
+  const moverRowProps = (record: TopMover) => ({ onClick: () => navigate(`/products/${record.productId}`) })
+
   return (
     <div>
       <Typography.Title level={3}>{t('dashboard.title')}</Typography.Title>
+      <Typography.Paragraph type="secondary">{t('dashboard.pageHint')}</Typography.Paragraph>
 
-      <div className="mc-kpi-grid">
-        <Card><Statistic title={t('dashboard.totalProducts')} value={summary.totalMcProducts} /></Card>
-        <Card><Statistic title={t('dashboard.matched')} value={summary.matchedProducts} valueStyle={{ color: '#3f8600' }} /></Card>
-        <Card><Statistic title={t('dashboard.unmatched')} value={summary.unmatchedProducts} /></Card>
-        <Card><Statistic title={t('dashboard.conflict')} value={summary.conflictProducts} valueStyle={{ color: '#cf1322' }} /></Card>
-        <Card><Statistic title={t('dashboard.priceIncreased')} value={summary.priceIncreasedCount} valueStyle={{ color: '#cf1322' }} /></Card>
-        <Card><Statistic title={t('dashboard.priceDecreased')} value={summary.priceDecreasedCount} valueStyle={{ color: '#3f8600' }} /></Card>
-        <Card><Statistic title={t('dashboard.unchanged')} value={summary.priceUnchangedCount} /></Card>
-        <Card><Statistic title={t('dashboard.stale')} value={summary.staleObservationCount} /></Card>
-        <Card><Statistic title={t('dashboard.mcSyncSuccess')} value={summary.merchantSyncSuccessCount} valueStyle={{ color: '#3f8600' }} /></Card>
-        <Card><Statistic title={t('dashboard.mcSyncFailed')} value={summary.merchantSyncFailedCount} valueStyle={{ color: '#cf1322' }} /></Card>
-        <Card>
-          <Statistic
-            title={t('dashboard.lastJob')}
-            value={summary.lastJobRun ? `${summary.lastJobRun.jobKey}: ${summary.lastJobRun.status}` : t('common.none')}
-          />
-        </Card>
-        <Card>
-          <Statistic
-            title={t('dashboard.lastError')}
-            value={summary.lastJobError ? `${summary.lastJobError.jobKey}` : t('common.none')}
-            valueStyle={{ color: summary.lastJobError ? '#cf1322' : undefined }}
-          />
-        </Card>
-      </div>
+      <Card title={t('dashboard.sectionProducts')} style={{ marginBottom: 16 }}>
+        <Row gutter={16}>
+          <Col flex="1">
+            <Statistic title={t('dashboard.totalProducts')} value={summary.totalMcProducts} />
+          </Col>
+          <Col flex="1">
+            <Statistic
+              title={t('dashboard.matched')}
+              value={summary.matchedProducts}
+              valueStyle={{ color: '#3f8600' }}
+              suffix={
+                <Typography.Text type="secondary" style={{ fontSize: 14 }}>
+                  ({percent(summary.matchedProducts, summary.totalMcProducts)})
+                </Typography.Text>
+              }
+            />
+          </Col>
+          <Col flex="1">
+            <Statistic
+              title={t('dashboard.unmatched')}
+              value={summary.unmatchedProducts}
+              suffix={
+                <Typography.Text type="secondary" style={{ fontSize: 14 }}>
+                  ({percent(summary.unmatchedProducts, summary.totalMcProducts)})
+                </Typography.Text>
+              }
+            />
+          </Col>
+          <Col flex="1">
+            <Statistic title={t('dashboard.conflict')} value={summary.conflictProducts} valueStyle={{ color: '#cf1322' }} />
+          </Col>
+        </Row>
+      </Card>
 
-      <Row gutter={16} style={{ marginBottom: 16 }}>
-        <Col span={8}><Card><Statistic title={t('dashboard.totalDiff')} value={summary.totalPriceDifference} /></Card></Col>
-        <Col span={8}><Card><Statistic title={t('dashboard.avgDiff')} value={summary.averagePriceDifference} /></Card></Col>
-      </Row>
+      <Card title={t('dashboard.sectionPricing')} style={{ marginBottom: 16 }}>
+        <Row gutter={16}>
+          <Col flex="1">
+            <Statistic title={t('dashboard.priceIncreased')} value={summary.priceIncreasedCount} valueStyle={{ color: '#cf1322' }} />
+          </Col>
+          <Col flex="1">
+            <Statistic title={t('dashboard.priceDecreased')} value={summary.priceDecreasedCount} valueStyle={{ color: '#3f8600' }} />
+          </Col>
+          <Col flex="1">
+            <Statistic title={t('dashboard.unchanged')} value={summary.priceUnchangedCount} />
+          </Col>
+          <Col flex="1">
+            <Statistic title={t('dashboard.totalDiff')} value={summary.totalPriceDifference} suffix="₫" />
+          </Col>
+          <Col flex="1">
+            <Statistic title={t('dashboard.avgDiff')} value={summary.averagePriceDifference} suffix="₫" />
+          </Col>
+        </Row>
+      </Card>
+
+      <Card title={t('dashboard.sectionOperations')} style={{ marginBottom: 16 }}>
+        <Row gutter={[16, 16]}>
+          <Col flex="1">
+            <Typography.Text type="secondary">{t('dashboard.lastJob')}</Typography.Text>
+            <div style={{ marginTop: 4 }}>
+              {summary.lastJobRun ? (
+                <>
+                  <div>{t(`jobs.names.${summary.lastJobRun.jobKey}`, { defaultValue: summary.lastJobRun.jobKey })}</div>
+                  <Tag color={runStatusColor(summary.lastJobRun.status)}>{statusLabel(t, 'run', summary.lastJobRun.status)}</Tag>
+                  <Typography.Text type="secondary" style={{ fontSize: 12 }}>
+                    {formatDateTime(summary.lastJobRun.finishedAt)}
+                  </Typography.Text>
+                </>
+              ) : (
+                <Typography.Text type="secondary">{t('common.none')}</Typography.Text>
+              )}
+            </div>
+          </Col>
+          <Col flex="1">
+            <Typography.Text type="secondary">{t('dashboard.lastError')}</Typography.Text>
+            <div style={{ marginTop: 4 }}>
+              {summary.lastJobError ? (
+                <>
+                  <div>{t(`jobs.names.${summary.lastJobError.jobKey}`, { defaultValue: summary.lastJobError.jobKey })}</div>
+                  <Tag color="red">{statusLabel(t, 'run', summary.lastJobError.status)}</Tag>
+                  <Typography.Text type="secondary" style={{ fontSize: 12 }}>
+                    {formatDateTime(summary.lastJobError.finishedAt)}
+                  </Typography.Text>
+                </>
+              ) : (
+                <Tag color="green">{t('dashboard.noError')}</Tag>
+              )}
+            </div>
+          </Col>
+          <Col flex="1">
+            <Statistic title={t('dashboard.stale')} value={summary.staleObservationCount} />
+          </Col>
+          <Col flex="1">
+            <Statistic title={t('dashboard.mcSyncSuccess')} value={summary.merchantSyncSuccessCount} valueStyle={{ color: '#3f8600' }} />
+          </Col>
+          <Col flex="1">
+            <Statistic title={t('dashboard.mcSyncFailed')} value={summary.merchantSyncFailedCount} valueStyle={{ color: summary.merchantSyncFailedCount > 0 ? '#cf1322' : undefined }} />
+          </Col>
+        </Row>
+      </Card>
+
+      <Card title={t('dashboard.sectionTopMovers')} style={{ marginBottom: 16 }}>
+        <Row gutter={16}>
+          <Col span={12}>
+            <Typography.Text strong style={{ display: 'block', marginBottom: 8 }}>
+              {t('dashboard.topIncreasingTitle')}
+            </Typography.Text>
+            <Table
+              rowKey="productId"
+              size="small"
+              pagination={false}
+              loading={trendsQuery.isLoading}
+              dataSource={trendsQuery.data?.topIncreasing ?? []}
+              columns={moverColumns}
+              locale={{ emptyText: t('dashboard.noMovers') }}
+              onRow={moverRowProps}
+              rowClassName={() => 'mc-clickable-row'}
+            />
+          </Col>
+          <Col span={12}>
+            <Typography.Text strong style={{ display: 'block', marginBottom: 8 }}>
+              {t('dashboard.topDecreasingTitle')}
+            </Typography.Text>
+            <Table
+              rowKey="productId"
+              size="small"
+              pagination={false}
+              loading={trendsQuery.isLoading}
+              dataSource={trendsQuery.data?.topDecreasing ?? []}
+              columns={moverColumns}
+              locale={{ emptyText: t('dashboard.noMovers') }}
+              onRow={moverRowProps}
+              rowClassName={() => 'mc-clickable-row'}
+            />
+          </Col>
+        </Row>
+      </Card>
 
       <div className="mc-chart-grid">
         <Card title={t('dashboard.chartByStatus')}>

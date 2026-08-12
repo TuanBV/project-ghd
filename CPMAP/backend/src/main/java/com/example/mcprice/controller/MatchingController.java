@@ -10,6 +10,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -37,5 +38,13 @@ public class MatchingController {
             case "REJECTED" -> matchingService.reject(productId, matchId, request.reason());
             default -> throw new BusinessRuleException("status khong hop le: " + request.status());
         };
+    }
+
+    /** Nguoi dung bam "Lay gia moi nhat" tren 1 listing bat ky (khong can doi job tu dong) —
+     * crawl lai URL do ngay va tinh lai gia trung binh cho san pham, dung chung logic voi luc xac nhan khop. */
+    @PostMapping("/refresh-price")
+    @PreAuthorize("hasAnyRole('ADMIN', 'ANALYST')")
+    public CompetitorListingDto refreshPrice(@PathVariable Long productId, @PathVariable Long matchId) {
+        return matchConfirmPriceService.crawlPriceAndRecalculate(matchingService.getDtoOwnedByProduct(productId, matchId));
     }
 }

@@ -175,6 +175,13 @@ public class MatchingService {
         return toDto(listing);
     }
 
+    /** Giong getDto nhung kiem tra them listing co thuoc dung productId khong (dung cho endpoint
+     * long trong /api/products/{productId}/matches/{matchId}, tranh nguoi dung doan ID lay nham listing). */
+    @Transactional(readOnly = true)
+    public CompetitorListingDto getDtoOwnedByProduct(Long productId, Long listingId) {
+        return toDto(getOwnedByProduct(productId, listingId));
+    }
+
     public CompetitorListingDto toDto(CompetitorListing l) {
         PriceObservation latest = priceObservationRepository
                 .findFirstByCompetitorListingIdOrderByCapturedAtDesc(l.getId()).orElse(null);

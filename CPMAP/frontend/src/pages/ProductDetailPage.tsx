@@ -23,17 +23,19 @@ import {
   getProductDetail,
   confirmMatch,
   rejectMatch,
+  refreshListingPrice,
   submitManualPrice,
   getListingCandidates,
   claimListingCandidate,
   updateProduct,
 } from '../api/products'
-import { approveRecommendation, rejectRecommendation, overrideRecommendation, recalculateProduct } from '../api/pricing'
 import { extractErrorMessage } from '../api/client'
 import type { CompetitorListingDto } from '../api/types'
 import { statusLabel } from '../utils/statusLabel'
 
 const AVAILABILITY_OPTIONS = ['IN_STOCK', 'OUT_OF_STOCK', 'PREORDER', 'UNKNOWN']
+const CONFIRMED_MATCH_STATUSES = ['AUTO_CONFIRMED', 'MANUALLY_CONFIRMED']
+const AVG_PRICE_WARNING_THRESHOLD_PERCENT = 10
 
 export default function ProductDetailPage() {
   const { t } = useTranslation()
@@ -41,9 +43,10 @@ export default function ProductDetailPage() {
   const productId = Number(id)
   const queryClient = useQueryClient()
   const [manualPriceListing, setManualPriceListing] = useState<CompetitorListingDto | null>(null)
-  const [overrideOpen, setOverrideOpen] = useState(false)
   const [candidateSku, setCandidateSku] = useState('')
   const [debouncedSku, setDebouncedSku] = useState('')
+  const [infoForm] = Form.useForm()
+  const [infoDirty, setInfoDirty] = useState(false)
 
   const query = useQuery({ queryKey: ['product', productId], queryFn: () => getProductDetail(productId) })
 
@@ -66,6 +69,8 @@ export default function ProductDetailPage() {
     onSuccess: (result) => {
       if (result.lastPrice != null) {
         message.success(t('productDetail.matchConfirmedWithPrice', { price: result.lastPrice.toLocaleString('vi-VN') }))
+      } else if (result.lastPriceStatus === 'CONTACT_ONLY') {
+        message.info(t('productDetail.matchConfirmedContactOnly'))
       } else {
         message.warning(t('productDetail.matchConfirmedNoPrice'))
       }
@@ -84,14 +89,31 @@ export default function ProductDetailPage() {
     onError: (e) => message.error(extractErrorMessage(e)),
   })
 
+  const refreshPriceMutation = useMutation({
+    mutationFn: (matchId: number) => refreshListingPrice(productId, matchId),
+    onSuccess: (result) => {
+      if (result.lastPrice != null) {
+        message.success(t('productDetail.refreshPriceSuccess', { price: result.lastPrice.toLocaleString('vi-VN') }))
+      } else if (result.lastPriceStatus === 'CONTACT_ONLY') {
+        message.info(t('productDetail.refreshPriceContactOnly'))
+      } else {
+        message.warning(t('productDetail.refreshPriceNoPrice'))
+      }
+      invalidate()
+    },
+    onError: (e) => message.error(extractErrorMessage(e)),
+  })
+
   const claimMutation = useMutation({
     mutationFn: (listingId: number) => claimListingCandidate(productId, listingId),
     onSuccess: (result) => {
-      message.success(
-        result.lastPrice != null
-          ? t('productDetail.claimSuccessWithPrice', { price: result.lastPrice.toLocaleString('vi-VN') })
-          : t('productDetail.claimSuccessNoPrice'),
-      )
+      if (result.lastPrice != null) {
+        message.success(t('productDetail.claimSuccessWithPrice', { price: result.lastPrice.toLocaleString('vi-VN') }))
+      } else if (result.lastPriceStatus === 'CONTACT_ONLY') {
+        message.info(t('productDetail.claimSuccessContactOnly'))
+      } else {
+        message.warning(t('productDetail.claimSuccessNoPrice'))
+      }
       queryClient.invalidateQueries({ queryKey: ['listing-candidates', productId] })
       invalidate()
     },
@@ -116,48 +138,25 @@ export default function ProductDetailPage() {
     })
   }
 
-  const updateAvailabilityMutation = useMutation({
-    mutationFn: (availability: string) =>
-      // Gui du toan bo field hien tai (khong chi availability) vi PUT /products/{id} thay the toan bo
+  const updateInfoMutation = useMutation({
+    mutationFn: (values: { currentWebsitePrice?: number; availability?: string; productUrl?: string }) =>
+      // Gui du toan bo field hien tai (khong chi cac field vua sua) vi PUT /products/{id} thay the toan bo
       // ban ghi — thieu field nao se bi Jackson gan mac dinh (vd active: boolean -> false) hoac bi ghi de thanh null.
+      // brand/googleCategory khong con sua duoc tren UI nen luon gui lai gia tri hien co, tranh bi xoa mat.
+      // Neu productUrl thay doi, backend se tu dong crawl URL moi de lay gia mac dinh.
       updateProduct(productId, {
         title: product.title,
         brand: product.brand,
         googleCategory: product.googleCategory,
         productType: product.productType,
-        currentWebsitePrice: product.currentWebsitePrice,
+        currentWebsitePrice: values.currentWebsitePrice ?? null,
         active: product.active,
-        availability,
+        availability: values.availability ?? product.availability,
+        productUrl: values.productUrl?.trim() || null,
       }),
     onSuccess: () => {
-      message.success(t('productDetail.availabilityUpdated'))
-      invalidate()
-    },
-    onError: (e) => message.error(extractErrorMessage(e)),
-  })
-
-  const recalcMutation = useMutation({
-    mutationFn: () => recalculateProduct(productId),
-    onSuccess: () => {
-      message.success(t('productDetail.recalculated'))
-      invalidate()
-    },
-    onError: (e) => message.error(extractErrorMessage(e)),
-  })
-
-  const approveMutation = useMutation({
-    mutationFn: (recId: number) => approveRecommendation(recId),
-    onSuccess: () => {
-      message.success(t('common.approved'))
-      invalidate()
-    },
-    onError: (e) => message.error(extractErrorMessage(e)),
-  })
-
-  const rejectRecMutation = useMutation({
-    mutationFn: (recId: number) => rejectRecommendation(recId, 'Rejected from UI'),
-    onSuccess: () => {
-      message.success(t('common.rejected'))
+      message.success(t('productDetail.infoSaved'))
+      setInfoDirty(false)
       invalidate()
     },
     onError: (e) => message.error(extractErrorMessage(e)),
@@ -174,16 +173,45 @@ export default function ProductDetailPage() {
     onError: (e) => message.error(extractErrorMessage(e)),
   })
 
-  const overrideMutation = useMutation({
-    mutationFn: (values: { price: number; reason: string; expiresAt: string }) =>
-      overrideRecommendation(query.data!.latestRecommendation!.id, values.price, values.reason, values.expiresAt),
-    onSuccess: () => {
-      message.success(t('productDetail.overrideSaved'))
-      setOverrideOpen(false)
+  const applyAveragePriceMutation = useMutation({
+    mutationFn: (averagePrice: number) =>
+      updateProduct(productId, {
+        title: product.title,
+        brand: product.brand,
+        googleCategory: product.googleCategory,
+        productType: product.productType,
+        currentWebsitePrice: averagePrice,
+        active: product.active,
+        availability: product.availability,
+        productUrl: product.productUrl,
+      }),
+    onSuccess: (_data, averagePriceApplied) => {
+      message.success(t('productDetail.avgPriceApplied'))
+      // Form khong tu dong dong bo lai initialValues khi query refetch — can gan tay de o
+      // "Gia hien tai" cap nhat ngay, khong doi nguoi dung phai tai lai trang moi thay.
+      infoForm.setFieldValue('currentWebsitePrice', averagePriceApplied)
+      setInfoDirty(false)
       invalidate()
     },
     onError: (e) => message.error(extractErrorMessage(e)),
   })
+
+  const handleApplyAveragePrice = (averagePrice: number, currentPrice: number | null) => {
+    if (currentPrice != null && currentPrice !== averagePrice) {
+      Modal.confirm({
+        title: t('productDetail.applyAvgPriceConfirmTitle'),
+        content: t('productDetail.applyAvgPriceConfirmContent', {
+          current: currentPrice.toLocaleString('vi-VN'),
+          average: averagePrice.toLocaleString('vi-VN'),
+        }),
+        okText: t('common.confirm'),
+        cancelText: t('common.cancel'),
+        onOk: () => applyAveragePriceMutation.mutate(averagePrice),
+      })
+      return
+    }
+    applyAveragePriceMutation.mutate(averagePrice)
+  }
 
   if (query.isLoading) {
     return <Spin size="large" style={{ marginTop: 80, display: 'block', textAlign: 'center' }} />
@@ -192,24 +220,30 @@ export default function ProductDetailPage() {
     return <Alert type="error" message={extractErrorMessage(query.error)} showIcon />
   }
   const product = query.data
-  const rec = product.latestRecommendation
+
+  const confirmedListingsWithPrice = product.competitorListings.filter(
+    (l) => CONFIRMED_MATCH_STATUSES.includes(l.matchStatus) && l.lastPrice != null,
+  )
+  const averagePrice = confirmedListingsWithPrice.length > 0
+    ? Math.round(confirmedListingsWithPrice.reduce((sum, l) => sum + l.lastPrice!, 0) / confirmedListingsWithPrice.length / 10_000) * 10_000
+    : null
+  const avgPercentDiff = averagePrice != null && product.currentWebsitePrice && product.currentWebsitePrice > 0
+    ? ((averagePrice - product.currentWebsitePrice) / product.currentWebsitePrice) * 100
+    : null
+  const avgExceedsThreshold = avgPercentDiff != null && avgPercentDiff > AVG_PRICE_WARNING_THRESHOLD_PERCENT
 
   const listingColumns = [
     { title: t('productDetail.colCompetitor'), dataIndex: 'competitorName', key: 'competitorName' },
     { title: 'URL', dataIndex: 'url', key: 'url', render: (v: string) => <a href={v} target="_blank" rel="noreferrer">{v}</a> },
-    {
-      title: t('productDetail.colMethod'),
-      dataIndex: 'matchMethod',
-      key: 'matchMethod',
-      render: (v: string) => statusLabel(t, 'matchMethod', v),
-    },
     { title: t('common.status'), dataIndex: 'matchStatus', key: 'matchStatus', render: (v: string) => <Tag>{statusLabel(t, 'match', v)}</Tag> },
     {
       title: t('productDetail.colCompetitorPrice'),
       dataIndex: 'lastPrice',
       key: 'lastPrice',
-      render: (v: number | null) =>
-        v == null ? (
+      render: (v: number | null, record: CompetitorListingDto) =>
+        record.lastPriceStatus === 'CONTACT_ONLY' ? (
+          <Tag color="blue">{t('productDetail.contactOnly')}</Tag>
+        ) : v == null ? (
           <Typography.Text type="secondary">{t('productDetail.noPriceYet')}</Typography.Text>
         ) : (
           <Typography.Text strong style={{ color: '#389e0d' }}>
@@ -224,6 +258,15 @@ export default function ProductDetailPage() {
         <Space>
           {record.matchStatus === 'REVIEW_REQUIRED' && (
             <Button size="small" onClick={() => confirmMutation.mutate(record.id)}>{t('common.confirm')}</Button>
+          )}
+          {CONFIRMED_MATCH_STATUSES.includes(record.matchStatus) && (
+            <Button
+              size="small"
+              loading={refreshPriceMutation.isPending && refreshPriceMutation.variables === record.id}
+              onClick={() => refreshPriceMutation.mutate(record.id)}
+            >
+              {t('productDetail.refreshPriceBtn')}
+            </Button>
           )}
           <Button
             size="small"
@@ -244,27 +287,58 @@ export default function ProductDetailPage() {
       <Typography.Title level={3}>{product.title}</Typography.Title>
 
       <Card title={t('productDetail.infoTitle')} style={{ marginBottom: 16 }}>
-        <Descriptions column={2} bordered size="small">
-          <Descriptions.Item label={t('productDetail.sku')}>{product.skuOriginal}</Descriptions.Item>
-          <Descriptions.Item label={t('productDetail.mcOfferId')}>{product.mcOfferId}</Descriptions.Item>
-          <Descriptions.Item label={t('productDetail.brand')}>{product.brand}</Descriptions.Item>
-          <Descriptions.Item label={t('productDetail.category')}>{product.googleCategory}</Descriptions.Item>
-          <Descriptions.Item label={t('productDetail.currentWebsitePrice')}>{product.currentWebsitePrice?.toLocaleString('vi-VN')}</Descriptions.Item>
-          <Descriptions.Item label={t('productDetail.currentMcPrice')}>{product.currentMcPrice?.toLocaleString('vi-VN')}</Descriptions.Item>
-          <Descriptions.Item label={t('productDetail.availability')}>
-            <Select
-              size="small"
-              style={{ minWidth: 140 }}
-              value={product.availability}
-              loading={updateAvailabilityMutation.isPending}
-              onChange={(value) => updateAvailabilityMutation.mutate(value)}
-              options={AVAILABILITY_OPTIONS.map((a) => ({ label: statusLabel(t, 'availability', a), value: a }))}
-            />
-          </Descriptions.Item>
-          <Descriptions.Item label={t('productDetail.url')}>
-            {product.productUrl && <a href={product.productUrl} target="_blank" rel="noreferrer">{product.productUrl}</a>}
-          </Descriptions.Item>
-        </Descriptions>
+        <Form
+          form={infoForm}
+          initialValues={{
+            currentWebsitePrice: product.currentWebsitePrice ?? undefined,
+            availability: product.availability,
+            productUrl: product.productUrl ?? undefined,
+          }}
+          onValuesChange={() => setInfoDirty(true)}
+          onFinish={(values) => updateInfoMutation.mutate(values)}
+        >
+          <Descriptions column={2} bordered size="small">
+            <Descriptions.Item label={t('productDetail.sku')}>{product.skuOriginal}</Descriptions.Item>
+            <Descriptions.Item label={t('productDetail.mcOfferId')}>{product.mcOfferId}</Descriptions.Item>
+            <Descriptions.Item label={t('productDetail.currentWebsitePrice')}>
+              <Form.Item name="currentWebsitePrice" noStyle>
+                <InputNumber size="small" style={{ width: '100%' }} min={0} />
+              </Form.Item>
+            </Descriptions.Item>
+            <Descriptions.Item label={t('productDetail.currentMcPrice')}>{product.currentMcPrice?.toLocaleString('vi-VN')}</Descriptions.Item>
+            <Descriptions.Item label={t('productDetail.availability')}>
+              <Form.Item name="availability" noStyle>
+                <Select
+                  size="small"
+                  style={{ minWidth: 140 }}
+                  options={AVAILABILITY_OPTIONS.map((a) => ({ label: statusLabel(t, 'availability', a), value: a }))}
+                />
+              </Form.Item>
+            </Descriptions.Item>
+            <Descriptions.Item label={t('productDetail.url')} span={2}>
+              <Space.Compact style={{ width: '100%' }}>
+                <Form.Item name="productUrl" noStyle>
+                  <Input size="small" placeholder={t('productDetail.urlPlaceholder')} />
+                </Form.Item>
+                {product.productUrl && (
+                  <Button size="small" href={product.productUrl} target="_blank" rel="noreferrer">
+                    {t('productDetail.openUrl')}
+                  </Button>
+                )}
+              </Space.Compact>
+              <Typography.Text type="secondary" style={{ fontSize: 12 }}>
+                {t('productDetail.urlHint')}
+              </Typography.Text>
+            </Descriptions.Item>
+          </Descriptions>
+          {infoDirty && (
+            <div style={{ marginTop: 12, textAlign: 'right' }}>
+              <Button type="primary" htmlType="submit" loading={updateInfoMutation.isPending}>
+                {t('common.save')}
+              </Button>
+            </div>
+          )}
+        </Form>
       </Card>
 
       <Card title={t('productDetail.listingsTitle')} style={{ marginBottom: 16 }}>
@@ -335,64 +409,30 @@ export default function ProductDetailPage() {
         />
       </Card>
 
-      <Card
-        title={t('productDetail.recommendationTitle')}
-        style={{ marginBottom: 16 }}
-        extra={<Button onClick={() => recalcMutation.mutate()} loading={recalcMutation.isPending}>{t('productDetail.recalculate')}</Button>}
-      >
-        {!rec && <Typography.Text type="secondary">{t('productDetail.noRecommendation')}</Typography.Text>}
-        {rec && (
+      <Card title={t('productDetail.avgPriceTitle')} style={{ marginBottom: 16 }}>
+        {confirmedListingsWithPrice.length === 0 ? (
+          <Typography.Text type="secondary">{t('productDetail.avgPriceNoConfirmed')}</Typography.Text>
+        ) : (
           <>
-            <Descriptions column={2} bordered size="small" style={{ marginBottom: 16 }}>
-              <Descriptions.Item label={t('common.status')}><Tag>{statusLabel(t, 'recommendation', rec.status)}</Tag></Descriptions.Item>
-              <Descriptions.Item label={t('productDetail.sourceCount')}>{rec.includedSourceCount}</Descriptions.Item>
-              <Descriptions.Item label={t('productDetail.currentWebsitePrice')}>{rec.currentPrice?.toLocaleString('vi-VN')}</Descriptions.Item>
-              <Descriptions.Item label={t('productDetail.rawAverage')}>{rec.rawAveragePrice?.toLocaleString('vi-VN')}</Descriptions.Item>
-              <Descriptions.Item label={t('productDetail.rounded')}>{rec.roundedPrice?.toLocaleString('vi-VN')}</Descriptions.Item>
-              <Descriptions.Item label={t('productDetail.finalPrice')}>{rec.finalSuggestedPrice?.toLocaleString('vi-VN')}</Descriptions.Item>
-              {rec.overridePrice != null && (
-                <Descriptions.Item label={t('productDetail.overridePriceLabel')} span={2}>
-                  {rec.overridePrice.toLocaleString('vi-VN')} ({t('productDetail.overrideDetail', {
-                    by: rec.overrideBy,
-                    reason: rec.overrideReason,
-                    expiresAt: rec.overrideExpiresAt,
-                  })})
-                </Descriptions.Item>
-              )}
-            </Descriptions>
-
-            <Table
-              rowKey="observationId"
-              size="small"
-              pagination={false}
-              dataSource={rec.sources}
-              columns={[
-                { title: t('productDetail.colCompetitor'), dataIndex: 'competitorName' },
-                { title: t('productDetail.colPrice'), dataIndex: 'price', render: (v: number | null) => v?.toLocaleString('vi-VN') ?? '-' },
-                { title: t('productDetail.colCapturedAt'), dataIndex: 'capturedAt' },
-                {
-                  title: t('productDetail.colIncluded'),
-                  dataIndex: 'included',
-                  render: (v: boolean) => (v ? <Tag color="green">{t('common.yes')}</Tag> : <Tag>{t('common.no')}</Tag>),
-                },
-                { title: t('productDetail.colReason'), dataIndex: 'reason' },
-              ]}
-              style={{ marginBottom: 16 }}
-            />
-
-            <Space>
-              {rec.status !== 'INSUFFICIENT_DATA' && rec.status !== 'APPROVED' && rec.status !== 'PUBLISHED' && (
-                <Button type="primary" onClick={() => approveMutation.mutate(rec.id)} loading={approveMutation.isPending}>
-                  {t('common.approve')}
-                </Button>
-              )}
-              {rec.status !== 'INSUFFICIENT_DATA' && (
-                <Button danger onClick={() => rejectRecMutation.mutate(rec.id)} loading={rejectRecMutation.isPending}>
-                  {t('common.reject')}
-                </Button>
-              )}
-              <Button onClick={() => setOverrideOpen(true)}>{t('productDetail.overrideBtn')}</Button>
-            </Space>
+            <Typography.Paragraph style={{ marginBottom: 8 }}>
+              <Typography.Text type="secondary">{t('productDetail.avgPriceSourceCount')}: </Typography.Text>
+              <Typography.Text strong>{confirmedListingsWithPrice.length}</Typography.Text>
+            </Typography.Paragraph>
+            <Typography.Title level={4} style={{ marginTop: 0, marginBottom: 12 }}>
+              {averagePrice!.toLocaleString('vi-VN')} ₫
+            </Typography.Title>
+            {avgExceedsThreshold && (
+              <Typography.Text type="danger" style={{ display: 'block', marginBottom: 12 }}>
+                {t('productDetail.avgPriceWarning', { percent: avgPercentDiff!.toFixed(1) })}
+              </Typography.Text>
+            )}
+            <Button
+              type="primary"
+              onClick={() => handleApplyAveragePrice(averagePrice!, product.currentWebsitePrice)}
+              loading={applyAveragePriceMutation.isPending}
+            >
+              {t('productDetail.applyAvgPrice')}
+            </Button>
           </>
         )}
       </Card>
@@ -412,32 +452,6 @@ export default function ProductDetailPage() {
           </Form.Item>
           <Button type="primary" htmlType="submit" loading={manualPriceMutation.isPending}>
             {t('common.save')}
-          </Button>
-        </Form>
-      </Modal>
-
-      <Modal title={t('productDetail.overrideModalTitle')} open={overrideOpen} onCancel={() => setOverrideOpen(false)} footer={null}>
-        <Form
-          layout="vertical"
-          onFinish={(values) =>
-            overrideMutation.mutate({ price: values.price, reason: values.reason, expiresAt: values.expiresAt })
-          }
-        >
-          <Form.Item name="price" label={t('productDetail.overridePriceInputLabel')} rules={[{ required: true }]}>
-            <InputNumber style={{ width: '100%' }} min={0} />
-          </Form.Item>
-          <Form.Item name="reason" label={t('productDetail.reasonLabel')} rules={[{ required: true }]}>
-            <Input.TextArea />
-          </Form.Item>
-          <Form.Item
-            name="expiresAt"
-            label={t('productDetail.expiresAtLabel')}
-            rules={[{ required: true }]}
-          >
-            <Input placeholder="2026-12-31T00:00:00+07:00" />
-          </Form.Item>
-          <Button type="primary" htmlType="submit" loading={overrideMutation.isPending}>
-            {t('productDetail.saveOverride')}
           </Button>
         </Form>
       </Modal>

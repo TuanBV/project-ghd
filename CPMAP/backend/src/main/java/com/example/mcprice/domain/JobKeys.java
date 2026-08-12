@@ -12,9 +12,11 @@ public final class JobKeys {
     public static final String MERCHANT_SYNC = "MerchantSyncJob";
     public static final String STALE_OBSERVATION_CLEANUP = "StaleObservationCleanupJob";
     public static final String DAILY_PIPELINE = "DailyPipelineJob";
+    public static final String OWN_WEBSITE_PRICE_CRAWL = "OwnWebsitePriceCrawlJob";
 
     public static final List<String> ALL = List.of(IMPORT_REFRESH, COMPETITOR_DISCOVERY, COMPETITOR_CRAWL,
-            PRICE_CALCULATION, WEBSITE_PUBLISH, MERCHANT_SYNC, STALE_OBSERVATION_CLEANUP, DAILY_PIPELINE);
+            PRICE_CALCULATION, WEBSITE_PUBLISH, MERCHANT_SYNC, STALE_OBSERVATION_CLEANUP, DAILY_PIPELINE,
+            OWN_WEBSITE_PRICE_CRAWL);
 
     private JobKeys() {
     }

@@ -26,6 +26,12 @@ import org.springframework.stereotype.Service;
  * khong can tai tung trang san pham rieng le). Doi chieu SKU van chay o duoi (vong for) de
  * cap nhat competitor_listings phuc vu crawl gia, nhung khong lam cham/anh huong den con so
  * "tong URL lay duoc" nay.
+ *
+ * Voi moi listing moi/cap nhat con REVIEW_REQUIRED (vd SKU_IN_URL_SLUG), vong lap con GOI THEM
+ * MatchConfirmPriceService.tryAutoConfirmByPricePlausibility de crawl gia ngay va tu xac nhan
+ * neu gia hop ly (lech <= 10% so voi gia hien tai cua san pham) — nen vong lap nay CHAM HON
+ * truoc day (moi URL REVIEW_REQUIRED gio kem theo 1 lan crawl gia, co rate limit), doi lai
+ * giam dang ke so URL nguoi dung phai tu duyet tay.
  */
 @Service
 @RequiredArgsConstructor
@@ -42,6 +48,7 @@ public class SitemapDiscoveryService {
     private final AuditService auditService;
     private final JobRunService jobRunService;
     private final CompetitorListingRepository competitorListingRepository;
+    private final MatchConfirmPriceService matchConfirmPriceService;
 
     public record DiscoveryResult(int totalUrlsScanned, int autoConfirmed, int reviewRequired, int conflicts, int noMatch) {
     }
@@ -86,7 +93,15 @@ public class SitemapDiscoveryService {
         for (int i = 0; i < urls.size(); i++) {
             SitemapMatchExecutor.Outcome outcome;
             try {
-                outcome = sitemapMatchExecutor.matchAndUpsertOne(competitorId, urls.get(i));
+                SitemapMatchExecutor.MatchUpsertResult upsertResult = sitemapMatchExecutor.matchAndUpsertOne(competitorId, urls.get(i));
+                outcome = upsertResult.outcome();
+                // Listing moi/cap nhat con REVIEW_REQUIRED — thu crawl gia NGAY (goi RIENG, sau khi
+                // transaction upsert da commit) de tu xac nhan neu gia hop ly, tranh bat nguoi dung
+                // phai duyet tay tung URL mot khi gia da du de tin tuong match nay dung.
+                if (outcome == SitemapMatchExecutor.Outcome.REVIEW_REQUIRED
+                        && matchConfirmPriceService.tryAutoConfirmByPricePlausibility(upsertResult.listingId())) {
+                    outcome = SitemapMatchExecutor.Outcome.AUTO_CONFIRMED;
+                }
             } catch (Exception e) {
                 log.warn("Loi ghep URL {} cho competitor #{}: {}", urls.get(i), competitorId, e.getMessage());
                 outcome = SitemapMatchExecutor.Outcome.NO_MATCH;

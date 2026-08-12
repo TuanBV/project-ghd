@@ -24,6 +24,10 @@ public interface ProductRepository extends JpaRepository<Product, Long>, JpaSpec
 
     List<Product> findByProductUrlIn(List<String> urls);
 
+    List<Product> findByProductUrlIsNull();
+
+    List<Product> findByProductUrlIsNotNullAndCurrentWebsitePriceIsNull();
+
     long countByActiveTrue();
 
     @Query("select count(p) from Product p where not exists (select 1 from CompetitorListing cl where cl.product = p)")

@@ -19,6 +19,7 @@ import com.example.mcprice.service.ProductAliasService;
 import com.example.mcprice.service.ProductService;
 import jakarta.validation.Valid;
 import java.util.List;
+import java.util.Map;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpStatus;
@@ -65,6 +66,17 @@ public class ProductController {
     @PreAuthorize("hasAnyRole('ADMIN', 'ANALYST')")
     public ProductDetailDto update(@PathVariable Long id, @Valid @RequestBody ProductUpdateRequest request) {
         return productService.update(id, request);
+    }
+
+    /**
+     * Sinh lai productUrl tren website cua chinh minh cho cac san pham dang thieu URL (dua vao ten
+     * san pham) — dung cho san pham cu import qua CSV_PRODUCT truoc khi tinh nang nay ton tai.
+     * An toan de goi lai nhieu lan: chi dien vao ban ghi dang null.
+     */
+    @PostMapping("/backfill-product-urls")
+    @PreAuthorize("hasRole('ADMIN')")
+    public Map<String, Integer> backfillProductUrls() {
+        return Map.of("updatedCount", productService.backfillMissingProductUrls());
     }
 
     @PostMapping("/{id}/aliases")

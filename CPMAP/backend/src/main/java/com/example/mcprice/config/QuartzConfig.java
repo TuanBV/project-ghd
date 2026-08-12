@@ -6,6 +6,7 @@ import com.example.mcprice.job.CompetitorDiscoveryJob;
 import com.example.mcprice.job.DailyPipelineJob;
 import com.example.mcprice.job.ImportRefreshJob;
 import com.example.mcprice.job.MerchantSyncJob;
+import com.example.mcprice.job.OwnWebsitePriceCrawlJob;
 import com.example.mcprice.job.PriceCalculationJob;
 import com.example.mcprice.job.StaleObservationCleanupJob;
 import com.example.mcprice.job.WebsitePublishJob;
@@ -77,6 +78,11 @@ public class QuartzConfig {
     @Bean
     public JobDetail dailyPipelineJobDetail() {
         return buildJobDetail(DailyPipelineJob.class, JobKeys.DAILY_PIPELINE);
+    }
+
+    @Bean
+    public JobDetail ownWebsitePriceCrawlJobDetail() {
+        return buildJobDetail(OwnWebsitePriceCrawlJob.class, JobKeys.OWN_WEBSITE_PRICE_CRAWL);
     }
 
     @Bean

@@ -15,6 +15,7 @@ import com.example.mcprice.repository.ImportRowRepository;
 import com.example.mcprice.repository.ImportRunRepository;
 import com.example.mcprice.repository.ProductRepository;
 import com.example.mcprice.util.FileHashUtil;
+import com.example.mcprice.util.ProductUrlBuilder;
 import com.example.mcprice.util.SkuNormalizer;
 import java.io.IOException;
 import java.io.InputStream;
@@ -178,6 +179,7 @@ public class CsvProductImportService {
                 .skuOriginal(skuRaw)
                 .skuNormalized(skuNormalized)
                 .title(title == null || title.isBlank() ? "(khong co ten)" : title)
+                .productUrl(ProductUrlBuilder.buildOwnWebsiteUrl(title))
                 .condition("UNKNOWN")
                 .availability(availability)
                 .currency("VND")

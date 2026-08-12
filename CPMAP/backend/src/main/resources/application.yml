@@ -78,6 +78,7 @@ app:
       - dienmay88.vn
       - dienmaythienphu.vn
       - dienmayabc.com
+      - tongkhodienmaymienbac.com
     max-redirects: 3
     crawl-timeout-seconds: 10
     crawl-user-agent: "McPriceOptimizerBot/1.0 (+contact: admin@tongkhodienmaymienbac.com)"

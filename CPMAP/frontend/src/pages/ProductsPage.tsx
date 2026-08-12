@@ -49,21 +49,16 @@ export default function ProductsPage() {
         ),
     },
     {
-      title: t('products.colSuggestedPrice'),
-      dataIndex: 'suggestedPrice',
-      key: 'suggestedPrice',
-      render: (v: number | null) => (v == null ? '-' : v.toLocaleString('vi-VN')),
-    },
-    {
       title: t('common.status'),
       dataIndex: 'recommendationStatus',
       key: 'recommendationStatus',
-      render: (status: string | null, record: ProductSummary) => (
-        <Space>
-          {status && <Tag color={statusColor(status)}>{statusLabel(t, 'recommendation', status)}</Tag>}
-          {record.hasMatchConflict && <Tag color="red">{t('products.matchConflict')}</Tag>}
-        </Space>
-      ),
+      render: (status: string | null, record: ProductSummary) => {
+        const needsConfirmation = record.hasMatchConflict || status === 'INSUFFICIENT_DATA'
+        if (needsConfirmation) {
+          return <Tag color="orange">{t('products.matchConflict')}</Tag>
+        }
+        return status ? <Tag color={statusColor(status)}>{statusLabel(t, 'recommendation', status)}</Tag> : null
+      },
     },
   ]
 

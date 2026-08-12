@@ -74,24 +74,24 @@ class RequestValidationTest {
 
     @Test
     void productUpdateRequest_negativePrice_violatesPositive() {
-        assertThat(validator.validate(new ProductUpdateRequest(null, null, null, null, BigDecimal.valueOf(-1), true, null)))
+        assertThat(validator.validate(new ProductUpdateRequest(null, null, null, null, BigDecimal.valueOf(-1), true, null, null)))
                 .isNotEmpty();
     }
 
     @Test
     void productUpdateRequest_nullPriceAndBlankOptionalFields_noViolation() {
         // Cac truong deu optional (chi validate KHI co gia tri) — giu dung nghiep vu partial-update hien tai.
-        assertThat(validator.validate(new ProductUpdateRequest(null, null, null, null, null, false, null))).isEmpty();
+        assertThat(validator.validate(new ProductUpdateRequest(null, null, null, null, null, false, null, null))).isEmpty();
     }
 
     @Test
     void productUpdateRequest_invalidAvailability_violatesPattern() {
-        assertThat(validator.validate(new ProductUpdateRequest(null, null, null, null, null, false, "NOT_A_REAL_STATUS")))
+        assertThat(validator.validate(new ProductUpdateRequest(null, null, null, null, null, false, "NOT_A_REAL_STATUS", null)))
                 .isNotEmpty();
     }
 
     @Test
     void productUpdateRequest_validAvailability_noViolation() {
-        assertThat(validator.validate(new ProductUpdateRequest(null, null, null, null, null, false, "IN_STOCK"))).isEmpty();
+        assertThat(validator.validate(new ProductUpdateRequest(null, null, null, null, null, false, "IN_STOCK", null))).isEmpty();
     }
 }

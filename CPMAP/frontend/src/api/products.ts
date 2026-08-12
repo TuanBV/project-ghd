@@ -28,6 +28,7 @@ export interface ProductUpdatePayload {
   currentWebsitePrice: number | null
   active: boolean
   availability: string | null
+  productUrl: string | null
 }
 
 export async function updateProduct(id: number, payload: ProductUpdatePayload): Promise<ProductDetail> {
@@ -52,6 +53,11 @@ export async function confirmMatch(productId: number, matchId: number): Promise<
 
 export async function rejectMatch(productId: number, matchId: number, reason?: string) {
   const { data } = await apiClient.patch(`/products/${productId}/matches/${matchId}`, { status: 'REJECTED', reason })
+  return data
+}
+
+export async function refreshListingPrice(productId: number, matchId: number): Promise<CompetitorListingDto> {
+  const { data } = await apiClient.post<CompetitorListingDto>(`/products/${productId}/matches/${matchId}/refresh-price`)
   return data
 }
 

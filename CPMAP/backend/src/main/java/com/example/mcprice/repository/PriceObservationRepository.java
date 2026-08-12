@@ -20,4 +20,9 @@ public interface PriceObservationRepository extends JpaRepository<PriceObservati
 
     List<PriceObservation> findByCapturedAtBeforeAndObservationStatus(OffsetDateTime threshold,
             com.example.mcprice.domain.ObservationStatus status);
+
+    @Query("select po from PriceObservation po where po.competitorListing.id in :listingIds "
+            + "and po.capturedAt = (select max(po2.capturedAt) from PriceObservation po2 "
+            + "where po2.competitorListing.id = po.competitorListing.id)")
+    List<PriceObservation> findLatestForListings(@Param("listingIds") List<Long> listingIds);
 }

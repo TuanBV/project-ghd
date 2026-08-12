@@ -16,11 +16,14 @@ import org.springframework.stereotype.Component;
  * se bo qua Spring AOP proxy va chay dong bo.
  *
  * Flow: doi chieu SKU danh sach URL da kham pha (sitemap) voi san pham hien co, giong het buoc
- * "Quet lai" (SitemapDiscoveryService), de cap nhat competitor_listings moi nhat -> crawl gia
- * that cho tat ca listing DA khop chac chan (AUTO_CONFIRMED/MANUALLY_CONFIRMED, ke ca cac match
- * cu tu truoc) -> tinh lai recommendation cho cac san pham lien quan. Cac match moi tu buoc doi
- * chieu SKU van theo dung quy tac cu (vd SKU_IN_URL_SLUG luon la REVIEW_REQUIRED) — nguoi dung
- * van phai vao trang Matching xac nhan truoc khi duoc tinh vao gia trung binh, khong bypass.
+ * "Quet lai" (SitemapDiscoveryService) — buoc nay tu crawl gia ngay cho tung listing moi/cap
+ * nhat con REVIEW_REQUIRED va tu xac nhan (AUTO_CONFIRMED) neu gia hop ly (lech <= 10% so voi
+ * gia hien tai), xem SitemapDiscoveryService/MatchConfirmPriceService.tryAutoConfirmByPricePlausibility
+ * -> crawl gia that cho TAT CA listing da khop chac chan (AUTO_CONFIRMED/MANUALLY_CONFIRMED, ke
+ * ca cac match cu tu truoc VA cac match vua duoc tu dong xac nhan o buoc tren) -> tinh lai
+ * recommendation cho cac san pham lien quan. Nhung match van con REVIEW_REQUIRED sau buoc tren
+ * (gia lech qua nhieu, hoac khong lay duoc gia) van phai cho nguoi dung vao trang Matching xac
+ * nhan tay truoc khi duoc tinh vao gia trung binh.
  */
 @Component
 @RequiredArgsConstructor
