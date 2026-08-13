@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { Alert, Button, Input, Select, Table, Tag, Typography, Space } from 'antd'
 import { useNavigate, useSearchParams } from 'react-router-dom'
@@ -11,6 +11,7 @@ const AVAILABILITY_OPTIONS = ['IN_STOCK', 'OUT_OF_STOCK', 'PREORDER', 'UNKNOWN']
 
 export default function ProductsPage() {
   const { t } = useTranslation()
+  const [keywordInput, setKeywordInput] = useState('')
   const [keyword, setKeyword] = useState('')
   const [availability, setAvailability] = useState<string | undefined>('IN_STOCK')
   const [page, setPage] = useState(0)
@@ -20,6 +21,15 @@ export default function ProductsPage() {
   const competitorIdParam = searchParams.get('competitorId')
   const competitorId = competitorIdParam ? Number(competitorIdParam) : undefined
   const competitorName = searchParams.get('competitorName') ?? undefined
+
+  // Tim tu dong khi go, khong can bam Enter/nut tim — debounce nhe de tranh goi API moi ky tu.
+  useEffect(() => {
+    const handle = setTimeout(() => {
+      setKeyword(keywordInput.trim())
+      setPage(0)
+    }, 400)
+    return () => clearTimeout(handle)
+  }, [keywordInput])
 
   const query = useQuery({
     queryKey: ['products', keyword, availability, competitorId, page, pageSize],
@@ -82,14 +92,12 @@ export default function ProductsPage() {
         />
       )}
       <Space style={{ marginBottom: 16 }}>
-        <Input.Search
+        <Input
           placeholder={t('products.searchPlaceholder')}
           allowClear
           style={{ width: 320 }}
-          onSearch={(v) => {
-            setKeyword(v)
-            setPage(0)
-          }}
+          value={keywordInput}
+          onChange={(e) => setKeywordInput(e.target.value)}
         />
         <Select
           placeholder={t('products.availabilityPlaceholder')}
@@ -116,6 +124,8 @@ export default function ProductsPage() {
           total: query.data?.totalElements ?? 0,
           showSizeChanger: true,
           pageSizeOptions: ['10', '20', '50', '100'],
+          position: ['topRight'],
+          hideOnSinglePage: true,
           onChange: (p, size) => {
             // Doi so ban ghi/trang thi ve lai trang 1, tranh sai lech offset voi pageSize moi.
             setPage(size !== pageSize ? 0 : p - 1)

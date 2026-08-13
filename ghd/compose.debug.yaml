@@ -14,3 +14,7 @@ services:
   redis:
     ports:
       - "${REDIS_DEBUG_PORT:-6379}:6379"
+
+  kafka:
+    ports:
+      - "${KAFKA_DEBUG_PORT:-9092}:9092"

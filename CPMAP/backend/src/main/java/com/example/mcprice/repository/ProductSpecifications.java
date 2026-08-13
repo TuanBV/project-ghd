@@ -6,6 +6,7 @@ import com.example.mcprice.domain.Product;
 import jakarta.persistence.criteria.Expression;
 import jakarta.persistence.criteria.Root;
 import jakarta.persistence.criteria.Subquery;
+import java.time.OffsetDateTime;
 import java.util.Collection;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.util.StringUtils;
@@ -52,9 +53,12 @@ public final class ProductSpecifications {
      * 1) San pham co it nhat 1 URL doi thu dang REVIEW_REQUIRED (can xac nhan co khop hay khong)
      *    len dau — day la thong tin nguoi dung can biet ngay de xu ly.
      * 2) Trong so con lai, san pham "Con hang" (IN_STOCK) len truoc.
-     * 3) Cuoi cung sap theo id de on dinh thu tu giua cac lan phan trang.
+     * 3) San pham co hoat dong gan day nhat len truoc (updatedAt giam dan) — tinh ca updatedAt cua
+     *    chinh san pham LAN updatedAt cua cac competitor listing cua no, vi xac nhan/tu choi/lay
+     *    gia moi 1 URL doi thu chi thay doi ban ghi CompetitorListing chu khong dung den Product.
+     * 4) Cuoi cung sap theo id de on dinh thu tu giua cac lan phan trang khi hoat dong gan day trung nhau.
      *
-     * Gop ca 3 tieu chi vao 1 lan goi query.orderBy(...) vi moi lan goi se THAY THE (khong cong don)
+     * Gop ca 4 tieu chi vao 1 lan goi query.orderBy(...) vi moi lan goi se THAY THE (khong cong don)
      * thu tu sap xep da dat truoc do, nen khong the tach thanh nhieu Specification rieng biet.
      *
      * Bo qua khi dang build count-query (ket qua la Long) — ORDER BY theo cot khong nam trong
@@ -75,7 +79,16 @@ public final class ProductSpecifications {
                 Expression<Integer> inStockFirst = cb.<Integer>selectCase()
                         .when(cb.equal(root.get("availability"), "IN_STOCK"), 0)
                         .otherwise(1);
-                query.orderBy(cb.asc(reviewNeededFirst), cb.asc(inStockFirst), cb.asc(root.get("id")));
+
+                Subquery<OffsetDateTime> latestListingUpdate = query.subquery(OffsetDateTime.class);
+                Root<CompetitorListing> listingForRecency = latestListingUpdate.from(CompetitorListing.class);
+                latestListingUpdate.select(cb.greatest(listingForRecency.<OffsetDateTime>get("updatedAt")))
+                        .where(cb.equal(listingForRecency.get("product"), root));
+                Expression<OffsetDateTime> lastActivityAt = cb.function("greatest", OffsetDateTime.class,
+                        root.get("updatedAt"), latestListingUpdate);
+
+                query.orderBy(cb.asc(reviewNeededFirst), cb.asc(inStockFirst),
+                        cb.desc(lastActivityAt), cb.asc(root.get("id")));
             }
             return cb.conjunction();
         };

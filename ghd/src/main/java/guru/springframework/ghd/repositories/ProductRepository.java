@@ -19,6 +19,11 @@ public interface ProductRepository extends JpaRepository<Product, UUID> {
     @Query(value="SELECT u.* FROM product u WHERE u.id = :productId and u.del_flag = 0", nativeQuery = true)
     Optional<Product> findById(@Param("productId") String productId);
 
+    // Row-locks the product for the duration of the caller's transaction so concurrent
+    // checkouts on the same product serialize instead of racing on the stock check.
+    @Query(value = "SELECT u.* FROM product u WHERE u.id = :productId and u.del_flag = 0 FOR UPDATE", nativeQuery = true)
+    Optional<Product> findByIdForUpdate(@Param("productId") String productId);
+
     @Query(value = """
             SELECT
                 p.id as id, 

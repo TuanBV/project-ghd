@@ -19,7 +19,15 @@ import org.springframework.web.bind.annotation.ModelAttribute;
 import java.util.*;
 import java.util.stream.Collectors;
 
-@ControllerAdvice
+// Scoped to controllers.views only - this used to be a bare @ControllerAdvice, which
+// Spring MVC applies to every controller including @RestController API endpoints. That
+// meant every single API call (JSON, never rendering a Thymeleaf view) was paying for a
+// full categories/brands/products table load just to build sidebar nav data it never
+// used - and, more seriously, it was loading every Product row into the request's
+// Hibernate persistence context before service-layer code got a chance to run its own
+// (correctly locked) query for the same row, so a later `SELECT ... FOR UPDATE` could be
+// handed back the stale, already-cached entity instead of the freshly locked one.
+@ControllerAdvice(basePackages = "guru.springframework.ghd.controllers.views")
 @RequiredArgsConstructor
 public class GlobalCommon {
     private final CategoryService categoryService;

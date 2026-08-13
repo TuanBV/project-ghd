@@ -6,17 +6,19 @@ import guru.springframework.ghd.dto.user.UserRequest;
 import guru.springframework.ghd.dto.user.UserResponse;
 import guru.springframework.ghd.entities.User;
 import guru.springframework.ghd.entities.UserImage;
+import guru.springframework.ghd.events.UserRegisteredEvent;
 import guru.springframework.ghd.mappers.UserMapper;
 import guru.springframework.ghd.repositories.UserImagesRepository;
 import guru.springframework.ghd.repositories.UserRepository;
-import guru.springframework.ghd.services.EmailService;
 import guru.springframework.ghd.services.UserService;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
+import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
@@ -29,12 +31,14 @@ import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.util.*;
 
+import static guru.springframework.ghd.config.KafkaTopicConfig.USER_EVENTS_TOPIC;
 import static guru.springframework.ghd.utils.UploadImageUtil.handleImageUpload;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class UserServiceImpl implements UserService {
-    private final EmailService emailService;
+    private final KafkaTemplate<String, Object> kafkaTemplate;
 
     private final UserRepository userRepository;
 
@@ -151,9 +155,10 @@ public class UserServiceImpl implements UserService {
         }
 
         try {
-            emailService.sendWelcomeEmail(savedUser);
+            kafkaTemplate.send(USER_EVENTS_TOPIC, savedUser.getId().toString(),
+                    new UserRegisteredEvent(savedUser.getId().toString(), savedUser.getUsername(), savedUser.getEmail()));
         } catch (Exception e) {
-            System.out.println("Lỗi gửi mail: {}" + e.getMessage());
+            log.warn("Không publish được sự kiện user.registered cho user {}: {}", savedUser.getId(), e.getMessage());
         }
 
         return userMapper.userToUserResponse(savedUser);

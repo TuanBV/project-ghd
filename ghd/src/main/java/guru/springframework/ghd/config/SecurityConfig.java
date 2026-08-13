@@ -2,6 +2,7 @@ package guru.springframework.ghd.config;
 
 import guru.springframework.ghd.security.JwtAuthenticationFilter;
 import lombok.RequiredArgsConstructor;
+import org.springframework.boot.web.servlet.FilterRegistrationBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.annotation.Order;
@@ -39,6 +40,26 @@ public class SecurityConfig {
 
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
     private final UserDetailsService userDetailsService;
+
+    // JwtAuthenticationFilter is a bare @Component, so Spring Boot's servlet-filter
+    // auto-registration would otherwise also install it as a generic filter for "/*",
+    // in addition to the explicit addFilterBefore() below that wires it into
+    // adminApiSecurityFilterChain. That meant it also ran for clientSecurityFilterChain
+    // requests (session policy IF_REQUIRED, not stateless) - so an admin's JWT cookie
+    // got authenticated there too, and Spring Security's default session-based
+    // SecurityContextRepository for that chain then persisted the resulting
+    // Authentication into the Redis-backed HttpSession. Jackson 3 (see SessionConfig)
+    // has no compatible creator for UsernamePasswordAuthenticationToken, so every
+    // following request carrying that session cookie 500'd trying to read it back.
+    // Disabling the auto-registration keeps this filter scoped to exactly the chain
+    // it's added to below.
+    @Bean
+    public FilterRegistrationBean<JwtAuthenticationFilter> jwtAuthenticationFilterRegistration(
+            JwtAuthenticationFilter filter) {
+        FilterRegistrationBean<JwtAuthenticationFilter> registration = new FilterRegistrationBean<>(filter);
+        registration.setEnabled(false);
+        return registration;
+    }
 
     public static final String[] PUBLIC_URLS = {
             // --- 1. Hệ thống & Xác thực ---

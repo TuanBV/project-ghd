@@ -6,17 +6,18 @@ import guru.springframework.ghd.dto.order.*;
 import guru.springframework.ghd.entities.OrderDetail;
 import guru.springframework.ghd.entities.Orders;
 import guru.springframework.ghd.entities.Product;
+import guru.springframework.ghd.events.OrderCreatedEvent;
 import guru.springframework.ghd.mappers.OrderMapper;
 import guru.springframework.ghd.repositories.OrderDetailRepository;
 import guru.springframework.ghd.repositories.OrdersRepository;
 import guru.springframework.ghd.repositories.ProductRepository;
 import guru.springframework.ghd.services.OrdersService;
-import guru.springframework.ghd.services.TelegramService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.support.TransactionSynchronization;
@@ -29,6 +30,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
+import static guru.springframework.ghd.config.KafkaTopicConfig.ORDER_EVENTS_TOPIC;
+
 @Service
 @RequiredArgsConstructor
 public class OrdersServiceImpl implements OrdersService {
@@ -37,7 +40,7 @@ public class OrdersServiceImpl implements OrdersService {
     private final OrderDetailRepository orderDetailRepository;
     private final ProductRepository productRepository;
     private final OrderMapper orderMapper;
-    private final TelegramService telegramService;
+    private final KafkaTemplate<String, Object> kafkaTemplate;
 
     @Override
     @Transactional
@@ -55,10 +58,10 @@ public class OrdersServiceImpl implements OrdersService {
         Orders savedOrder = ordersRepository.save(order);
 
         List<OrderDetail> orderDetails = new ArrayList<>();
-        List<String> telegramProductLines = new ArrayList<>();
+        List<OrderCreatedEvent.OrderItemInfo> eventItems = new ArrayList<>();
 
         for (OrderItemRequest itemReq : request.getItems()) {
-            Product product = productRepository.findById(itemReq.getProductId())
+            Product product = productRepository.findByIdForUpdate(itemReq.getProductId())
                     .orElseThrow(() -> new RuntimeException("Không tìm thấy sản phẩm ID: " + itemReq.getProductId()));
 
             if (product.getStockQty() < itemReq.getQuantity()) {
@@ -79,21 +82,27 @@ public class OrdersServiceImpl implements OrdersService {
 
             productRepository.save(product);
 
-            telegramProductLines.add(
-                    "• " + escapeHtml(product.getTitle())
-                            + " x " + itemReq.getQuantity()
-                            + " - " + itemReq.getPrice()
-            );
+            eventItems.add(new OrderCreatedEvent.OrderItemInfo(product.getTitle(), itemReq.getQuantity(), itemReq.getPrice()));
         }
 
         orderDetailRepository.saveAll(orderDetails);
 
-        String telegramMessage = buildTelegramOrderMessage(savedOrder, request, telegramProductLines);
+        OrderCreatedEvent event = new OrderCreatedEvent(
+                savedOrder.getId().toString(),
+                request.getCustName(),
+                request.getCustPhone(),
+                request.getCustEmail(),
+                request.getCustAddress(),
+                request.getPaymentMethod(),
+                request.getTotalAmount(),
+                request.getOrderNote(),
+                eventItems
+        );
 
         TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
             @Override
             public void afterCommit() {
-                telegramService.sendMessage(telegramMessage);
+                kafkaTemplate.send(ORDER_EVENTS_TOPIC, savedOrder.getId().toString(), event);
             }
         });
     }
@@ -148,49 +157,5 @@ public class OrdersServiceImpl implements OrdersService {
                     .note(p.getNote())
                     .build();
         });
-    }
-
-    private String buildTelegramOrderMessage(
-            Orders order,
-            OrderRequest request,
-            List<String> productLines
-    ) {
-        return """
-            🛒 <b>CÓ ĐƠN HÀNG MỚI</b>
-            
-            <b>Mã đơn:</b> #%s
-            <b>Khách hàng:</b> %s
-            <b>SĐT:</b> %s
-            <b>Email:</b> %s
-            <b>Địa chỉ:</b> %s
-            <b>Thanh toán:</b> %s
-            <b>Tổng tiền:</b> %s
-            
-            <b>Sản phẩm:</b>
-            %s
-            
-            <b>Ghi chú:</b> %s
-            """.formatted(
-                order.getId(),
-                escapeHtml(request.getCustName()),
-                escapeHtml(request.getCustPhone()),
-                escapeHtml(request.getCustEmail()),
-                escapeHtml(request.getCustAddress()),
-                escapeHtml(String.valueOf(request.getPaymentMethod())),
-                escapeHtml(String.valueOf(request.getTotalAmount())),
-                String.join("\n", productLines),
-                escapeHtml(request.getOrderNote())
-        );
-    }
-
-    private String escapeHtml(String value) {
-        if (value == null) {
-            return "";
-        }
-
-        return value
-                .replace("&", "&amp;")
-                .replace("<", "&lt;")
-                .replace(">", "&gt;");
     }
 }

@@ -1,7 +1,7 @@
 # Docker operations guide
 
 This document covers building, running, and operating the GHD stack (app + MySQL +
-Redis) with Docker Compose.
+Redis + Kafka) with Docker Compose.
 
 ## Prerequisites
 
@@ -45,7 +45,7 @@ docker compose build
 docker compose up -d
 ```
 
-`app` waits for `mysql` and `redis` to report healthy before starting
+`app` waits for `mysql`, `redis`, and `kafka` to report healthy before starting
 (`depends_on: condition: service_healthy`). On first boot, Flyway runs all
 migrations in `src/main/resources/db/migration` against the empty `core` database -
 this is the only thing that creates the schema; nothing in this repo mounts or runs
@@ -212,7 +212,27 @@ Requirements on the host MySQL:
 Flyway still runs on app startup and owns schema creation - point `DB_NAME` at an
 empty database the first time, exactly like the containerized-MySQL setup.
 
-## 12. Rotating secrets
+## 12. Kafka notification events
+
+Order creation and user registration publish events (`order-events`, `user-events` -
+see `guru.springframework.ghd.config.KafkaTopicConfig`) instead of calling
+Telegram/SMTP synchronously on the request thread. `guru.springframework.ghd.listeners`
+consumes them (consumer group `ghd-notifications`) and does the actual Telegram/email
+send; a failed send retries 3x (2s apart) then is logged and dropped (see
+`KafkaConsumerConfig`), matching the previous log-and-continue behavior.
+
+Inspect the topics from inside the container:
+
+```bash
+docker compose exec kafka /opt/kafka/bin/kafka-console-consumer.sh \
+  --bootstrap-server localhost:9092 --topic order-events --from-beginning
+```
+
+Kafka is single-node/single-partition per topic, appropriate for this app's current
+notification-only volume - see the comments in `KafkaTopicConfig`/`compose.yaml` for
+what to reconsider first if that changes (partition count, then multi-broker).
+
+## 13. Rotating secrets
 
 1. Generate new values (`openssl rand -hex 64` for `JWT_SECRET`/`AES_SECRET`, a
    strong random string for `DB_PASSWORD`/`MYSQL_ROOT_PASSWORD`/`REDIS_PASSWORD`).

@@ -69,10 +69,8 @@ export default function ProductDetailPage() {
     onSuccess: (result) => {
       if (result.lastPrice != null) {
         message.success(t('productDetail.matchConfirmedWithPrice', { price: result.lastPrice.toLocaleString('vi-VN') }))
-      } else if (result.lastPriceStatus === 'CONTACT_ONLY') {
-        message.info(t('productDetail.matchConfirmedContactOnly'))
       } else {
-        message.warning(t('productDetail.matchConfirmedNoPrice'))
+        message.info(t('productDetail.matchConfirmedContactOnly'))
       }
       invalidate()
     },
@@ -94,10 +92,8 @@ export default function ProductDetailPage() {
     onSuccess: (result) => {
       if (result.lastPrice != null) {
         message.success(t('productDetail.refreshPriceSuccess', { price: result.lastPrice.toLocaleString('vi-VN') }))
-      } else if (result.lastPriceStatus === 'CONTACT_ONLY') {
-        message.info(t('productDetail.refreshPriceContactOnly'))
       } else {
-        message.warning(t('productDetail.refreshPriceNoPrice'))
+        message.info(t('productDetail.refreshPriceContactOnly'))
       }
       invalidate()
     },
@@ -109,10 +105,8 @@ export default function ProductDetailPage() {
     onSuccess: (result) => {
       if (result.lastPrice != null) {
         message.success(t('productDetail.claimSuccessWithPrice', { price: result.lastPrice.toLocaleString('vi-VN') }))
-      } else if (result.lastPriceStatus === 'CONTACT_ONLY') {
-        message.info(t('productDetail.claimSuccessContactOnly'))
       } else {
-        message.warning(t('productDetail.claimSuccessNoPrice'))
+        message.info(t('productDetail.claimSuccessContactOnly'))
       }
       queryClient.invalidateQueries({ queryKey: ['listing-candidates', productId] })
       invalidate()
@@ -241,14 +235,16 @@ export default function ProductDetailPage() {
       dataIndex: 'lastPrice',
       key: 'lastPrice',
       render: (v: number | null, record: CompetitorListingDto) =>
-        record.lastPriceStatus === 'CONTACT_ONLY' ? (
-          <Tag color="blue">{t('productDetail.contactOnly')}</Tag>
-        ) : v == null ? (
-          <Typography.Text type="secondary">{t('productDetail.noPriceYet')}</Typography.Text>
-        ) : (
+        v != null ? (
           <Typography.Text strong style={{ color: '#389e0d' }}>
             {v.toLocaleString('vi-VN')}
           </Typography.Text>
+        ) : record.lastPriceStatus != null ? (
+          // Da tung thu lay gia (co it nhat 1 lan crawl) nhung khong ra so — coi nhu doi thu de
+          // gia "Lien he", khong phan biet ly do ky thuat (CONTACT_ONLY/NO_PRICE/loi parse...).
+          <Tag color="blue">{t('productDetail.contactOnly')}</Tag>
+        ) : (
+          <Typography.Text type="secondary">{t('productDetail.noPriceYet')}</Typography.Text>
         ),
     },
     {
