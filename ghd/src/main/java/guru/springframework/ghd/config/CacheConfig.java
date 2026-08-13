@@ -1,6 +1,8 @@
 package guru.springframework.ghd.config;
 
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.ApplicationRunner;
+import org.springframework.cache.CacheManager;
 import org.springframework.cache.annotation.EnableCaching;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -104,5 +106,21 @@ public class CacheConfig {
                 .cacheDefaults(redisCacheConfiguration)
                 .withInitialCacheConfigurations(perCacheConfigurations)
                 .build();
+    }
+
+    // Redis cache persists across `docker compose down`/rebuild (it's a durable volume,
+    // separate from the app container), so a value cached before a DB reset/restore can
+    // silently survive the rebuild and keep serving stale (e.g. empty) results forever -
+    // this bit the client-side slider/banner/category/brand lists after one such reset.
+    // Clearing every cache once on startup guarantees each rebuild/restart repopulates
+    // from the current DB on first access instead of trusting whatever was left behind.
+    @Bean
+    public ApplicationRunner clearCachesOnStartup(CacheManager cacheManager) {
+        return args -> cacheManager.getCacheNames().forEach(name -> {
+            var cache = cacheManager.getCache(name);
+            if (cache != null) {
+                cache.clear();
+            }
+        });
     }
 }
