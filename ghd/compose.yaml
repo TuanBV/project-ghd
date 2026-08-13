@@ -67,8 +67,15 @@ services:
       - --collation-server=utf8mb4_unicode_ci
     volumes:
       - mysql_data:/var/lib/mysql
-    # Flyway (run by the app on startup) owns schema creation/migration against this
-    # empty database - see scripts/mysql-init.sql for why that script is NOT mounted here.
+      # The official MySQL image runs every *.sql file under /docker-entrypoint-initdb.d
+      # exactly once - only when /var/lib/mysql is completely empty (true first boot of
+      # this volume). On every later start it's a no-op, since the data directory is no
+      # longer empty. This seeds the DB straight from the latest local dump instead of
+      # starting from Flyway's empty schema; Flyway still validates on app startup and
+      # applies any migrations newer than what the dump already contains.
+      # See scripts/mysql-init.sql for why that older script is NOT mounted here (it
+      # targets a different db user/schema left over from another environment).
+      - ./backups/core-local-dump.sql:/docker-entrypoint-initdb.d/01-core-dump.sql:ro
     healthcheck:
       # $$ keeps the password out of `docker compose config` output; the container's
       # own shell resolves it from its environment at healthcheck-run time.

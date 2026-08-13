@@ -46,12 +46,22 @@ docker compose up -d
 ```
 
 `app` waits for `mysql`, `redis`, and `kafka` to report healthy before starting
-(`depends_on: condition: service_healthy`). On first boot, Flyway runs all
-migrations in `src/main/resources/db/migration` against the empty `core` database -
-this is the only thing that creates the schema; nothing in this repo mounts or runs
-`scripts/mysql-init.sql` against the compose database (that script references a
-different database/user - `manageruser`/`admin` - left over from another
-environment; don't run it here).
+(`depends_on: condition: service_healthy`).
+
+The very first time the `mysql_data` volume is created (a genuinely fresh volume -
+never on later restarts), the container automatically seeds itself from
+`backups/core-local-dump.sql`, mounted at `/docker-entrypoint-initdb.d/01-core-dump.sql`
+- this is the official MySQL image's own init mechanism, and it only fires when
+`/var/lib/mysql` is empty. Flyway then runs on top of that (validates the schema and
+applies any migrations newer than what the dump already contains) instead of building
+the schema from scratch. To pick up a newer dump for the *next* fresh volume, overwrite
+`backups/core-local-dump.sql` before the first `docker compose up` - once the volume
+exists, this file is never re-read automatically (see section 6 below to restore a dump
+into an existing volume manually).
+
+Nothing in this repo mounts or runs `scripts/mysql-init.sql` against the compose
+database (that script references a different database/user - `manageruser`/`admin` -
+left over from another environment; don't run it here).
 
 ## 3. Logs
 
