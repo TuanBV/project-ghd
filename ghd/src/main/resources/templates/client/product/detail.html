@@ -863,7 +863,7 @@
                               type="button"
                               onclick="changeQuantity(-1)"
                               aria-label="Giảm số lượng"
-                              class="w-10 h-10 flex items-center justify-center hover:bg-gray-50 text-gray-600 transition-colors border-r border-gray-100"
+                              class="w-10 h-10 flex items-center justify-center hover:bg-gray-50 text-gray-600 transition-colors border-r border-gray-100 cursor-pointer"
                               th:disabled="${product.stockQty <= 0}"
                       >
                         <svg class="" data-icon="minus" aria-hidden="true" focusable="false" viewBox="0 0 24 24" width="1em" height="1em" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" ><path d="M5 12h14"/></svg>
@@ -884,7 +884,7 @@
                               type="button"
                               onclick="changeQuantity(1)"
                               aria-label="Tăng số lượng"
-                              class="w-10 h-10 flex items-center justify-center hover:bg-gray-50 text-gray-600 transition-colors border-l border-gray-100"
+                              class="w-10 h-10 flex items-center justify-center hover:bg-gray-50 text-gray-600 transition-colors border-l border-gray-100 cursor-pointer"
                               th:disabled="${product.stockQty <= 0}"
                       >
                         <svg class="" data-icon="plus" aria-hidden="true" focusable="false" viewBox="0 0 24 24" width="1em" height="1em" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" ><path d="M12 5v14M5 12h14"/></svg>
@@ -895,7 +895,7 @@
                   <div class="flex flex-col sm:flex-row gap-4 mb-8">
                     <button
                       id="btn-buy-now"
-                      class="btn-hover-effect flex-[1.5] bg-[#1c62e8] hover:bg-blue-700 text-white font-semibold py-5 rounded-xl flex items-center justify-center gap-3 text-sm md:text-base"
+                      class="btn-hover-effect flex-[1.5] bg-[#1c62e8] hover:bg-blue-700 text-white font-semibold py-5 rounded-xl flex items-center justify-center gap-3 text-sm md:text-base cursor-pointer"
                       th:data-id="${product.id}"
                       th:data-title="${product.title}"
                       th:data-price="${product.salePrice ?: product.price}"
@@ -907,7 +907,7 @@
                     <button
                       type="button"
                       id="btn-add-cart"
-                      class="btn-hover-effect btn-add-to-cart flex-1 bg-white border-2 border-gray-900 text-gray-900 hover:bg-gray-900 hover:text-white font-semibold py-5 rounded-xl flex items-center justify-center gap-2 text-sm md:text-base"
+                      class="btn-hover-effect btn-add-to-cart flex-1 bg-white border-2 border-gray-900 text-gray-900 hover:bg-gray-900 hover:text-white font-semibold py-5 rounded-xl flex items-center justify-center gap-2 text-sm md:text-base cursor-pointer"
                       th:data-id="${product.id}"
                       th:data-title="${product.title}"
                       th:data-price="${product.salePrice ?: product.price}"
@@ -1079,7 +1079,7 @@
               </div>
               <div class="text-center" id="loadMoreContainer" style="display:none;">
                 <button id="loadMoreBtn"
-                        class="mt-4 px-6 py-2 bg-gray-100 hover:bg-gray-200 rounded-lg text-sm font-medium">
+                        class="mt-4 px-6 py-2 bg-gray-100 hover:bg-gray-200 rounded-lg text-sm font-medium cursor-pointer">
                   Xem thêm
                 </button>
               </div>
@@ -1409,7 +1409,7 @@
             div.className = "relative w-24 h-24";
             div.innerHTML = `
                 <img src="${e.target.result}" class="w-full h-full object-cover rounded-xl border border-gray-300">
-                <button type="button" class="absolute -top-2 -right-2 text-gray-200 rounded-full w-5 h-5 flex items-center justify-center shadow-md z-30"
+                <button type="button" class="absolute -top-2 -right-2 text-gray-200 rounded-full w-5 h-5 flex items-center justify-center shadow-md z-30 cursor-pointer"
                     onclick="removeReviewImage(this, '${file.name}')">
                     <svg class="text-xs" data-icon="x" aria-hidden="true" focusable="false" viewBox="0 0 24 24" width="1em" height="1em" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" ><path d="M18 6 6 18M6 6l12 12"/></svg>
                 </button>

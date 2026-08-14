@@ -14,7 +14,7 @@
           Quản lý người dùng
         </h1>
         <button
-                class="bg-blue-600 text-white px-4 py-2 rounded-xl shadow hover:bg-blue-700 transition"
+                class="bg-blue-600 text-white px-4 py-2 rounded-xl shadow hover:bg-blue-700 transition cursor-pointer"
                 onclick="openModal()"
         >
           + Thêm người dùng
@@ -49,9 +49,9 @@
                       </span>
               </td>
               <td class="px-6 py-4 text-right space-x-2">
-                <button th:attr="onclick=${'viewUser('''+user.id+''')'}" class="text-blue-600 hover:underline text-sm">Xem</button>
-                <button th:attr="onclick=${'editUser('''+user.id+''')'}" class="text-yellow-600 hover:underline text-sm">Sửa</button>
-                <button th:attr="onclick=${'deleteUser('''+user.id+''')'}" class="text-red-600 hover:underline text-sm">Xóa</button>
+                <button th:attr="onclick=${'viewUser('''+user.id+''')'}" class="text-blue-600 hover:underline text-sm cursor-pointer">Xem</button>
+                <button th:attr="onclick=${'editUser('''+user.id+''')'}" class="text-yellow-600 hover:underline text-sm cursor-pointer">Sửa</button>
+                <button th:attr="onclick=${'deleteUser('''+user.id+''')'}" class="text-red-600 hover:underline text-sm cursor-pointer">Xóa</button>
               </td>
             </tr>
             </tbody>
@@ -61,7 +61,7 @@
 
       <div id="createUserModal" class="modal hidden fixed inset-0 bg-[#697284b3] flex items-center justify-center z-50">
         <div class="modal-content bg-white p-6 rounded-xl w-96 shadow-xl relative max-h-[90vh] overflow-y-auto">
-          <button type="button" class="absolute top-4 right-4 text-gray-600 hover:text-gray-600 text-2xl" onclick="closeModal()">&times;</button>
+          <button type="button" class="absolute top-4 right-4 text-gray-600 hover:text-gray-600 text-2xl cursor-pointer" onclick="closeModal()">&times;</button>
           <h2 id="modalTitle" class="text-xl font-semibold mb-4">Thêm người dùng mới</h2>
 
           <form id="createUserForm" class="space-y-4">
@@ -118,7 +118,7 @@
               <span id="error-password" class="text-red-500 text-xs mt-1 hidden"></span>
             </div>
             <div class="flex gap-2 pt-2">
-              <button type="button" onclick="closeModal()" class="flex-1 bg-gray-200 text-gray-700 py-2 rounded-xl hover:bg-gray-300 transition">Hủy bỏ</button>
+              <button type="button" onclick="closeModal()" class="flex-1 bg-gray-200 text-gray-700 py-2 rounded-xl hover:bg-gray-300 transition cursor-pointer">Hủy bỏ</button>
               <button type="submit" id="submitBtn" class="flex-1 bg-blue-600 text-white py-2 rounded-xl hover:bg-blue-700 transition">Lưu lại</button>
             </div>
           </form>
@@ -295,9 +295,9 @@
                   </span>
               </td>
               <td class="px-6 py-4 text-right space-x-2">
-                  <button onclick="viewUser('${user.id}')" class="text-blue-600 hover:underline text-sm">Xem</button>
-                  <button onclick="editUser('${user.id}')" class="text-yellow-600 hover:underline text-sm">Sửa</button>
-                  <button onclick="deleteUser('${user.id}')" class="text-red-600 hover:underline text-sm">Xóa</button>
+                  <button onclick="viewUser('${user.id}')" class="text-blue-600 hover:underline text-sm cursor-pointer">Xem</button>
+                  <button onclick="editUser('${user.id}')" class="text-yellow-600 hover:underline text-sm cursor-pointer">Sửa</button>
+                  <button onclick="deleteUser('${user.id}')" class="text-red-600 hover:underline text-sm cursor-pointer">Xóa</button>
               </td>
           </tr>
         `);

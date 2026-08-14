@@ -117,7 +117,7 @@
     <section id="header" th:fragment="header" class="fixed top-0 left-0 right-0 w-full z-[1000] min-h-[118px] md:min-h-[160px] lg:min-h-[112px]">
       <div
         id="sidebarOverlay"
-        class="fixed inset-0 bg-black/60 z-[60] hidden opacity-0 transition-opacity duration-300"
+        class="fixed inset-0 bg-black/60 z-[60] hidden opacity-0 transition-opacity duration-300 cursor-pointer"
         onclick="toggleSidebar()"
         aria-label="Đóng menu"
       ></div>
@@ -189,7 +189,7 @@
               <button
                 onclick="handleSearch()"
                 aria-label="Tìm kiếm sản phẩm"
-                class="absolute right-1.5 top-1/2 -translate-y-1/2 bg-blue-600 hover:bg-blue-700 text-white p-2 rounded-full w-9 h-9 flex items-center justify-center shadow-sm transition-colors"
+                class="absolute right-1.5 top-1/2 -translate-y-1/2 bg-blue-600 hover:bg-blue-700 text-white p-2 rounded-full w-9 h-9 flex items-center justify-center shadow-sm transition-colors cursor-pointer"
               >
                 <svg class="" data-icon="search" aria-hidden="true" focusable="false" viewBox="0 0 24 24" width="1em" height="1em" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" ><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
               </button>

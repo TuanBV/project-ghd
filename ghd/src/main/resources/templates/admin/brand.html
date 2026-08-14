@@ -16,7 +16,7 @@
           Quản lý thương hiệu
         </h1>
         <button
-                class="inline-flex items-center px-5 py-2.5 text-sm font-medium text-white bg-blue-600 rounded-xl shadow hover:bg-blue-700 transition-all active:scale-95"
+                class="inline-flex items-center px-5 py-2.5 text-sm font-medium text-white bg-blue-600 rounded-xl shadow hover:bg-blue-700 transition-all active:scale-95 cursor-pointer"
                 onclick="openModal()"
         >
           <svg class="me-2 text-lg" data-icon="plus" aria-hidden="true" focusable="false" viewBox="0 0 24 24" width="1em" height="1em" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" ><path d="M12 5v14M5 12h14"/></svg>
@@ -128,7 +128,7 @@
       >
         <button
                 type="button"
-                class="absolute top-4 right-4 text-gray-600 hover:text-gray-600 text-2xl"
+                class="absolute top-4 right-4 text-gray-600 hover:text-gray-600 text-2xl cursor-pointer"
                 onclick="closeModal()"
         >
           &times;
@@ -191,7 +191,7 @@
             <button
                     type="button"
                     onclick="closeModal()"
-                    class="flex-1 px-4 py-2 bg-gray-100 text-gray-700 rounded-xl hover:bg-gray-200 transition font-medium"
+                    class="flex-1 px-4 py-2 bg-gray-100 text-gray-700 rounded-xl hover:bg-gray-200 transition font-medium cursor-pointer"
             >
               Hủy bỏ
             </button>
@@ -341,7 +341,7 @@
               (i >= activePage - 2 && i <= activePage + 2)
       ) {
         const btn = $(
-                `<button class="w-9 h-9 rounded-xl text-sm font-medium transition-all ${i === activePage ? "bg-blue-600 text-white" : "bg-white border"}">${i}</button>`,
+                `<button class="w-9 h-9 rounded-xl text-sm font-medium transition-all cursor-pointer ${i === activePage ? "bg-blue-600 text-white" : "bg-white border"}">${i}</button>`,
         );
         btn.on("click", () => fetchBrands(i));
         $buttons.append(btn);

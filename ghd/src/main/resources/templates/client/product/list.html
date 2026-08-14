@@ -230,14 +230,14 @@
           <div class="col-span-1 flex items-center gap-2">
             <button
               onclick="applyPriceFilter()"
-              class="flex-1 h-[46px] bg-blue-600 hover:bg-blue-700 text-white rounded-xl transition-all shadow-md active:scale-95 flex items-center justify-center gap-2 text-[11px] font-semibold uppercase tracking-wider"
+              class="flex-1 h-[46px] bg-blue-600 hover:bg-blue-700 text-white rounded-xl transition-all shadow-md active:scale-95 flex items-center justify-center gap-2 text-[11px] font-semibold uppercase tracking-wider cursor-pointer"
             >
               Lọc giá
             </button>
             <button
               onclick="resetFilters()"
               id="resetBtn"
-              class="flex-1 h-[46px] bg-red-50 hover:bg-red-500 text-red-500 hover:text-white rounded-xl transition-all border border-red-100 active:scale-95 flex items-center justify-center gap-2 text-[11px] font-semibold uppercase tracking-wider"
+              class="flex-1 h-[46px] bg-red-50 hover:bg-red-500 text-red-500 hover:text-white rounded-xl transition-all border border-red-100 active:scale-95 flex items-center justify-center gap-2 text-[11px] font-semibold uppercase tracking-wider cursor-pointer"
             >
               Xóa
             </button>
@@ -389,7 +389,7 @@
               <div class="flex gap-2">
                 <button
                         id="share-facebook"
-                        class="w-8 h-8 rounded-full bg-[#1877F2] text-white flex items-center justify-center hover:opacity-80"
+                        class="w-8 h-8 rounded-full bg-[#1877F2] text-white flex items-center justify-center hover:opacity-80 cursor-pointer"
                 >
                   <svg class="" data-icon="facebook" aria-hidden="true" focusable="false" viewBox="0 0 24 24" width="1em" height="1em" fill="currentColor" ><path d="M14 8h3V4h-3c-3.3 0-5 2-5 5v3H6v4h3v6h4v-6h3l1-4h-4V9c0-.7.3-1 1-1z"/></svg>
                 </button>
@@ -695,7 +695,7 @@
                 ? "bg-blue-600 text-white shadow-md"
                 : "bg-white text-gray-600 border border-gray-100 hover:border-blue-200";
             $buttons.append(
-              `<button type="button" onclick="loadProducts(${i})" class="w-8 h-8 rounded-xl text-sm font-semibold transition-all ${active}">${i + 1}</button>`,
+              `<button type="button" onclick="loadProducts(${i})" class="w-8 h-8 rounded-xl text-sm font-semibold transition-all cursor-pointer ${active}">${i + 1}</button>`,
             );
           } else if (i === current - 2 || i === current + 2) {
             $buttons.append(`<span class="text-gray-300">...</span>`);

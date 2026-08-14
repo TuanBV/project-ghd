@@ -383,7 +383,7 @@
               id="btnSubmitOrder"
               type="button"
               onclick="handleOrder()"
-              class="w-full bg-blue-600 text-white py-4 rounded-2xl font-semibold text-[16px] mt-6 hover:bg-blue-700 transition-all active:scale-[0.98] flex items-center justify-center gap-2 shadow-lg shadow-blue-100"
+              class="w-full bg-blue-600 text-white py-4 rounded-2xl font-semibold text-[16px] mt-6 hover:bg-blue-700 transition-all active:scale-[0.98] flex items-center justify-center gap-2 shadow-lg shadow-blue-100 cursor-pointer"
             >
               XÁC NHẬN ĐẶT HÀNG
               <svg class="text-xl" data-icon="right-arrow-alt" aria-hidden="true" focusable="false" viewBox="0 0 24 24" width="1em" height="1em" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" ><path d="M5 12h14"/><path d="m13 6 6 6-6 6"/></svg>
@@ -635,13 +635,13 @@
           <div class="flex-1 min-w-0">
               <div class="flex justify-between items-start">
                   <h3 class="text-sm font-semibold text-gray-700 line-clamp-2 leading-tight">${item.title}</h3>
-                  <button onclick="removeItem(${index})" class="text-gray-400 hover:text-red-500"><svg class="" data-icon="trash" aria-hidden="true" focusable="false" viewBox="0 0 24 24" width="1em" height="1em" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" ><path d="M3 6h18"/><path d="M8 6V4h8v2"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v5M14 11v5"/></svg></button>
+                  <button onclick="removeItem(${index})" class="text-gray-400 hover:text-red-500 cursor-pointer"><svg class="" data-icon="trash" aria-hidden="true" focusable="false" viewBox="0 0 24 24" width="1em" height="1em" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" ><path d="M3 6h18"/><path d="M8 6V4h8v2"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v5M14 11v5"/></svg></button>
               </div>
               <div class="flex justify-between items-end mt-2">
                   <div class="flex items-center border border-gray-200 rounded-lg overflow-hidden">
-                      <button onclick="updateQty(${index}, -1)" class="px-2 py-1">-</button>
+                      <button onclick="updateQty(${index}, -1)" class="px-2 py-1 cursor-pointer">-</button>
                       <span class="px-3 py-1 text-xs font-semibold">${item.quantity}</span>
-                      <button onclick="updateQty(${index}, 1)" class="px-2 py-1">+</button>
+                      <button onclick="updateQty(${index}, 1)" class="px-2 py-1 cursor-pointer">+</button>
                   </div>
                   <div class="text-right">
                     <div class="text-sm font-semibold text-blue-600">${itemTotal.toLocaleString("vi-VN")}VND</div>

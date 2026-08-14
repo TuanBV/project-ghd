@@ -73,7 +73,7 @@
         <div class="flex-1 flex items-center bg-white rounded-2xl ring-1 ring-gray-200 focus-within:ring-2 focus-within:ring-blue-600 shadow-sm px-6 transition-all group relative">
           <svg class="text-gray-600 text-2xl group-focus-within:text-blue-600" data-icon="search" aria-hidden="true" focusable="false" viewBox="0 0 24 24" width="1em" height="1em" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" ><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
           <input id="searchInput" type="text" th:value="${param['tu-khoa']}" placeholder="Tìm kiếm bài viết theo tiêu đề..." class="w-full py-4 px-4 bg-transparent border-none outline-none text-lg text-gray-700">
-          <button id="clearFilterBtn" onclick="clearFilters()" title="Xóa tất cả bộ lọc" class="hidden absolute right-16 flex items-center gap-1 px-3 py-1.5 bg-gray-100 hover:bg-rose-50 text-gray-600 hover:text-rose-600 rounded-lg text-xs font-semibold transition-all border border-gray-200">
+          <button id="clearFilterBtn" onclick="clearFilters()" title="Xóa tất cả bộ lọc" class="hidden absolute right-16 flex items-center gap-1 px-3 py-1.5 bg-gray-100 hover:bg-rose-50 text-gray-600 hover:text-rose-600 rounded-lg text-xs font-semibold transition-all border border-gray-200 cursor-pointer">
             <svg class="text-lg" data-icon="x" aria-hidden="true" focusable="false" viewBox="0 0 24 24" width="1em" height="1em" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" ><path d="M18 6 6 18M6 6l12 12"/></svg> XÓA LỌC
           </button>
           <div id="search-loader" class="hidden">
@@ -127,7 +127,7 @@
 
       <div id="pagination" class="mt-16 flex justify-center items-center gap-3">
         <th:block th:if="${totalPages > 1}" th:each="i : ${#numbers.sequence(1, totalPages)}">
-          <button th:onclick="'loadNews(' + ${i} + ')'" th:class="${i == currentPage} ? 'page-btn w-12 h-12 rounded-xl bg-blue-600 text-white shadow-lg shadow-blue-200 font-semibold' : 'page-btn w-12 h-12 rounded-xl bg-white text-gray-600 border border-gray-100 hover:border-blue-600 hover:text-blue-900 font-semibold transition-all'" th:text="${i}"></button>
+          <button th:onclick="'loadNews(' + ${i} + ')'" th:class="${i == currentPage} ? 'page-btn w-12 h-12 rounded-xl bg-blue-600 text-white shadow-lg shadow-blue-200 font-semibold cursor-pointer' : 'page-btn w-12 h-12 rounded-xl bg-white text-gray-600 border border-gray-100 hover:border-blue-600 hover:text-blue-900 font-semibold transition-all cursor-pointer'" th:text="${i}"></button>
         </th:block>
       </div>
     </div>
@@ -294,7 +294,7 @@
     if (totalPages <= 1) return;
     for (let i = 1; i <= totalPages; i++) {
       const activeClass = i === current ? "bg-blue-600 text-white shadow-lg shadow-blue-200" : "bg-white text-gray-600 border border-gray-100 hover:border-blue-600 hover:text-blue-900";
-      $buttons.append(`<button onclick="loadNews(${i})" class="page-btn w-12 h-12 rounded-xl font-semibold transition-all ${activeClass}">${i}</button>`);
+      $buttons.append(`<button onclick="loadNews(${i})" class="page-btn w-12 h-12 rounded-xl font-semibold transition-all cursor-pointer ${activeClass}">${i}</button>`);
     }
   }
 
