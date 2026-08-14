@@ -1,15 +1,148 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="vi" xmlns:th="http://www.thymeleaf.org">
-  <head th:replace="~{common/admin/header :: header(~{::title}, ~{::link})}">
+  <head th:replace="~{common/admin/header :: header(~{::title}, ~{::link-extra})}">
     <title th:text="${titlePage}"></title>
+
+    <th:block th:fragment="link-extra">
+      <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+      <style>
+        .filter-btn {
+          padding: 0.375rem 1rem;
+          font-size: 0.875rem;
+          font-weight: 500;
+          border-radius: 0.5rem;
+          color: #6b7280;
+          transition: all 0.15s ease;
+        }
+        .filter-btn:hover {
+          background: #f3f4f6;
+        }
+        .filter-btn.active {
+          background: #2563eb;
+          color: #fff;
+        }
+        .legend-dot {
+          display: inline-block;
+          width: 10px;
+          height: 10px;
+          border-radius: 9999px;
+          margin-right: 6px;
+        }
+        .online-dot {
+          display: inline-block;
+          width: 8px;
+          height: 8px;
+          border-radius: 9999px;
+          background: #16a34a;
+          margin-right: 6px;
+          animation: online-pulse 1.6s ease-in-out infinite;
+        }
+        @keyframes online-pulse {
+          0%, 100% { opacity: 1; }
+          50% { opacity: 0.35; }
+        }
+      </style>
+    </th:block>
   </head>
   <body>
     <div th:replace="common/admin/sidebar :: sidebar"></div>
     <section id="content">
       <nav th:replace="common/admin/navbar :: navbar"></nav>
       <main>
-        Đang phát triển
+        <div id="analytics-dashboard" class="max-w-full mx-auto p-6">
+          <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
+            <h1 class="text-2xl font-semibold text-gray-700">Dashboard</h1>
+            <div class="inline-flex rounded-xl border border-gray-200 bg-white p-1 shadow-sm">
+              <button type="button" class="filter-btn" data-range="today">Hôm nay</button>
+              <button type="button" class="filter-btn active" data-range="7d">7 ngày qua</button>
+              <button type="button" class="filter-btn" data-range="30d">30 ngày qua</button>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+            <div class="bg-white rounded-xl shadow p-5 flex items-center gap-4">
+              <span class="flex items-center justify-center w-12 h-12 rounded-xl bg-blue-50 text-blue-600">
+                <svg viewBox="0 0 24 24" width="1.5em" height="1.5em" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+              </span>
+              <div>
+                <h3 id="kpi-pageviews" class="text-2xl font-semibold text-gray-800">--</h3>
+                <p class="text-sm text-gray-500">Tổng lượt xem</p>
+              </div>
+            </div>
+
+            <div class="bg-white rounded-xl shadow p-5 flex items-center gap-4">
+              <span class="flex items-center justify-center w-12 h-12 rounded-xl bg-orange-50 text-orange-500">
+                <svg viewBox="0 0 24 24" width="1.5em" height="1.5em" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+              </span>
+              <div>
+                <h3 id="kpi-visitors" class="text-2xl font-semibold text-gray-800">--</h3>
+                <p class="text-sm text-gray-500">Người dùng duy nhất</p>
+              </div>
+            </div>
+
+            <div class="bg-white rounded-xl shadow p-5 flex items-center gap-4">
+              <span class="flex items-center justify-center w-12 h-12 rounded-xl bg-green-50 text-green-600">
+                <svg viewBox="0 0 24 24" width="1.5em" height="1.5em" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+              </span>
+              <div>
+                <h3 class="text-2xl font-semibold text-gray-800"><span class="online-dot"></span><span id="kpi-online">--</span></h3>
+                <p class="text-sm text-gray-500">Đang online</p>
+              </div>
+            </div>
+
+            <div class="bg-white rounded-xl shadow p-5 flex items-center gap-4">
+              <span class="flex items-center justify-center w-12 h-12 rounded-xl bg-red-50 text-red-500">
+                <svg viewBox="0 0 24 24" width="1.5em" height="1.5em" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="5" x2="5" y2="19"/><circle cx="6.5" cy="6.5" r="2.5"/><circle cx="17.5" cy="17.5" r="2.5"/></svg>
+              </span>
+              <div>
+                <h3 id="kpi-bounce" class="text-2xl font-semibold text-gray-800">--</h3>
+                <p class="text-sm text-gray-500">Tỷ lệ thoát &middot; TB <span id="kpi-duration">--</span>/phiên</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-6">
+            <div class="lg:col-span-2 bg-white rounded-xl shadow p-5">
+              <h3 class="text-lg font-semibold text-gray-700 mb-4">Lưu lượng truy cập</h3>
+              <canvas id="trafficChart" height="110"></canvas>
+            </div>
+            <div class="bg-white rounded-xl shadow p-5">
+              <h3 class="text-lg font-semibold text-gray-700 mb-4">Thiết bị</h3>
+              <canvas id="deviceChart"></canvas>
+              <ul id="deviceLegend" class="mt-4 space-y-2 text-sm text-gray-600"></ul>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+            <div class="bg-white rounded-xl shadow p-5 overflow-x-auto">
+              <h3 class="text-lg font-semibold text-gray-700 mb-4">Top trang được xem</h3>
+              <table class="w-full text-sm text-left">
+                <thead>
+                  <tr class="text-gray-500 border-b">
+                    <th class="pb-2 font-medium">Trang</th>
+                    <th class="pb-2 font-medium text-right">Lượt xem</th>
+                  </tr>
+                </thead>
+                <tbody id="topPagesBody" class="divide-y divide-gray-100 text-gray-700"></tbody>
+              </table>
+            </div>
+            <div class="bg-white rounded-xl shadow p-5 overflow-x-auto">
+              <h3 class="text-lg font-semibold text-gray-700 mb-4">Top nguồn truy cập</h3>
+              <table class="w-full text-sm text-left">
+                <thead>
+                  <tr class="text-gray-500 border-b">
+                    <th class="pb-2 font-medium">Nguồn</th>
+                    <th class="pb-2 font-medium text-right">Lượt xem</th>
+                  </tr>
+                </thead>
+                <tbody id="topReferrersBody" class="divide-y divide-gray-100 text-gray-700"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
       </main>
     </section>
+    <script th:src="@{/admin/js/main.js}"></script>
+    <script th:src="@{/admin/js/dashboard.js}"></script>
   </body>
 </html>

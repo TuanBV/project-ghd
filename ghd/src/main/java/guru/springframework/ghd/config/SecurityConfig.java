@@ -66,6 +66,7 @@ public class SecurityConfig {
             "/api/v1/auth/**",
             "/admin/v1/sign-in",
             "/api/v1/product/sync",
+            "/api/v1/analytics/track",
             "/common/**",
 
             // --- 2. Các trang Web Client (Giao diện) ---

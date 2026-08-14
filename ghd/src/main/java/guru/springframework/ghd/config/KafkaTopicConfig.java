@@ -14,6 +14,7 @@ public class KafkaTopicConfig {
 
     public static final String ORDER_EVENTS_TOPIC = "order-events";
     public static final String USER_EVENTS_TOPIC = "user-events";
+    public static final String ANALYTICS_EVENTS_TOPIC = "analytics-events";
 
     @Bean
     public NewTopic orderEventsTopic() {
@@ -27,6 +28,16 @@ public class KafkaTopicConfig {
     public NewTopic userEventsTopic() {
         return TopicBuilder.name(USER_EVENTS_TOPIC)
                 .partitions(1)
+                .replicas(1)
+                .build();
+    }
+
+    // Higher pageview throughput than orders/registrations - 3 partitions so the
+    // analytics consumer group can parallelize the DB writes.
+    @Bean
+    public NewTopic analyticsEventsTopic() {
+        return TopicBuilder.name(ANALYTICS_EVENTS_TOPIC)
+                .partitions(3)
                 .replicas(1)
                 .build();
     }

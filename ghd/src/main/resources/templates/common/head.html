@@ -127,6 +127,52 @@
         window.setTimeout(loadGtm, 2500);
       }
     });
+
+    // First-party pageview tracking (see /api/v1/analytics/track). Fires via
+    // sendBeacon so it never blocks or delays page rendering, and runs on
+    // DOMContentLoaded (not "load") so a fast bounce is still recorded.
+    (function() {
+      function persistentId(key, storage) {
+        try {
+          var value = storage.getItem(key);
+          if (!value) {
+            value = (window.crypto && crypto.randomUUID)
+              ? crypto.randomUUID()
+              : (Date.now().toString(36) + Math.random().toString(36).slice(2));
+            storage.setItem(key, value);
+          }
+          return value;
+        } catch (e) {
+          return null;
+        }
+      }
+
+      function sendPageview() {
+        var visitorId = persistentId("_ghd_visitor_id", window.localStorage);
+        var sessionId = persistentId("_ghd_session_id", window.sessionStorage);
+        if (!visitorId || !sessionId) return;
+
+        var payload = JSON.stringify({
+          url: location.pathname + location.search,
+          referrer: document.referrer || null,
+          visitorId: visitorId,
+          sessionId: sessionId
+        });
+        var endpoint = "/api/v1/analytics/track";
+
+        if (navigator.sendBeacon) {
+          navigator.sendBeacon(endpoint, new Blob([payload], { type: "application/json" }));
+        } else {
+          fetch(endpoint, { method: "POST", headers: { "Content-Type": "application/json" }, body: payload, keepalive: true });
+        }
+      }
+
+      if (document.readyState === "loading") {
+        document.addEventListener("DOMContentLoaded", sendPageview, { once: true });
+      } else {
+        sendPageview();
+      }
+    })();
   </script>
   <link
     rel="preload"
