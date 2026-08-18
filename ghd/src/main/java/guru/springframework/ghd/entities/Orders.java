@@ -55,7 +55,7 @@ public class Orders extends BaseEntity {
     private String paymentMethod;
 
     @Enumerated(EnumType.STRING)
-    @Column(columnDefinition = "ENUM('PENDING', 'CONFIRMED', 'SHIPPING', 'COMPLETED', 'CANCELLED')")
+    @Column(columnDefinition = "ENUM('PENDING', 'CONFIRMED', 'SHIPPING', 'COMPLETED', 'CANCELLED', 'AWAITING_PAYMENT', 'PAYMENT_FAILED')")
     private OrderStatus status;
 
     @Column(columnDefinition = "TEXT")

@@ -30,4 +30,8 @@ public interface OrderDetailRepository extends JpaRepository<OrderDetail, UUID> 
             WHERE od.order_id = :orderId
             """, nativeQuery = true)
     List<OrderDetailProjection> findByOrderId(@Param("orderId") String orderId);
+
+    // Entity (không phải projection) - dùng bởi StockService.decrementStockForOrder để
+    // lấy productId/quantity/price đã persist lúc tạo đơn.
+    List<OrderDetail> findAllByOrderId(String orderId);
 }

@@ -80,6 +80,10 @@ public class SecurityConfig {
 
             // --- 3. API Công khai cho AJAX (KHÔNG ĐƯỢC THIẾU) ---
             "/api/v1/order/**",
+            // VNPay IPN (server-to-server, không JWT/session) + return URL (trình
+            // duyệt) + status (poll đọc) - bảo mật của IPN nằm ở verify chữ ký trong
+            // PaymentServiceImpl.handleIpn, không phải ở đây.
+            "/api/v1/payment/**",
             "/api/v1/product/search/**",
             "/api/v1/news/list/**",
             "/api/v1/categories/**",     // <--- THÊM DÒNG NÀY ĐỂ HIỆN DANH MỤC

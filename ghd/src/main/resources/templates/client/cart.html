@@ -204,7 +204,7 @@
                 Phương thức thanh toán
               </h2>
 
-              <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-3">
+              <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-3">
                 <label class="relative cursor-pointer">
                   <input
                     type="radio"
@@ -260,6 +260,72 @@
                       </p>
                       <p class="text-sm text-gray-600 mt-1">
                         Quét mã QR hoặc chuyển khoản App.
+                      </p>
+                    </div>
+                    <div
+                      class="check-icon hidden absolute top-3 right-3 text-blue-600 text-xl"
+                    >
+                      <svg class="" data-icon="check-circle" aria-hidden="true" focusable="false" viewBox="0 0 24 24" width="1em" height="1em" fill="currentColor" ><path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20zm-1.3 14.3-4-4 1.4-1.4 2.6 2.6 5.2-5.2 1.4 1.4-6.6 6.6z"/></svg>
+                    </div>
+                  </div>
+                </label>
+
+                <!-- Thanh toán online qua VNPay: redirect sang trang VNPay, khách tự
+                     chọn thẻ/ngân hàng/trả góp cụ thể ở đó - xem handleOrder() bên dưới. -->
+                <label class="relative cursor-pointer">
+                  <input
+                    type="radio"
+                    name="paymentMethod"
+                    value="CARD"
+                    class="peer sr-only"
+                    onchange="toggleBankInfo()"
+                  />
+                  <div
+                    class="payment-card h-full p-4 rounded-xl border-2 border-gray-100 bg-white flex flex-col gap-2 relative overflow-hidden"
+                  >
+                    <div
+                      class="w-10 h-10 rounded-xl bg-purple-100 text-purple-600 flex items-center justify-center text-xl"
+                    >
+                      <svg class="" data-icon="credit-card" aria-hidden="true" focusable="false" viewBox="0 0 24 24" width="1em" height="1em" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" ><rect x="1" y="4" width="22" height="16" rx="2" ry="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
+                    </div>
+                    <div>
+                      <p class="font-semibold text-gray-700 text-[14px]">
+                        Thẻ ngân hàng (VNPay)
+                      </p>
+                      <p class="text-sm text-gray-600 mt-1">
+                        Thẻ ATM nội địa hoặc thẻ quốc tế Visa/Master.
+                      </p>
+                    </div>
+                    <div
+                      class="check-icon hidden absolute top-3 right-3 text-blue-600 text-xl"
+                    >
+                      <svg class="" data-icon="check-circle" aria-hidden="true" focusable="false" viewBox="0 0 24 24" width="1em" height="1em" fill="currentColor" ><path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20zm-1.3 14.3-4-4 1.4-1.4 2.6 2.6 5.2-5.2 1.4 1.4-6.6 6.6z"/></svg>
+                    </div>
+                  </div>
+                </label>
+
+                <label class="relative cursor-pointer">
+                  <input
+                    type="radio"
+                    name="paymentMethod"
+                    value="INSTALLMENT"
+                    class="peer sr-only"
+                    onchange="toggleBankInfo()"
+                  />
+                  <div
+                    class="payment-card h-full p-4 rounded-xl border-2 border-gray-100 bg-white flex flex-col gap-2 relative overflow-hidden"
+                  >
+                    <div
+                      class="w-10 h-10 rounded-xl bg-green-100 text-green-600 flex items-center justify-center text-xl"
+                    >
+                      <svg class="" data-icon="calendar-check" aria-hidden="true" focusable="false" viewBox="0 0 24 24" width="1em" height="1em" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" ><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/><path d="m9 16 2 2 4-4"/></svg>
+                    </div>
+                    <div>
+                      <p class="font-semibold text-gray-700 text-[14px]">
+                        Trả góp (VNPay)
+                      </p>
+                      <p class="text-sm text-gray-600 mt-1">
+                        Qua ngân hàng/công ty tài chính đối tác VNPay - chọn cụ thể ở bước sau.
                       </p>
                     </div>
                     <div
@@ -444,7 +510,7 @@
             Chính sách thanh toán
           </span>
           <span class="block text-xs text-gray-500 mt-0.5">
-            Hỗ trợ COD và chuyển khoản ngân hàng an toàn.
+            Hỗ trợ COD, chuyển khoản ngân hàng, thẻ ngân hàng và trả góp qua VNPay.
           </span>
         </span>
             </a>
@@ -857,6 +923,14 @@
           data: JSON.stringify(formData),
           success: function (response) {
             localStorage.removeItem("cart");
+            const paymentUrl = response.body && response.body.paymentUrl;
+            if (paymentUrl) {
+              // CARD/INSTALLMENT: đơn đã tạo (chờ thanh toán, CHƯA trừ kho) - redirect
+              // thẳng sang VNPay để khách thanh toán/chọn trả góp, không hiện dialog
+              // thành công ở đây (chỉ thành công thật sau khi VNPay xác nhận qua IPN).
+              window.location.href = paymentUrl;
+              return;
+            }
             Swal.fire({
               icon: "success",
               title: "Đặt hàng thành công!",

@@ -13,4 +13,6 @@ public interface OrderProjection {
     LocalDateTime getCreatedDate();
     String getShippingAddress();
     String getNote();
+    // Null cho đơn COD/BANK_TRANSFER (không có Payment). Xem OrdersRepository.findAllNative.
+    String getPaymentStatus();
 }

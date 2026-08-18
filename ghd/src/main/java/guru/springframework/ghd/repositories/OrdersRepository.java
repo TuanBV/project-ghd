@@ -20,7 +20,7 @@ public interface OrdersRepository extends JpaRepository<Orders, UUID> {
     Optional<Orders> findByOrderId(@Param("orderId") String orderId);
 
     @Query(value = """
-        SELECT 
+        SELECT
             o.id AS id,
             o.customer_name AS customerName,
             o.customer_phone AS customerPhone,
@@ -29,7 +29,10 @@ public interface OrdersRepository extends JpaRepository<Orders, UUID> {
             o.status AS status,
             o.created_date AS createdDate,
             o.shipping_address AS shippingAddress,
-            o.note AS note
+            o.note AS note,
+            (SELECT p.status FROM payment p
+             WHERE p.order_id = o.id AND p.del_flag = 0
+             ORDER BY p.created_date DESC LIMIT 1) AS paymentStatus
         FROM orders o
         WHERE (:customerName IS NULL OR o.customer_name LIKE CONCAT('%', :customerName, '%'))
           AND (:phone IS NULL OR o.customer_phone = :phone)
@@ -55,4 +58,11 @@ public interface OrdersRepository extends JpaRepository<Orders, UUID> {
             @Param("startDate") LocalDateTime startDate,
             @Param("endDate") LocalDateTime endDate,
             Pageable pageable);
+
+    // Khoá row Orders - dùng bởi PaymentServiceImpl.retryPayment làm mutex: 2 lần gọi
+    // retry đồng thời cho CÙNG 1 order phải serialize qua khoá này (không chỉ khoá
+    // Payment), để lần retry chạy sau luôn thấy và huỷ đúng payment PENDING mà lần
+    // chạy trước vừa tạo, thay vì cả 2 cùng tạo payment PENDING song song.
+    @Query(value = "SELECT * FROM orders WHERE id = :orderId FOR UPDATE", nativeQuery = true)
+    Optional<Orders> findByOrderIdForUpdate(@Param("orderId") String orderId);
 }

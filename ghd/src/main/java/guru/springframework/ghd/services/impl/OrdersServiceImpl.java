@@ -2,16 +2,19 @@ package guru.springframework.ghd.services.impl;
 
 import guru.springframework.ghd.constants.DefaultPage;
 import guru.springframework.ghd.constants.enums.OrderStatus;
+import guru.springframework.ghd.constants.enums.PaymentEnum;
 import guru.springframework.ghd.dto.order.*;
+import guru.springframework.ghd.dto.payment.PaymentStatusResponse;
 import guru.springframework.ghd.entities.OrderDetail;
 import guru.springframework.ghd.entities.Orders;
-import guru.springframework.ghd.entities.Product;
 import guru.springframework.ghd.events.OrderCreatedEvent;
 import guru.springframework.ghd.mappers.OrderMapper;
 import guru.springframework.ghd.repositories.OrderDetailRepository;
 import guru.springframework.ghd.repositories.OrdersRepository;
 import guru.springframework.ghd.repositories.ProductRepository;
 import guru.springframework.ghd.services.OrdersService;
+import guru.springframework.ghd.services.PaymentService;
+import guru.springframework.ghd.services.StockService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -26,7 +29,6 @@ import org.springframework.transaction.support.TransactionSynchronizationManager
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
@@ -41,10 +43,15 @@ public class OrdersServiceImpl implements OrdersService {
     private final ProductRepository productRepository;
     private final OrderMapper orderMapper;
     private final KafkaTemplate<String, Object> kafkaTemplate;
+    private final StockService stockService;
+    private final PaymentService paymentService;
 
     @Override
     @Transactional
-    public void createOrder(OrderRequest request) {
+    public OrderCreationResult createOrder(OrderRequest request, String clientIp) {
+        PaymentEnum paymentMethod = parsePaymentMethod(request.getPaymentMethod());
+        boolean onlineGateway = paymentMethod == PaymentEnum.CARD || paymentMethod == PaymentEnum.INSTALLMENT;
+
         Orders order = new Orders();
         order.setCustomerName(request.getCustName());
         order.setCustomerPhone(request.getCustPhone());
@@ -53,39 +60,37 @@ public class OrdersServiceImpl implements OrdersService {
         order.setNote(request.getOrderNote());
         order.setPaymentMethod(request.getPaymentMethod());
         order.setTotalAmount(request.getTotalAmount());
-        order.setStatus(OrderStatus.PENDING);
+        // CARD/INSTALLMENT: chờ IPN xác nhận, CHƯA trừ kho (xem StockService/PaymentServiceImpl).
+        // COD/BANK_TRANSFER: giữ nguyên hành vi cũ - trừ kho ngay bên dưới.
+        order.setStatus(onlineGateway ? OrderStatus.AWAITING_PAYMENT : OrderStatus.PENDING);
 
         Orders savedOrder = ordersRepository.save(order);
 
-        List<OrderDetail> orderDetails = new ArrayList<>();
-        List<OrderCreatedEvent.OrderItemInfo> eventItems = new ArrayList<>();
-
-        for (OrderItemRequest itemReq : request.getItems()) {
-            Product product = productRepository.findByIdForUpdate(itemReq.getProductId())
-                    .orElseThrow(() -> new RuntimeException("Không tìm thấy sản phẩm ID: " + itemReq.getProductId()));
-
-            if (product.getStockQty() < itemReq.getQuantity()) {
-                throw new RuntimeException("Sản phẩm " + product.getTitle() + " không đủ hàng trong kho!");
-            }
-
+        List<OrderDetail> orderDetails = request.getItems().stream().map(itemReq -> {
             OrderDetail detail = new OrderDetail();
             detail.setOrderId(savedOrder.getId().toString());
+            detail.setProductId(itemReq.getProductId());
             detail.setQuantity(itemReq.getQuantity());
             detail.setPrice(itemReq.getPrice());
-            detail.setProductId(product.getId());
-            orderDetails.add(detail);
+            return detail;
+        }).toList();
 
-            product.setStockQty(product.getStockQty() - itemReq.getQuantity());
+        if (onlineGateway) {
+            // Chỉ xác nhận sản phẩm tồn tại - KHÔNG khoá, KHÔNG trừ kho ở bước này
+            // (tồn kho chỉ bị trừ sau khi VNPay xác nhận thanh toán thành công qua IPN).
+            for (OrderDetail detail : orderDetails) {
+                productRepository.findById(detail.getProductId())
+                        .orElseThrow(() -> new RuntimeException("Không tìm thấy sản phẩm ID: " + detail.getProductId()));
+            }
+            orderDetailRepository.saveAll(orderDetails);
 
-            Integer soldCount = product.getSoldCount() == null ? 0 : product.getSoldCount();
-            product.setSoldCount(soldCount + itemReq.getQuantity());
-
-            productRepository.save(product);
-
-            eventItems.add(new OrderCreatedEvent.OrderItemInfo(product.getTitle(), itemReq.getQuantity(), itemReq.getPrice()));
+            String paymentUrl = paymentService.initiatePayment(savedOrder, paymentMethod, clientIp);
+            return new OrderCreationResult(savedOrder.getId().toString(), paymentUrl);
         }
 
         orderDetailRepository.saveAll(orderDetails);
+        List<OrderCreatedEvent.OrderItemInfo> eventItems =
+                stockService.decrementStockForOrder(savedOrder.getId().toString());
 
         OrderCreatedEvent event = new OrderCreatedEvent(
                 savedOrder.getId().toString(),
@@ -105,6 +110,16 @@ public class OrdersServiceImpl implements OrdersService {
                 kafkaTemplate.send(ORDER_EVENTS_TOPIC, savedOrder.getId().toString(), event);
             }
         });
+
+        return new OrderCreationResult(savedOrder.getId().toString(), null);
+    }
+
+    private PaymentEnum parsePaymentMethod(String rawPaymentMethod) {
+        try {
+            return PaymentEnum.valueOf(rawPaymentMethod);
+        } catch (IllegalArgumentException | NullPointerException e) {
+            throw new RuntimeException("Phương thức thanh toán không hợp lệ: " + rawPaymentMethod);
+        }
     }
     @Override
     public OrderDetailResponse findByOrderId(String orderId) {
@@ -114,6 +129,12 @@ public class OrdersServiceImpl implements OrdersService {
         // Get list product
         List<OrderDetailProjection> items = orderDetailRepository.findByOrderId(orderId);
         res.setOrderItems(items);
+        // paymentStatus không có trên entity Orders nên OrderMapper không tự map được -
+        // null cho COD/BANK_TRANSFER (không có Payment), set thủ công ở đây.
+        PaymentStatusResponse paymentStatus = paymentService.getStatus(orderId);
+        if (paymentStatus != null && paymentStatus.getPaymentStatus() != null) {
+            res.setPaymentStatus(paymentStatus.getPaymentStatus().name());
+        }
         return res;
     }
 
@@ -151,6 +172,7 @@ public class OrdersServiceImpl implements OrdersService {
                     .customerPhone(p.getCustomerPhone())
                     .totalAmount(p.getTotalAmount())
                     .paymentMethod(p.getPaymentMethod())
+                    .paymentStatus(p.getPaymentStatus())
                     .status(p.getStatus())
                     .createdDate(p.getCreatedDate())
                     .shippingAddress(p.getShippingAddress())

@@ -22,6 +22,8 @@ public class OrderResponse {
     private String adminNote;
     private BigDecimal totalAmount;
     private String paymentMethod;
+    // Null cho COD/BANK_TRANSFER (không có Payment). Xem Payment/PaymentStatus.
+    private String paymentStatus;
     private String status;
     private LocalDateTime createdDate;
     private LocalDateTime updatedDate;
