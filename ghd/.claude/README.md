@@ -57,6 +57,7 @@ File này chỉ là mục lục — xem `CLAUDE.md` §1 để biết thứ tự 
 | [`../docs/PROJECT_INDEX.md`](../docs/PROJECT_INDEX.md) | Cấu trúc source, route index, entity (đã có sẵn trước khi xây bộ kit này) |
 | [`../docs/PROCESSING-FLOW.md`](../docs/PROCESSING-FLOW.md) | Sequence diagram luồng request/order/user/Kafka/login |
 | [`../docs/DOCKER.md`](../docs/DOCKER.md) | Build/run/vận hành Docker Compose |
+| [`../docs/VNPAY_INTEGRATION.md`](../docs/VNPAY_INTEGRATION.md) | Cấu hình `.env`/`compose.yaml`, chạy thử sandbox (tunnel + đăng ký IPN), thuật toán ký, troubleshooting cho VNPay |
 
 ## Vòng lặp QA (tóm tắt, chi tiết ở `CLAUDE.md` §5)
 
