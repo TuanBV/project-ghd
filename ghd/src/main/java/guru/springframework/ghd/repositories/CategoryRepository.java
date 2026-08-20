@@ -15,7 +15,10 @@ import java.util.*;
 public interface CategoryRepository extends JpaRepository<Category, UUID> {
     Page<Category> findAllByTitleContainingIgnoreCase(String title, Pageable pageable);
 
-    @Query(value="SELECT u.* FROM category u WHERE u.del_flag = 0", nativeQuery = true)
+    // JPQL (không phải native) - native query cũ (+ Pageable có Sort) khiến Spring Data
+    // JPA tự chèn ORDER BY vào 1 chuỗi SQL nó không parse được, ném lỗi 500 trên mọi
+    // request (cùng lớp bug với OrdersRepository.search, xem OrdersRepository.java).
+    @Query("SELECT c FROM Category c WHERE c.delFlag = 0")
     Page<Category> findAll(Pageable pageable);
 
     @Query(value="SELECT u.* FROM category u WHERE u.id = :categoryId and u.del_flag = 0", nativeQuery = true)

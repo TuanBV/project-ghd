@@ -1,10 +1,12 @@
 package guru.springframework.ghd.services;
 
 import guru.springframework.ghd.AbstractIntegrationTest;
+import guru.springframework.ghd.constants.DefaultPage;
 import guru.springframework.ghd.constants.enums.OrderStatus;
 import guru.springframework.ghd.dto.order.OrderCreationResult;
 import guru.springframework.ghd.dto.order.OrderItemRequest;
 import guru.springframework.ghd.dto.order.OrderRequest;
+import guru.springframework.ghd.dto.order.OrderResponse;
 import guru.springframework.ghd.entities.Orders;
 import guru.springframework.ghd.entities.Product;
 import guru.springframework.ghd.repositories.OrderDetailRepository;
@@ -13,6 +15,7 @@ import guru.springframework.ghd.repositories.ProductRepository;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.data.domain.Page;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
@@ -119,5 +122,58 @@ class OrdersServiceImplIntegrationTest extends AbstractIntegrationTest {
         Orders order = ordersRepository.findByOrderId(result.orderId()).orElseThrow();
         assertThat(order.getStatus()).isEqualTo(OrderStatus.PENDING);
         assertThat(productRepository.findById(product.getId()).orElseThrow().getStockQty()).isEqualTo(3);
+    }
+
+    // Bug thật đã tái hiện: searchOrders/OrdersRepository.search (trước đây
+    // findAllNative - native query + Pageable có Sort) ném lỗi 500 trên MỌI request vì
+    // sortField mặc định "created_date" luôn tạo ra 1 Sort khác unsorted(). Test này
+    // dùng ĐÚNG tham số mặc định của OrderController/DefaultPage để không tái diễn.
+    @Test
+    void searchOrdersWithDefaultSortDoesNotThrow() {
+        Product product = saveTestProduct(5);
+        ordersService.createOrder(buildOrderRequest("COD", product.getId()), "127.0.0.1");
+
+        Page<OrderResponse> page = ordersService.searchOrders(
+                null, null, null, null, null, null,
+                DefaultPage.CREATED_DATE, DefaultPage.DESC, 1, 10);
+
+        assertThat(page.getTotalElements()).isGreaterThanOrEqualTo(1);
+    }
+
+    @Test
+    void searchOrdersFiltersByOrderId() {
+        Product product = saveTestProduct(5);
+        OrderCreationResult result = ordersService.createOrder(buildOrderRequest("COD", product.getId()), "127.0.0.1");
+
+        Page<OrderResponse> page = ordersService.searchOrders(
+                result.orderId(), null, null, null, null, null,
+                DefaultPage.CREATED_DATE, DefaultPage.DESC, 1, 10);
+
+        assertThat(page.getContent()).extracting(OrderResponse::getId).containsExactly(result.orderId());
+    }
+
+    @Test
+    void searchOrdersFiltersByCustomerNameWhenOrderIdNotGiven() {
+        Product product = saveTestProduct(5);
+        ordersService.createOrder(buildOrderRequest("COD", product.getId()), "127.0.0.1");
+
+        Page<OrderResponse> page = ordersService.searchOrders(
+                null, "Nguyen Van A", null, null, null, null,
+                DefaultPage.CREATED_DATE, DefaultPage.DESC, 1, 10);
+
+        assertThat(page.getContent()).isNotEmpty();
+        assertThat(page.getContent()).allMatch(o -> o.getCustomerName().contains("Nguyen Van A"));
+    }
+
+    @Test
+    void searchOrdersLeavesPaymentStatusNullForCod() {
+        Product product = saveTestProduct(5);
+        OrderCreationResult result = ordersService.createOrder(buildOrderRequest("COD", product.getId()), "127.0.0.1");
+
+        Page<OrderResponse> page = ordersService.searchOrders(
+                result.orderId(), null, null, null, null, null,
+                DefaultPage.CREATED_DATE, DefaultPage.DESC, 1, 10);
+
+        assertThat(page.getContent().get(0).getPaymentStatus()).isNull();
     }
 }

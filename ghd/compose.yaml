@@ -25,6 +25,13 @@ services:
       MAIL_PASSWORD: ${MAIL_PASSWORD:-}
       TELEGRAM_BOT_TOKEN: ${TELEGRAM_BOT_TOKEN:-}
       TELEGRAM_CHAT_ID: ${TELEGRAM_CHAT_ID:-}
+      # VNPay - xem application.properties (không có default, thiếu thì
+      # VnpayServiceImpl.buildPaymentUrl fail rõ ràng) + .claude/skills/vnpay-payment/SKILL.md
+      VNPAY_TMN_CODE: ${VNPAY_TMN_CODE:-}
+      VNPAY_HASH_SECRET: ${VNPAY_HASH_SECRET:-}
+      VNPAY_PAY_URL: ${VNPAY_PAY_URL:-}
+      VNPAY_API_URL: ${VNPAY_API_URL:-}
+      APP_BASE_URL: ${APP_BASE_URL:-http://localhost:18080}
       # Internal PLAINTEXT listener (see the kafka service below) - not the
       # PLAINTEXT_HOST listener, which is only for host-side tools/localhost access.
       KAFKA_BOOTSTRAP_SERVERS: kafka:19092

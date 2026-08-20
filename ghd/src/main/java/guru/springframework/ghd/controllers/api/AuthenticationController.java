@@ -1,12 +1,13 @@
 package guru.springframework.ghd.controllers.api;
 
+import guru.springframework.ghd.constants.RequestHeaderNames;
 import guru.springframework.ghd.constants.enums.WebEnvironment;
 import guru.springframework.ghd.dto.auth.LoginRequest;
 import guru.springframework.ghd.dto.auth.LoginResponse;
-import guru.springframework.ghd.dto.auth.TokenInfoResponse;
 import guru.springframework.ghd.entities.User;
-import guru.springframework.ghd.services.AuthenticationService;
+import guru.springframework.ghd.services.CustomerUserDetailsService;
 import guru.springframework.ghd.services.JwtService;
+import guru.springframework.ghd.services.TokenStoreService;
 import guru.springframework.ghd.utils.CookiesUtil;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -24,12 +25,13 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.*;
+import java.util.Arrays;
 
 @RestController
 @RequestMapping("/api/v1/auth")
@@ -37,7 +39,7 @@ import java.util.*;
 @Slf4j
 public class AuthenticationController extends BaseController {
 
-    private final AuthenticationService authService;
+    private final CustomerUserDetailsService customerUserDetailsService;
 
     @Autowired
     @Lazy
@@ -45,13 +47,12 @@ public class AuthenticationController extends BaseController {
 
     private final JwtService jwtService;
 
+    private final TokenStoreService tokenStoreService;
+
     private final Environment environment;
 
-    @Value("${cookie.expiration.default}")
-    private int expirationTimeDefault;
-
-    @Value("${cookie.domain}")
-    private String domain;
+    @Value("${jwt.refresh-token.expiration}")
+    private long refreshTokenExpirationSeconds;
 
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody @Valid LoginRequest param,
@@ -66,7 +67,7 @@ public class AuthenticationController extends BaseController {
             SecurityContextHolder.getContext().setAuthentication(authentication);
 
             User data = (User) authentication.getPrincipal();
-            String token = setCookie(data, httpResponse);
+            String token = issueTokens(data.getUsername(), httpResponse);
             return ok(LoginResponse.builder()
                     .data(data)
                     .token(token)
@@ -83,38 +84,84 @@ public class AuthenticationController extends BaseController {
         }
     }
 
+    @PostMapping("/refresh")
+    public ResponseEntity<?> refresh(HttpServletRequest httpRequest, HttpServletResponse httpResponse) {
+        String refreshToken = CookiesUtil.getCookieValue(httpRequest, RequestHeaderNames.COOKIE_REFRESH_TOKEN_NAME);
+
+        if (!StringUtils.hasText(refreshToken)
+                || !Boolean.TRUE.equals(jwtService.validateToken(refreshToken))
+                || !JwtService.TYPE_REFRESH.equals(jwtService.extractType(refreshToken))) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Refresh token không hợp lệ");
+        }
+
+        String username = jwtService.extractUsername(refreshToken);
+        String jti = jwtService.extractJti(refreshToken);
+
+        if (!tokenStoreService.isRefreshTokenValid(username, jti)) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Refresh token đã bị thu hồi");
+        }
+
+        UserDetails userDetails;
+        try {
+            userDetails = customerUserDetailsService.loadUserByUsername(username);
+        } catch (UsernameNotFoundException ex) {
+            tokenStoreService.revokeRefreshToken(username, jti);
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Tài khoản không tồn tại");
+        }
+
+        // Rotate: refresh token cũ chỉ dùng được đúng 1 lần.
+        tokenStoreService.revokeRefreshToken(username, jti);
+        String newAccessToken = issueTokens(userDetails.getUsername(), httpResponse);
+
+        return ok(LoginResponse.builder()
+                .data((User) userDetails)
+                .token(newAccessToken)
+                .build());
+    }
+
     @DeleteMapping("/logout")
-    public ResponseEntity<?> logout(Authentication authentication, HttpServletRequest httpRequest,
-                                 HttpServletResponse httpResponse) {
+    public ResponseEntity<?> logout(HttpServletRequest httpRequest, HttpServletResponse httpResponse) {
+
+        String accessToken = CookiesUtil.getCookieValue(httpRequest, RequestHeaderNames.COOKIE_TOKEN_NAME);
+        if (StringUtils.hasText(accessToken) && Boolean.TRUE.equals(jwtService.validateToken(accessToken))) {
+            tokenStoreService.blacklistAccessToken(jwtService.extractJti(accessToken),
+                    jwtService.getRemainingSeconds(accessToken));
+        }
+
+        String refreshToken = CookiesUtil.getCookieValue(httpRequest, RequestHeaderNames.COOKIE_REFRESH_TOKEN_NAME);
+        if (StringUtils.hasText(refreshToken) && Boolean.TRUE.equals(jwtService.validateToken(refreshToken))) {
+            tokenStoreService.revokeRefreshToken(jwtService.extractUsername(refreshToken), jwtService.extractJti(refreshToken));
+        }
 
         HttpSession session = httpRequest.getSession(false);
         if (session != null) {
             session.invalidate();
         }
 
-        // SecurityContext
-        SecurityContext context = SecurityContextHolder.getContext();
         SecurityContextHolder.clearContext();
-        context.setAuthentication(null);
 
-        // Delete Cookie
-        CookiesUtil.deleteCookies(httpRequest, httpResponse);
+        CookiesUtil.deleteCookies(httpResponse);
         return ok(null);
     }
 
+    /** Phát access + refresh token mới, đăng ký refresh token vào whitelist, set cả 2 cookie. */
+    private String issueTokens(String username, HttpServletResponse httpResponse) {
+        String accessToken = jwtService.generateAccessToken(username);
+        String refreshToken = jwtService.generateRefreshToken(username);
 
-    private String setCookie(User userResponse, HttpServletResponse httpResponse) {
-        TokenInfoResponse tokenInfoResponse = new TokenInfoResponse();
-        tokenInfoResponse.setUsername(userResponse.getUsername());
-        String token = jwtService.generateToken(tokenInfoResponse);
-
+        tokenStoreService.registerRefreshToken(username, jwtService.extractJti(refreshToken),
+                refreshTokenExpirationSeconds);
 
         boolean secure = !Arrays.asList(environment.getActiveProfiles())
                 .contains(WebEnvironment.DEVELOPMENT);
-        // Set cookie
-        httpResponse.addCookie(
-                CookiesUtil.createCookieResponse(token, expirationTimeDefault, domain, secure));
 
-        return token;
+        httpResponse.addCookie(CookiesUtil.createCookieResponse(
+                RequestHeaderNames.COOKIE_TOKEN_NAME, accessToken,
+                (int) jwtService.getRemainingSeconds(accessToken), secure, "/"));
+        httpResponse.addCookie(CookiesUtil.createCookieResponse(
+                RequestHeaderNames.COOKIE_REFRESH_TOKEN_NAME, refreshToken,
+                (int) refreshTokenExpirationSeconds, secure, "/api/v1/auth"));
+
+        return accessToken;
     }
 }

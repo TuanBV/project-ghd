@@ -26,6 +26,16 @@ public interface PaymentService {
     VnpayIpnResponse handleIpn(Map<String, String> params);
 
     /**
+     * Áp dụng kết quả gateway (đã verify chữ ký, hoặc đã chuẩn hoá từ
+     * {@link VnpayService#queryTransaction} khi đối soát) cho payment ứng với
+     * {@code txnRef} - CÙNG logic idempotency/đối chiếu số tiền/trừ kho với
+     * {@link #handleIpn}, dùng chung để không viết trùng. Gọi bởi
+     * {@code PaymentReconciliationServiceImpl} khi Query API xác nhận được kết quả
+     * cuối cùng cho 1 payment PENDING mà IPN chưa từng tới.
+     */
+    VnpayIpnResponse applyGatewayResult(String txnRef, Map<String, String> gatewayParams);
+
+    /**
      * Đọc (KHÔNG đổi) trạng thái thanh toán/đơn hàng hiện tại - dùng cho trang
      * return-URL poll hiển thị, không bao giờ dùng để mutate state.
      */

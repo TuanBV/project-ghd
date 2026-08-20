@@ -3,6 +3,7 @@ package guru.springframework.ghd.security;
 import guru.springframework.ghd.constants.RequestHeaderNames;
 import guru.springframework.ghd.services.CustomerUserDetailsService;
 import guru.springframework.ghd.services.JwtService;
+import guru.springframework.ghd.services.TokenStoreService;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.Cookie;
@@ -31,6 +32,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     private final JwtService jwtService;
     private final CustomerUserDetailsService customerUserDetailsService;
+    private final TokenStoreService tokenStoreService;
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response,
@@ -43,7 +45,9 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         try {
             String token = getJwtFromCookie(requestWrapper);
 
-            if (StringUtils.hasText(token) && jwtService.validateToken(token)) {
+            if (StringUtils.hasText(token) && jwtService.validateToken(token)
+                    && JwtService.TYPE_ACCESS.equals(jwtService.extractType(token))
+                    && !tokenStoreService.isAccessTokenBlacklisted(jwtService.extractJti(token))) {
                 String username = jwtService.getUsernameFromJWT(token);
                 UserDetails userDetails = customerUserDetailsService.loadUserByUsername(username);
 

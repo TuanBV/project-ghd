@@ -4,16 +4,18 @@ Rule cấp cao nhất nằm ở [`CLAUDE.md`](../CLAUDE.md) (root, tự nạp kh
 File này chỉ là mục lục — xem `CLAUDE.md` §1 để biết thứ tự ưu tiên khi có mâu thuẫn.
 
 **Phạm vi**: git repo root thật nằm ở thư mục cha (`project-ghd/`), chứa cả project
-`CPMAP/` không liên quan. Toàn bộ nội dung dưới đây chỉ áp dụng cho `ghd/`.
+`CPMAP/` không liên quan. Toàn bộ nội dung dưới đây chỉ áp dụng cho `ghd/` — và được
+enforce cứng bằng hook `scope-guard.cjs` (xem bảng dưới), không chỉ là quy ước bằng lời.
 
 ## Nạp tự động (không cần gọi tường minh)
 
 | File | Vai trò |
 |---|---|
 | `CLAUDE.md` (root) | Rule chính, tự nạp mỗi session |
-| `.claude/settings.json` | Đấu nối 2 hook bên dưới + `permissions.deny` (.env) + tắt AI attribution |
+| `.claude/settings.json` | Đấu nối 3 hook bên dưới + `permissions.deny` (.env) + tắt AI attribution |
 | `.claude/hooks/git-safety.cjs` | `PreToolUse` trên `Bash` — chặn force-push, commit thẳng `main`, push thẳng `main`, amend/rebase lịch sử đã publish, sai Conventional Commits, có `Co-Authored-By` AI |
 | `.claude/hooks/layer-boundary.cjs` | `PostToolUse` trên `Edit`/`Write` — chặn `controllers/**` import `repositories.*` trực tiếp |
+| `.claude/hooks/scope-guard.cjs` | `PreToolUse` trên `Read`/`Edit`/`Write`/`Glob`/`Grep`/`Bash` — chặn đọc/ghi bất kỳ đường dẫn nào ngoài `ghd/` (đặc biệt project `CPMAP/` cùng cấp), trừ hạ tầng Claude Code (temp/scratchpad, `~/.claude/`) |
 
 ## Skill kỹ thuật (đọc trước khi code phần liên quan)
 
@@ -57,6 +59,7 @@ File này chỉ là mục lục — xem `CLAUDE.md` §1 để biết thứ tự 
 | [`../docs/PROJECT_INDEX.md`](../docs/PROJECT_INDEX.md) | Cấu trúc source, route index, entity (đã có sẵn trước khi xây bộ kit này) |
 | [`../docs/PROCESSING-FLOW.md`](../docs/PROCESSING-FLOW.md) | Sequence diagram luồng request/order/user/Kafka/login |
 | [`../docs/DOCKER.md`](../docs/DOCKER.md) | Build/run/vận hành Docker Compose |
+| [`../docs/VNPAY_INTEGRATION.md`](../docs/VNPAY_INTEGRATION.md) | Cấu hình `.env`/`compose.yaml`, chạy thử sandbox (tunnel + đăng ký IPN), thuật toán ký, troubleshooting cho VNPay |
 
 ## Vòng lặp QA (tóm tắt, chi tiết ở `CLAUDE.md` §5)
 
