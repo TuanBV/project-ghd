@@ -54,6 +54,7 @@ public class ApiExceptionHandler {
     // Exception
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ErrorResponse> handleException(Exception ex) {
+        logger.error("Unexpected error", ex);
 
         ErrorResponse response = ErrorResponse.builder()
                 .status(HttpStatus.INTERNAL_SERVER_ERROR.value())

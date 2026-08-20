@@ -11,6 +11,7 @@ import guru.springframework.ghd.events.OrderCreatedEvent;
 import guru.springframework.ghd.mappers.OrderMapper;
 import guru.springframework.ghd.repositories.OrderDetailRepository;
 import guru.springframework.ghd.repositories.OrdersRepository;
+import guru.springframework.ghd.repositories.PaymentRepository;
 import guru.springframework.ghd.repositories.ProductRepository;
 import guru.springframework.ghd.services.OrdersService;
 import guru.springframework.ghd.services.PaymentService;
@@ -25,11 +26,13 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.support.TransactionSynchronization;
 import org.springframework.transaction.support.TransactionSynchronizationManager;
+import org.springframework.util.StringUtils;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 import static guru.springframework.ghd.config.KafkaTopicConfig.ORDER_EVENTS_TOPIC;
@@ -41,10 +44,20 @@ public class OrdersServiceImpl implements OrdersService {
     private final OrdersRepository ordersRepository;
     private final OrderDetailRepository orderDetailRepository;
     private final ProductRepository productRepository;
+    private final PaymentRepository paymentRepository;
     private final OrderMapper orderMapper;
     private final KafkaTemplate<String, Object> kafkaTemplate;
     private final StockService stockService;
     private final PaymentService paymentService;
+
+    // "thuoc-tinh" từ client hiện chỉ có 1 giá trị khả dĩ (created_date, xem
+    // admin/order.html DEFAULTS.SORT_FIELD) - Sort.by() cần đúng tên property Java của
+    // entity Orders (createdDate), không phải tên cột DB. Map an toàn qua allowlist,
+    // mặc định về createdDate cho giá trị lạ thay vì để Hibernate ném lỗi property
+    // không tồn tại.
+    private static final Map<String, String> ORDER_SORT_PROPERTIES = Map.of(
+            DefaultPage.CREATED_DATE, "createdDate"
+    );
 
     @Override
     @Transactional
@@ -157,27 +170,41 @@ public class OrdersServiceImpl implements OrdersService {
                                             OrderStatus status, LocalDate startDate, LocalDate endDate,
                                             String sortField, String sortDir, int pageNumber, int sizeNumber) {
         int pageIndex = pageNumber > DefaultPage.PAGE ? pageNumber - 1 : DefaultPage.PAGE;
-        String dbSortField = sortField.equals(DefaultPage.CREATED_DATE) ? DefaultPage.CREATED_DATE : sortField;
-        Sort sort = sortDir.equalsIgnoreCase(DefaultPage.ASC) ? Sort.by(dbSortField).ascending() : Sort.by(dbSortField).descending();
-        Pageable pageable = PageRequest.of(pageIndex, sizeNumber, sort);
+        Pageable pageable = PageRequest.of(pageIndex, sizeNumber, resolveSort(sortField, sortDir));
         LocalDateTime start = (startDate != null) ? startDate.atStartOfDay() : null;
         LocalDateTime end = (endDate != null) ? endDate.atTime(LocalTime.MAX) : null;
-        String statusStr = (status != null) ? status.name() : null;
-        Page<OrderProjection> projectionPage = ordersRepository.findAllNative(
-                customerName, phone, statusStr, start, end, pageable);
-        return projectionPage.map(p -> {
-            return OrderResponse.builder()
-                    .id(p.getId())
-                    .customerName(p.getCustomerName())
-                    .customerPhone(p.getCustomerPhone())
-                    .totalAmount(p.getTotalAmount())
-                    .paymentMethod(p.getPaymentMethod())
-                    .paymentStatus(p.getPaymentStatus())
-                    .status(p.getStatus())
-                    .createdDate(p.getCreatedDate())
-                    .shippingAddress(p.getShippingAddress())
-                    .note(p.getNote())
-                    .build();
+
+        Page<Orders> orderPage = ordersRepository.search(
+                parseOrderId(orderId), customerName, phone, status, start, end, pageable);
+
+        return orderPage.map(order -> {
+            OrderResponse response = orderMapper.toResponse(order);
+            // paymentStatus không có trên entity Orders nên OrderMapper không tự map
+            // được - null cho COD/BANK_TRANSFER (không có Payment), giống findByOrderId.
+            response.setPaymentStatus(latestPaymentStatus(order.getId().toString()));
+            return response;
         });
+    }
+
+    private Sort resolveSort(String sortField, String sortDir) {
+        String property = ORDER_SORT_PROPERTIES.getOrDefault(sortField, "createdDate");
+        return DefaultPage.ASC.equalsIgnoreCase(sortDir) ? Sort.by(property).ascending() : Sort.by(property).descending();
+    }
+
+    private UUID parseOrderId(String orderId) {
+        if (!StringUtils.hasText(orderId)) {
+            return null;
+        }
+        try {
+            return UUID.fromString(orderId.trim());
+        } catch (IllegalArgumentException e) {
+            return null;
+        }
+    }
+
+    private String latestPaymentStatus(String orderId) {
+        return paymentRepository.findFirstByOrderIdOrderByCreatedDateDesc(orderId)
+                .map(payment -> payment.getStatus().name())
+                .orElse(null);
     }
 }
