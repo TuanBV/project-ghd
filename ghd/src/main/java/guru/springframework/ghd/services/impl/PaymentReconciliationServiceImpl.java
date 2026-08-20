@@ -7,6 +7,7 @@ import guru.springframework.ghd.entities.Payment;
 import guru.springframework.ghd.repositories.OrdersRepository;
 import guru.springframework.ghd.repositories.PaymentRepository;
 import guru.springframework.ghd.services.PaymentReconciliationService;
+import guru.springframework.ghd.services.PaymentService;
 import guru.springframework.ghd.services.VnpayService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -18,6 +19,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 @Slf4j
@@ -28,6 +30,7 @@ public class PaymentReconciliationServiceImpl implements PaymentReconciliationSe
     private final OrdersRepository ordersRepository;
     private final PaymentRepository paymentRepository;
     private final VnpayService vnpayService;
+    private final PaymentService paymentService;
 
     @Value("${app.order.payment-ttl-minutes:15}")
     private long paymentTtlMinutes;
@@ -115,17 +118,18 @@ public class PaymentReconciliationServiceImpl implements PaymentReconciliationSe
 
         for (Payment payment : candidates) {
             try {
-                // VnpayService.queryTransaction CHƯA hiện thực thật ở v1 (throw
-                // UnsupportedOperationException theo thiết kế) - method này chỉ là
-                // KHUNG, tự động có tác dụng khi queryTransaction được hiện thực thật
-                // (có sandbox) mà không cần sửa gì ở đây.
-                // TODO: khi queryTransaction trả kết quả thật, xử lý ở đây: nếu VNPay
-                // xác nhận thành công/thất bại, áp dụng cùng logic với
-                // PaymentServiceImpl.handleIpn (KHÔNG viết trùng - trích xuất phần xử
-                // lý kết quả IPN thành phương thức dùng chung nếu cần).
-                vnpayService.queryTransaction(payment.getTxnRef());
+                // null = chưa có kết quả cuối cùng (đang xử lý/gọi lỗi/thiếu
+                // vnpCreateDate) - bỏ qua, để lần đối soát sau thử lại hoặc job TTL
+                // (cancelExpiredAwaitingPayments) tự huỷ khi hết hạn.
+                Map<String, String> result = vnpayService.queryTransaction(payment);
+                if (result == null) {
+                    continue;
+                }
+                // Cùng logic idempotency/đối chiếu số tiền/trừ kho với IPN thật - không
+                // viết trùng (xem PaymentServiceImpl.applyGatewayResult).
+                paymentService.applyGatewayResult(payment.getTxnRef(), result);
             } catch (Exception e) {
-                log.warn("Đối soát VNPay cho txnRef={} chưa thực hiện được: {}", payment.getTxnRef(), e.getMessage());
+                log.warn("Đối soát VNPay cho txnRef={} lỗi: {}", payment.getTxnRef(), e.getMessage());
             }
         }
     }

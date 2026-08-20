@@ -5,6 +5,7 @@ import lombok.NoArgsConstructor;
 
 import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
+import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.util.Map;
@@ -21,9 +22,14 @@ import java.util.TreeMap;
 public class VnpayUtil {
 
     /**
-     * Sort params theo key (thứ tự tự nhiên của String) và nối thành
-     * {@code key1=value1&key2=value2&...}, bỏ qua key có value null/rỗng và bỏ qua chính
-     * field chữ ký nếu lỡ có mặt trong map truyền vào.
+     * Sort params theo key (thứ tự tự nhiên của String), URL-encode từng value rồi nối
+     * thành {@code key1=value1&key2=value2&...}, bỏ qua key có value null/rỗng và bỏ qua
+     * chính field chữ ký nếu lỡ có mặt trong map truyền vào.
+     * <p>
+     * PHẢI encode value trước khi hash (khớp thuật toán chuẩn của VNPay) - nếu hash trên
+     * giá trị thô rồi mới encode riêng lúc build URL (bug cũ), chuỗi bị ký và chuỗi thật
+     * sự gửi đi sẽ khác nhau ngay khi 1 value có ký tự cần encode (vd dấu cách trong
+     * vnp_OrderInfo), khiến VNPay luôn báo sai chữ ký bất kể secret đúng hay không.
      */
     public static String buildSortedQueryString(Map<String, String> params, String signatureFieldName) {
         TreeMap<String, String> sorted = new TreeMap<>();
@@ -38,7 +44,26 @@ public class VnpayUtil {
             if (!sb.isEmpty()) {
                 sb.append('&');
             }
-            sb.append(entry.getKey()).append('=').append(entry.getValue());
+            sb.append(entry.getKey()).append('=')
+                    .append(URLEncoder.encode(entry.getValue(), StandardCharsets.UTF_8));
+        }
+        return sb.toString();
+    }
+
+    /**
+     * Nối các value theo ĐÚNG thứ tự tham số truyền vào (không sort, không encode) bằng
+     * dấu {@code |} - thuật toán ký RIÊNG của Query/Refund API (querydr), KHÁC hẳn
+     * {@link #buildSortedQueryString}. Value {@code null} được coi là chuỗi rỗng (VNPay
+     * quy ước field vắng mặt vẫn có vị trí trong chuỗi ký, không bỏ qua như payment
+     * URL/IPN). CHƯA verify với tài liệu merchant thật - xem VnpayServiceImpl.queryTransaction.
+     */
+    public static String buildPipeDelimitedHash(String... values) {
+        StringBuilder sb = new StringBuilder();
+        for (int i = 0; i < values.length; i++) {
+            if (i > 0) {
+                sb.append('|');
+            }
+            sb.append(values[i] == null ? "" : values[i]);
         }
         return sb.toString();
     }

@@ -74,7 +74,12 @@ public class PaymentServiceImpl implements PaymentService {
                 .build();
         paymentRepository.save(payment);
 
-        return vnpayService.buildPaymentUrl(payment, clientIp);
+        String paymentUrl = vnpayService.buildPaymentUrl(payment, clientIp);
+        // buildPaymentUrl set payment.vnpCreateDate (cần cho Query API đối soát sau này,
+        // xem VnpayServiceImpl.queryTransaction) - save lại để persist field này.
+        paymentRepository.save(payment);
+
+        return paymentUrl;
     }
 
     // Khoá Payment MỚI NHẤT của order này (cùng row/cơ chế/THỨ TỰ mà handleIpn khoá:
@@ -107,8 +112,13 @@ public class PaymentServiceImpl implements PaymentService {
             return VnpayIpnResponse.invalidSignature();
         }
 
+        return applyGatewayResult(params.get("vnp_TxnRef"), params);
+    }
+
+    @Override
+    @Transactional
+    public VnpayIpnResponse applyGatewayResult(String txnRef, Map<String, String> params) {
         // typical convention - xác nhận lại tên field thật với tài liệu VNPay
-        String txnRef = params.get("vnp_TxnRef");
         Payment payment = txnRef == null ? null : paymentRepository.findByTxnRefForUpdate(txnRef).orElse(null);
         if (payment == null) {
             log.warn("VNPay IPN: không tìm thấy payment cho txnRef={}", txnRef);

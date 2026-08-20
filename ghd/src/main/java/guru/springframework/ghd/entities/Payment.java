@@ -78,6 +78,12 @@ public class Payment extends BaseEntity {
 
     private LocalDateTime ipnReceivedAt;
 
+    // Đúng giá trị vnp_CreateDate đã gửi lúc build URL thanh toán (VnpayServiceImpl.buildPaymentUrl)
+    // - cần cho vnp_TransactionDate của Query API đối soát (VnpayServiceImpl.queryTransaction),
+    // phải khớp chính xác giá trị gốc. Null cho payment tạo trước khi field này tồn tại.
+    @Column(length = 14)
+    private String vnpCreateDate;
+
     // Toàn bộ query string IPN gốc - phục vụ đối soát thủ công trước khi có Query API
     // tự động (phase 2, xem plan).
     @Column(columnDefinition = "TEXT")
