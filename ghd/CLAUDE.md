@@ -16,6 +16,11 @@ File này không lặp lại nội dung 3 tài liệu trên — chỉ nêu **quy
 **Lưu ý phạm vi repo**: git repo root thực tế nằm ở thư mục cha (`project-ghd/`), chứa
 cả project `CPMAP/` (pricing/crawler) hoàn toàn độc lập, không liên quan tới `ghd/`.
 Toàn bộ rule/skill/hook trong file này và `.claude/` chỉ áp dụng cho cây thư mục `ghd/`.
+**Ranh giới này được enforce cứng bằng hook** `.claude/hooks/scope-guard.cjs` — chặn
+Read/Edit/Write/Glob/Grep/Bash đọc/ghi bất kỳ đường dẫn nào ngoài `ghd/` (kể cả
+`CPMAP/`), trừ hạ tầng vận hành của Claude Code (thư mục temp/scratchpad, `~/.claude/`).
+Nếu 1 tác vụ thật sự cần đọc file ngoài `ghd/`, hook sẽ chặn — dừng lại và hỏi người
+dùng thay vì tìm cách lách qua.
 
 ## 1. Phân cấp nguồn chân lý (bắt buộc, không mơ hồ)
 
