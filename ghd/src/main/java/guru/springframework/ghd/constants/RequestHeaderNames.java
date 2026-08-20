@@ -12,4 +12,6 @@ public class RequestHeaderNames {
 
     public static final String COOKIE_TOKEN_NAME = "ghd";
 
+    public static final String COOKIE_REFRESH_TOKEN_NAME = "ghd_rt";
+
 }

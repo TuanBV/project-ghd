@@ -8,7 +8,8 @@ import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 import org.apache.commons.lang3.StringUtils;
 
-import java.util.*;
+import java.util.Arrays;
+import java.util.Optional;
 
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class CookiesUtil {
@@ -27,27 +28,33 @@ public class CookiesUtil {
                 .orElse(StringUtils.EMPTY);
     }
 
-    public static void deleteCookies(HttpServletRequest httpRequest,
-                                     HttpServletResponse httpResponse) {
-        // Cookie
-        Cookie[] cookies = httpRequest.getCookies();
-        if (cookies != null) {
-            for (Cookie cookie : cookies) {
-                Cookie deleteCookie = new Cookie(cookie.getName(), "");
-                deleteCookie.setPath("/");
-                deleteCookie.setMaxAge(0);
-                httpResponse.addCookie(deleteCookie);
-            }
-        }
+    public static String getCookieValue(HttpServletRequest httpRequest, String name) {
+        return Optional.ofNullable(httpRequest.getCookies()).stream().flatMap(Arrays::stream)
+                .filter(c -> c.getName().equals(name)).findFirst()
+                .map(Cookie::getValue)
+                .orElse(null);
     }
 
-    public static Cookie createCookieResponse(String token, int time, String domain, boolean secure) {
-        Cookie cookie = new Cookie(RequestHeaderNames.COOKIE_TOKEN_NAME, token);
+    /** Xoá cookie access + refresh token (đúng 2 cookie auth, không đụng cookie khác như session). */
+    public static void deleteCookies(HttpServletResponse httpResponse) {
+        httpResponse.addCookie(expiredCookie(RequestHeaderNames.COOKIE_TOKEN_NAME, "/"));
+        httpResponse.addCookie(expiredCookie(RequestHeaderNames.COOKIE_REFRESH_TOKEN_NAME, "/api/v1/auth"));
+    }
+
+    private static Cookie expiredCookie(String name, String path) {
+        Cookie cookie = new Cookie(name, "");
+        cookie.setPath(path);
+        cookie.setMaxAge(0);
+        return cookie;
+    }
+
+    public static Cookie createCookieResponse(String name, String token, int maxAgeSeconds,
+                                              boolean secure, String path) {
+        Cookie cookie = new Cookie(name, token);
         cookie.setHttpOnly(true);
-        cookie.setPath("/");
-        //cookie.setDomain(domain);
-        cookie.setSecure(false);
-        cookie.setMaxAge(time);
+        cookie.setPath(path);
+        cookie.setSecure(secure);
+        cookie.setMaxAge(maxAgeSeconds);
         return cookie;
     }
 
