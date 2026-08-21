@@ -14,6 +14,7 @@ import guru.springframework.ghd.repositories.OrdersRepository;
 import guru.springframework.ghd.repositories.PaymentRepository;
 import guru.springframework.ghd.repositories.ProductRepository;
 import guru.springframework.ghd.services.OrdersService;
+import guru.springframework.ghd.services.PaymentMethodConfigService;
 import guru.springframework.ghd.services.PaymentService;
 import guru.springframework.ghd.services.StockService;
 import lombok.RequiredArgsConstructor;
@@ -49,6 +50,7 @@ public class OrdersServiceImpl implements OrdersService {
     private final KafkaTemplate<String, Object> kafkaTemplate;
     private final StockService stockService;
     private final PaymentService paymentService;
+    private final PaymentMethodConfigService paymentMethodConfigService;
 
     // "thuoc-tinh" từ client hiện chỉ có 1 giá trị khả dĩ (created_date, xem
     // admin/order.html DEFAULTS.SORT_FIELD) - Sort.by() cần đúng tên property Java của
@@ -63,6 +65,11 @@ public class OrdersServiceImpl implements OrdersService {
     @Transactional
     public OrderCreationResult createOrder(OrderRequest request, String clientIp) {
         PaymentEnum paymentMethod = parsePaymentMethod(request.getPaymentMethod());
+        // Chặn thật ở đây - ẩn lựa chọn trên trang giỏ hàng chỉ là UX, khách vẫn có thể
+        // tự gửi request với phương thức đã bị admin tắt (xem PaymentMethodConfigService).
+        if (!paymentMethodConfigService.isEnabled(paymentMethod)) {
+            throw new RuntimeException("Phương thức thanh toán này hiện không khả dụng: " + paymentMethod);
+        }
         boolean onlineGateway = paymentMethod == PaymentEnum.CARD || paymentMethod == PaymentEnum.INSTALLMENT;
 
         Orders order = new Orders();

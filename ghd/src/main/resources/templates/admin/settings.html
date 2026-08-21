@@ -66,7 +66,15 @@
                     />
                   </td>
                   <td class="p-4">
+                    <div th:if="${item.paramValue == 'true' || item.paramValue == 'false'}" class="relative inline-block">
+                      <label class="inline-flex items-center cursor-pointer">
+                        <input type="checkbox" class="sr-only peer param-value-toggle" th:checked="${item.paramValue == 'true'}" />
+                        <div class="relative w-11 h-6 bg-gray-200 rounded-full peer peer-checked:bg-blue-600 transition-all after:content-[''] after:absolute after:top-0.5 after:left-0.5 after:bg-white after:border after:border-gray-300 after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:after:translate-x-full peer-checked:after:border-white"></div>
+                      </label>
+                      <input type="hidden" class="param-value" th:value="${item.paramValue}" />
+                    </div>
                     <input
+                      th:unless="${item.paramValue == 'true' || item.paramValue == 'false'}"
                       type="text"
                       class="param-value w-full px-4 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition"
                       th:value="${item.paramValue}"
@@ -159,7 +167,16 @@
           $icon.toggleClass("rotate-180");
         });
 
-        // 2. Xử lý lưu dữ liệu (nút Lưu giờ nằm trong group-content)
+        // 2. Đồng bộ trạng thái switch bật/tắt vào input ẩn .param-value dùng chung
+        // với luồng thu thập dữ liệu lưu bên dưới.
+        $(document).on("change", ".param-value-toggle", function () {
+          $(this)
+            .closest("td")
+            .find("input.param-value")
+            .val(this.checked ? "true" : "false");
+        });
+
+        // 3. Xử lý lưu dữ liệu (nút Lưu giờ nằm trong group-content)
         $(".btn-save-group").click(function () {
           const $button = $(this);
           const $container = $button.closest(".group-container");

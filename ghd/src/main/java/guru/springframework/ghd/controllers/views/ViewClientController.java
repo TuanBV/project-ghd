@@ -3,6 +3,7 @@ package guru.springframework.ghd.controllers.views;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import guru.springframework.ghd.constants.DefaultPage;
+import guru.springframework.ghd.constants.enums.PaymentEnum;
 import guru.springframework.ghd.dto.banner.BannerResponse;
 import guru.springframework.ghd.dto.brand.BrandResponse;
 import guru.springframework.ghd.dto.category.CategoryResponse;
@@ -31,6 +32,7 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import static guru.springframework.ghd.utils.CommonUtil.toSlug;
@@ -47,6 +49,13 @@ public class ViewClientController {
     private final ProductService productService;
     private final PolicyService policyService;
     private final ReviewService reviewService;
+    private final PaymentMethodConfigService paymentMethodConfigService;
+
+    // Thứ tự ưu tiên chọn phương thức mặc định trên trang giỏ hàng, khớp thứ tự hiển
+    // thị radio trong client/cart.html (COD trước, VNPay sau cùng).
+    private static final List<PaymentEnum> DEFAULT_PAYMENT_METHOD_ORDER = List.of(
+            PaymentEnum.COD, PaymentEnum.BANK_TRANSFER, PaymentEnum.CARD, PaymentEnum.INSTALLMENT
+    );
 
     @GetMapping("")
     public String home(Model model) {
@@ -616,8 +625,16 @@ public class ViewClientController {
     @GetMapping("gio-hang")
     public String cart(Model model) {
 
-
+        Set<PaymentEnum> enabledPaymentMethods = paymentMethodConfigService.getEnabledMethods();
         model.addAttribute("titlePage", "Giỏ hàng");
+        model.addAttribute("enabledPaymentMethods", enabledPaymentMethods);
+        // Chọn sẵn phương thức đầu tiên đang bật theo thứ tự ưu tiên hiển thị trên UI -
+        // tránh trường hợp COD (mặc định checked cứng trước đây) bị admin tắt và không
+        // còn radio nào được chọn sẵn.
+        model.addAttribute("defaultPaymentMethod", DEFAULT_PAYMENT_METHOD_ORDER.stream()
+                .filter(enabledPaymentMethods::contains)
+                .findFirst()
+                .orElse(null));
 
         return "client/cart";
     }
