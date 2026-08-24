@@ -205,13 +205,13 @@
               </h2>
 
               <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-3">
-                <label class="relative cursor-pointer">
+                <label class="relative cursor-pointer" th:if="${enabledPaymentMethods.contains(T(guru.springframework.ghd.constants.enums.PaymentEnum).COD)}">
                   <input
                     type="radio"
                     name="paymentMethod"
                     value="COD"
                     class="peer sr-only"
-                    checked
+                    th:checked="${defaultPaymentMethod?.name() == 'COD'}"
                     onchange="toggleBankInfo()"
                   />
                   <div
@@ -238,12 +238,13 @@
                   </div>
                 </label>
 
-                <label class="relative cursor-pointer">
+                <label class="relative cursor-pointer" th:if="${enabledPaymentMethods.contains(T(guru.springframework.ghd.constants.enums.PaymentEnum).BANK_TRANSFER)}">
                   <input
                     type="radio"
                     name="paymentMethod"
                     value="BANK_TRANSFER"
                     class="peer sr-only"
+                    th:checked="${defaultPaymentMethod?.name() == 'BANK_TRANSFER'}"
                     onchange="toggleBankInfo()"
                   />
                   <div
@@ -272,12 +273,13 @@
 
                 <!-- Thanh toán online qua VNPay: redirect sang trang VNPay, khách tự
                      chọn thẻ/ngân hàng/trả góp cụ thể ở đó - xem handleOrder() bên dưới. -->
-                <label class="relative cursor-pointer">
+                <label class="relative cursor-pointer" th:if="${enabledPaymentMethods.contains(T(guru.springframework.ghd.constants.enums.PaymentEnum).CARD)}">
                   <input
                     type="radio"
                     name="paymentMethod"
                     value="CARD"
                     class="peer sr-only"
+                    th:checked="${defaultPaymentMethod?.name() == 'CARD'}"
                     onchange="toggleBankInfo()"
                   />
                   <div
@@ -304,12 +306,13 @@
                   </div>
                 </label>
 
-                <label class="relative cursor-pointer">
+                <label class="relative cursor-pointer" th:if="${enabledPaymentMethods.contains(T(guru.springframework.ghd.constants.enums.PaymentEnum).INSTALLMENT)}">
                   <input
                     type="radio"
                     name="paymentMethod"
                     value="INSTALLMENT"
                     class="peer sr-only"
+                    th:checked="${defaultPaymentMethod?.name() == 'INSTALLMENT'}"
                     onchange="toggleBankInfo()"
                   />
                   <div
@@ -336,6 +339,9 @@
                   </div>
                 </label>
               </div>
+              <p th:if="${enabledPaymentMethods.isEmpty()}" class="text-sm text-red-600 mb-3">
+                Hiện chưa có phương thức thanh toán nào khả dụng. Vui lòng liên hệ để được hỗ trợ đặt hàng.
+              </p>
 
               <div
                 id="bank-info-container"
@@ -867,6 +873,14 @@
 
         if (!custAddress) {
           setFieldError("custAddress", "Địa chỉ nhận hàng không được để trống");
+          isValid = false;
+        }
+
+        if (!paymentMethod) {
+          Swal.fire({
+            icon: "error",
+            title: "Vui lòng chọn phương thức thanh toán!",
+          });
           isValid = false;
         }
 

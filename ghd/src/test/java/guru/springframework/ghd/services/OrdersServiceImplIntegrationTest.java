@@ -7,6 +7,7 @@ import guru.springframework.ghd.dto.order.OrderCreationResult;
 import guru.springframework.ghd.dto.order.OrderItemRequest;
 import guru.springframework.ghd.dto.order.OrderRequest;
 import guru.springframework.ghd.dto.order.OrderResponse;
+import guru.springframework.ghd.dto.sysparam.SysParamRequest;
 import guru.springframework.ghd.entities.Orders;
 import guru.springframework.ghd.entities.Product;
 import guru.springframework.ghd.repositories.OrderDetailRepository;
@@ -49,6 +50,19 @@ class OrdersServiceImplIntegrationTest extends AbstractIntegrationTest {
     @Autowired
     private ProductRepository productRepository;
 
+    @Autowired
+    private SysParamService sysParamService;
+
+    // CARD/INSTALLMENT mặc định TẮT từ V30 (VNPay chưa test xong với sandbox thật -
+    // xem PaymentMethodConfigService) - bật lại ở đây để 2 test dưới vẫn kiểm tra đúng
+    // luồng tạo đơn CARD/INSTALLMENT độc lập với cấu hình bật/tắt của admin.
+    private void enablePaymentMethod(String key) {
+        SysParamRequest req = new SysParamRequest();
+        req.setParamKey(key);
+        req.setParamValue("true");
+        sysParamService.updateSysParam(List.of(req));
+    }
+
     // Không có Kafka trong AbstractIntegrationTest (chỉ Testcontainers MySQL+Redis) -
     // mock để tránh gọi mạng thật ra localhost:9092 lúc afterCommit publish OrderCreatedEvent.
     @MockitoBean
@@ -86,6 +100,7 @@ class OrdersServiceImplIntegrationTest extends AbstractIntegrationTest {
 
     @Test
     void cardPaymentDoesNotTouchStockAndReturnsPaymentUrl() {
+        enablePaymentMethod("payment.card.enabled");
         Product product = saveTestProduct(5);
 
         OrderCreationResult result = ordersService.createOrder(buildOrderRequest("CARD", product.getId()), "127.0.0.1");
@@ -102,6 +117,7 @@ class OrdersServiceImplIntegrationTest extends AbstractIntegrationTest {
 
     @Test
     void installmentPaymentDoesNotTouchStockAndReturnsPaymentUrl() {
+        enablePaymentMethod("payment.installment.enabled");
         Product product = saveTestProduct(5);
 
         OrderCreationResult result = ordersService.createOrder(buildOrderRequest("INSTALLMENT", product.getId()), "127.0.0.1");
