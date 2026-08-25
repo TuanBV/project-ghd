@@ -119,14 +119,30 @@ lab — `getByIdProduct`, `getBySlug`, list category/brand/news...) sẽ **500**
 [DB] Querying database
 ```
 
-### ⚠️ Phát hiện quan trọng khác (chưa fix, cần bạn quyết định)
+### ⚠️ Phát hiện quan trọng khác (đã fix — fail-open)
 `JwtAuthenticationFilter` → `TokenStoreService.isAccessTokenBlacklisted()` gọi Redis **trực
 tiếp** (không qua Spring Cache, không được `CacheErrorHandler` bảo vệ) để check JWT blacklist
 trên **mọi** request đã đăng nhập. Verify thật qua Toxiproxy (Case 3): khi Redis chậm/down, mọi
 request `/admin/v1/**`/`/api/v1/**` cần JWT đều **500**, kể cả request không liên quan gì đến
-cache. Đây là lỗ hổng resilience thật ngoài phạm vi cache — sửa nó là quyết định bảo mật
-(fail-open: bỏ qua check khi Redis lỗi, chấp nhận rủi ro token đã bị revoke vẫn qua; hay
-fail-closed: trả 401/503 rõ ràng thay vì 500) nên **chưa tự sửa**, cần bạn chọn hướng.
+cache. Đây là lỗ hổng resilience thật ngoài phạm vi cache.
+
+**Đã fix theo hướng fail-open** (`TokenStoreService.isAccessTokenBlacklisted`, có xác nhận của
+chủ dự án): khi Redis lỗi, coi như token **không** bị blacklist thay vì rethrow → request vẫn
+được xử lý bình thường thay vì 500. Đánh đổi: nếu đúng lúc Redis down mà 1 JWT bị admin thu hồi/
+logout, token đó vẫn được chấp nhận cho tới khi tự hết hạn (`jwt.access-token.expiration`, mặc
+định 30 phút) hoặc Redis sống lại — cửa sổ rủi ro giới hạn tự nhiên theo thời gian sống JWT.
+`isRefreshTokenValid` (dùng ở `/api/v1/auth/refresh`, whitelist refresh token) **không** đổi
+theo hướng này — vẫn fail-closed như cũ, vì refresh token sống lâu hơn (7 ngày) nên rủi ro chấp
+nhận nhầm token đã rotate-out cao hơn nhiều, ngoài phạm vi quyết định lần này.
+
+Verify thật (Toxiproxy 5s latency + endpoint `/admin/v1/test/redis/product/{id}`):
+```
+Trước fix: STATUS=500 (JwtAuthenticationFilter ném QueryTimeoutException, không được bắt)
+Sau fix:   STATUS=200, cacheStatus=REDIS_DOWN, real≈10.4s (nhiều lượt timeout 2s dọc filter
+           chain + probe + @Cacheable GET/PUT, nhưng KHÔNG còn 500)
+```
+`AuthenticationFlowTest` (test cũ, login/refresh/logout khi Redis bình thường) vẫn PASS sau fix
+— fail-open chỉ kích hoạt khi Redis thật sự lỗi, không đổi hành vi bình thường.
 
 ### Cách khôi phục
 ```bash
