@@ -1,6 +1,7 @@
 package guru.springframework.ghd.services;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
@@ -14,6 +15,7 @@ import java.time.Duration;
  * - Access token: blacklist (revoke sớm khi logout, tự hết hạn theo TTL).
  * - Refresh token: whitelist (chỉ token vừa phát hành mới hợp lệ - rotate mỗi lần dùng).
  */
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class TokenStoreService {
@@ -32,8 +34,22 @@ public class TokenStoreService {
         redisTemplate.opsForValue().set(blacklistKey(jti), VALID_MARKER, Duration.ofSeconds(ttlSeconds));
     }
 
+    // Fail-open: called on every authenticated request (JwtAuthenticationFilter), so a Redis
+    // outage/timeout here used to 500 every single request that carried a JWT - not just cache
+    // reads. Redis being down means we genuinely don't know whether this token was revoked;
+    // treating "unknown" as "not blacklisted" keeps the app usable during the outage instead of
+    // locking out every logged-in user, at the cost of a revoked token staying valid until it
+    // naturally expires (jwt.access-token.expiration, 30 min default) if revoked exactly while
+    // Redis is unreachable. Deliberate trade-off, confirmed with the project owner - see
+    // REDIS_TEST_GUIDE.md Case 2/3 for how this gap was found (via the Redis Test Lab).
     public boolean isAccessTokenBlacklisted(String jti) {
-        return Boolean.TRUE.equals(redisTemplate.hasKey(blacklistKey(jti)));
+        try {
+            return Boolean.TRUE.equals(redisTemplate.hasKey(blacklistKey(jti)));
+        } catch (RuntimeException e) {
+            log.warn("[REDIS] Connection failed checking blacklist for jti={} - failing open (treating as not blacklisted): {}",
+                    jti, e.getMessage());
+            return false;
+        }
     }
 
     public void registerRefreshToken(String username, String jti, long ttlSeconds) {
