@@ -81,7 +81,15 @@ function isPathAllowed(candidate, allowedRoots, baseDir) {
 
 // Windows drive-letter (C:\..., C:/...) hoặc Git-Bash style (/c/...), hoặc "../"/"./"
 // tương đối - đủ rộng để bắt các đường dẫn thường gặp trong lệnh Bash thật của agent.
-const PATH_TOKEN_RE = /(?:[A-Za-z]:[\\/][^\s"']*|\/[a-zA-Z][\\/][^\s"']*|\.\.?\/[^\s"']*)/g;
+//
+// (?<![A-Za-z]) trước phần drive-letter: không có nó, "http://..."/"https://..." bị
+// nhận nhầm thành path Windows vì ký tự cuối của scheme ("p" trong "http") + ":" + "/"
+// khớp đúng pattern [A-Za-z]:[\\/] (vd "p://localhost:18080" khớp như thể "p:" là ổ đĩa)
+// - phát hiện thật khi curl gọi API local trong lúc test Redis Test Lab bị chặn nhầm.
+// Lookbehind này đảm bảo ký tự trước "X:" không phải là 1 chữ cái khác, nên "http:"/
+// "https:" (nhiều chữ cái liền trước ":") không còn khớp, còn "C:\..." đứng đầu token
+// (không có chữ cái nào trước nó) vẫn khớp như cũ.
+const PATH_TOKEN_RE = /(?:(?<![A-Za-z])[A-Za-z]:[\\/][^\s"']*|\/[a-zA-Z][\\/][^\s"']*|\.\.?\/[^\s"']*)/g;
 const QUOTED_RE = /"([^"]*)"|'([^']*)'/g;
 // Bắt riêng target của "cd" kể cả không có dấu "/" theo sau (vd "cd ..", "cd ../..")
 // - PATH_TOKEN_RE ở trên yêu cầu có "/" sau dấu chấm nên bỏ sót trường hợp này.

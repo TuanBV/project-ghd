@@ -1,0 +1,52 @@
+# Redis Failure & Cache Test Lab overlay - see REDIS_TEST_GUIDE.md.
+#
+# Usage (on top of the normal compose.yaml, never standalone):
+#   docker compose -f compose.yaml -f compose.redis-lab.yml up -d --build
+#
+# What this adds, on top of the base stack:
+#   - app: activates the "redis-lab" Spring profile (application-redis-lab.properties) and
+#     routes its Redis traffic through Toxiproxy instead of straight to `redis`, so Case 3
+#     (timeout/connection error) can inject latency/downtime without touching app config again.
+#     With no toxic configured, Toxiproxy passes traffic through basically transparently, so
+#     every other case behaves exactly like the base stack.
+#   - toxiproxy: control API on 8474 (toxiproxy-cli), proxies `redis_proxy` on 8666 -> redis:6379.
+#   - redis-memtest: a SEPARATE, low-memory Redis instance for Case 4 (memory full / eviction
+#     policy). Intentionally NOT wired to the app - that case is about Redis's own OOM/eviction
+#     behavior, not app-level cache logic, so it's exercised purely with redis-cli.
+#
+# Case 9 (restart/persistence) and Case 10 (k6 load test) need no extra service - they run
+# against the base `redis`/`app` services from compose.yaml directly.
+services:
+  app:
+    environment:
+      SPRING_PROFILES_ACTIVE: redis-lab
+      REDIS_HOST: toxiproxy
+      REDIS_PORT: "8666"
+    depends_on:
+      toxiproxy:
+        condition: service_started
+
+  toxiproxy:
+    image: ghcr.io/shopify/toxiproxy:2.9.0
+    command: ["-host=0.0.0.0", "-config=/config/toxiproxy.json"]
+    volumes:
+      - ./scripts/redis-lab/toxiproxy.json:/config/toxiproxy.json:ro
+    ports:
+      # Control API only - used from the host to run `toxiproxy-cli` (add/remove toxics).
+      # The proxy port itself (8666) stays internal to the compose network like `redis`.
+      - "8474:8474"
+    depends_on:
+      redis:
+        condition: service_healthy
+    restart: unless-stopped
+    networks:
+      - ghd-net
+
+  redis-memtest:
+    image: redis:7.4.10-alpine
+    command: ["redis-server", "--maxmemory", "20mb", "--maxmemory-policy", "noeviction"]
+    ports:
+      - "16379:6379"
+    restart: unless-stopped
+    networks:
+      - ghd-net

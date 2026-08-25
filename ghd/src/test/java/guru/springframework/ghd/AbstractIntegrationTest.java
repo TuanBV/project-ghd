@@ -23,9 +23,11 @@ public abstract class AbstractIntegrationTest {
             .withDatabaseName("core")
             .withReuse(true);
 
+    // protected (not package-private) so subclasses outside guru.springframework.ghd - e.g. the
+    // Redis Test Lab's RedisLabFallbackTest - can pause/unpause it to simulate Redis being down.
     @Container
     @ServiceConnection
-    static final GenericContainer<?> REDIS = new GenericContainer<>(DockerImageName.parse("redis:7.4.10-alpine"))
+    protected static final GenericContainer<?> REDIS = new GenericContainer<>(DockerImageName.parse("redis:7.4.10-alpine"))
             .withExposedPorts(6379)
             .withReuse(true);
 }

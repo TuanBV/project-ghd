@@ -1,9 +1,13 @@
 package guru.springframework.ghd.config;
 
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.ApplicationRunner;
+import org.springframework.cache.Cache;
 import org.springframework.cache.CacheManager;
+import org.springframework.cache.annotation.CachingConfigurer;
 import org.springframework.cache.annotation.EnableCaching;
+import org.springframework.cache.interceptor.CacheErrorHandler;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.redis.cache.RedisCacheConfiguration;
@@ -27,9 +31,10 @@ import java.util.Map;
  * eviction target in the service layer ({@code @CacheEvict(cacheNames = ..., allEntries = true)}),
  * so correctness on write wins over precise per-entry invalidation.
  */
+@Slf4j
 @Configuration
 @EnableCaching
-public class CacheConfig {
+public class CacheConfig implements CachingConfigurer {
 
     public static final String CATEGORIES = "categories";
     public static final String BRANDS = "brands";
@@ -106,6 +111,55 @@ public class CacheConfig {
                 .cacheDefaults(redisCacheConfiguration)
                 .withInitialCacheConfigurations(perCacheConfigurations)
                 .build();
+    }
+
+    // Implementing CachingConfigurer (rather than just declaring a standalone @Bean) is
+    // required for this to actually reach CacheInterceptor: AbstractCachingConfiguration only
+    // wires a custom CacheErrorHandler/KeyGenerator/CacheResolver in through a CachingConfigurer
+    // bean - with none present it never looks up a CacheErrorHandler bean by type at all, so a
+    // plain @Bean CacheErrorHandler here would be silently ignored (verified with a real Redis
+    // Test Lab integration test before adding this interface - the plain @Bean version still
+    // rethrew and 500'd).
+    //
+    // Without this, the default SimpleCacheErrorHandler RETHROWS any exception thrown while
+    // talking to Redis (connection refused, timeout...), so every @Cacheable method
+    // (getByIdProduct, getBySlug, category/brand/news lists...) would fail with a 500 the
+    // moment Redis is unreachable, even though it's only a cache in front of MySQL. Swallowing
+    // the error here instead lets the annotated method fall through to its own body (cache miss
+    // path -> query the DB) on GET failures, and simply skips the write/evict on
+    // PUT/EVICT/CLEAR failures instead of failing the request.
+    @Override
+    public CacheErrorHandler errorHandler() {
+        return cacheErrorHandler();
+    }
+
+    @Bean
+    public CacheErrorHandler cacheErrorHandler() {
+        return new CacheErrorHandler() {
+            @Override
+            public void handleCacheGetError(RuntimeException exception, Cache cache, Object key) {
+                log.warn("[REDIS] Connection failed on GET {}::{} - {}. [FALLBACK] Switching to database",
+                        cache.getName(), key, exception.getMessage());
+            }
+
+            @Override
+            public void handleCachePutError(RuntimeException exception, Cache cache, Object key, Object value) {
+                log.warn("[REDIS] Connection failed on PUT {}::{} - {}. Skipping cache write",
+                        cache.getName(), key, exception.getMessage());
+            }
+
+            @Override
+            public void handleCacheEvictError(RuntimeException exception, Cache cache, Object key) {
+                log.warn("[REDIS] Connection failed on EVICT {}::{} - {}. Skipping cache eviction",
+                        cache.getName(), key, exception.getMessage());
+            }
+
+            @Override
+            public void handleCacheClearError(RuntimeException exception, Cache cache) {
+                log.warn("[REDIS] Connection failed on CLEAR {} - {}. Skipping cache clear",
+                        cache.getName(), exception.getMessage());
+            }
+        };
     }
 
     // Redis cache persists across `docker compose down`/rebuild (it's a durable volume,
